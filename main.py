@@ -7,6 +7,7 @@ from torch.autograd import Variable
 
 import data
 import model
+import vocab
 
 
 ###############################################################################
@@ -101,6 +102,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--data', type=str, default='./data/penn',
                         help='location of the data corpus')
+    parser.add_argument('--wordlist', type=str, required=True,
+                        help='word -> int map; Kaldi style "words.txt"')
     parser.add_argument('--model', type=str, default='LSTM',
                         help='type of recurrent net (RNN_TANH, RNN_RELU, LSTM, GRU)')
     parser.add_argument('--emsize', type=int, default=200,
@@ -139,7 +142,10 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
 
     print("preparing data...")
-    corpus = data.Corpus(args.data)
+    with open(args.wordlist, 'r') as f:
+        vocab = vocab.vocab_from_kaldi_wordlist(f)
+
+    corpus = data.Corpus(args.data, vocab)
     eval_batch_size = 10
     train_data = batchify(corpus.train, args.batch_size)
     val_data = batchify(corpus.valid, eval_batch_size)

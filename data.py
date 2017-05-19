@@ -15,10 +15,17 @@ class Dictionary(object):
     def __len__(self):
         return len(self.idx2word)
 
+def nb_words(f):
+    n = 0
+    for line in f:
+        words = line.split()
+        n += len(words)
+
+    return n
 
 class Corpus(object):
-    def __init__(self, path):
-        self.dictionary = Dictionary()
+    def __init__(self, path, vocab):
+        self.dictionary = vocab
         self.train = self.tokenize(os.path.join(path, 'train.txt'))
         self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
         self.test = self.tokenize(os.path.join(path, 'test.txt'))
@@ -28,12 +35,7 @@ class Corpus(object):
         assert os.path.exists(path)
         # Add words to the dictionary
         with open(path, 'r') as f:
-            tokens = 0
-            for line in f:
-                words = line.split()
-                tokens += len(words)
-                for word in words:
-                    self.dictionary.add_word(word)
+            tokens = nb_words(f)
 
         # Tokenize file content
         with open(path, 'r') as f:
@@ -42,7 +44,7 @@ class Corpus(object):
             for line in f:
                 words = line.split()
                 for word in words:
-                    ids[token] = self.dictionary.word2idx[word]
+                    ids[token] = self.dictionary.w2i(word)
                     token += 1
 
         return ids
