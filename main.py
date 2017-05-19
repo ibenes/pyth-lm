@@ -138,19 +138,23 @@ if __name__ == '__main__':
     if args.cuda and torch.cuda.is_available():
         torch.cuda.manual_seed(args.seed)
 
+    print("preparing data...")
     corpus = data.Corpus(args.data)
     eval_batch_size = 10
     train_data = batchify(corpus.train, args.batch_size)
     val_data = batchify(corpus.valid, eval_batch_size)
     test_data = batchify(corpus.test, eval_batch_size)
 
+    print("building model...")
     ntokens = len(corpus.dictionary)
+
     model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
     if args.cuda:
         model.cuda()
 
     criterion = nn.CrossEntropyLoss()
 
+    print("training...")
     # Loop over epochs.
     lr = args.lr
     best_val_loss = None
