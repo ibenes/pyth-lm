@@ -98,6 +98,34 @@ def train():
             total_loss = 0
             start_time = time.time()
 
+def seq_logprob(seq, model):
+    ''' Sequence as a list of integers
+    '''
+    ids = torch.LongTensor(seq)
+    data = ids.t().contiguous()
+    if args.cuda:
+        data = data.cuda()
+    
+    x = Variable(data)
+
+    hidden = model.init_hidden(1) # batch of 1 sequence
+
+    model.eval()
+    total_loss = 0
+    ntokens = len(corpus.dictionary)
+
+    # TODO: proba of first (0-th) word?
+
+    for i in range(0, data_source.size(0) - 1, args.bptt):
+        data, targets = get_batch(data_source, i, evaluation=True)
+        output, hidden = model(data, hidden)
+        output_flat = output.view(-1, ntokens)
+        total_loss += len(data) * criterion(output_flat, targets).data
+        hidden = repackage_hidden(hidden)
+    return total_loss[0] / len(data_source)
+
+
+ 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--data', type=str, default='./data/penn',
@@ -158,7 +186,7 @@ if __name__ == '__main__':
     if args.cuda:
         model.cuda()
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()
 
     print("training...")
     # Loop over epochs.
