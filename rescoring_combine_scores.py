@@ -1,5 +1,20 @@
 import argparse
 
+def split_nbest_key(key):
+    fields = key.split('-')
+    segment = '-'.join(fields[:-1])
+    trans_id = fields[-1]
+
+    return segment, trans_id
+
+    
+def dict_argmin(dict):
+    return min(dict, key=dict.get)
+
+def write_best(scores, key, out_f):
+    best = dict_argmin(scores)
+    out_f.write(key + ' ' + best + '\n')
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--ac-scale', type=float, default=1.0, help='weight of acoustic score')
@@ -27,18 +42,13 @@ if __name__ == '__main__':
             lm_fields = lm_line.split()
 
             assert ac_fields[0] == gr_fields[0] and gr_fields[0] == lm_fields[0]
-            utt_id = ac_fields[0]
-            fields = utt_id.split('-')
-            segment = '-'.join(fields[:-1])
-            trans_id = fields[-1]
+            segment, trans_id = split_nbest_key(ac_fields[0])
 
             if not curr_seg:
                 curr_seg = segment
 
-
             if segment != curr_seg:
-                best = min(segment_utts_scores, key=segment_utts_scores.get)
-                out_f.write(curr_seg + ' ' + best + '\n')
+                write_best(segment_utts_scores, curr_seg, out_f)
 
                 curr_seg = segment
                 segment_utts_scores = {}
@@ -48,8 +58,7 @@ if __name__ == '__main__':
             lm_s = float(lm_fields[1])
 
             segment_utts_scores[trans_id] = args.ac_scale * ac_s + \
-                                     args.gr_scale * gr_s + \
-                                     args.lm_scale * lm_s
+                                            args.gr_scale * gr_s + \
+                                            args.lm_scale * lm_s
 
-        best = min(segment_utts_scores, key=segment_utts_scores.get)
-        out_f.write(curr_seg + ' ' + best + '\n')
+        write_best(segment_utts_scores, curr_seg, out_f)
