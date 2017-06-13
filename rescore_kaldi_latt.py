@@ -1,30 +1,12 @@
 import argparse
-import time
-import math
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-import data
 import model
 import vocab
 
-import IPython
-
-###############################################################################
-# Load data
-###############################################################################
-def batchify(data, bsz):
-    # Work out how cleanly we can divide the dataset into bsz parts.
-    nbatch = data.size(0) // bsz
-    # Trim off any extra elements that wouldn't cleanly fit (remainders).
-    data = data.narrow(0, 0, nbatch * bsz)
-    # Evenly divide the data across the bsz batches.
-    data = data.view(bsz, -1).t().contiguous()
-    if args.cuda:
-        data = data.cuda()
-    return data
+import kaldi_itf
 
 def max_len(seqs):
     return max([len(seq) for seq in seqs])
@@ -32,17 +14,14 @@ def max_len(seqs):
 def pick_ys(y, seq_x):
     seqs_ys = []
     for seq_n, seq in enumerate(seq_x):
-        seq_ys = [0] # we WLOG assume that the <s> at the begining has proba 1
-        for w_n, w in enumerate(seq[1:]): # starting at position one
+        seq_ys = [1.0] # hard 1.0 for the 'sure' <s>
+        for w_n, w in enumerate(seq[1:]): # skipping the initial element ^^^
             seq_ys.append(y[w_n, seq_n, w])
         seqs_ys.append(seq_ys)
 
     return seqs_ys
 
-def seqs_logprob(seqs, model):
-    ''' Sequence as a list of integers
-    '''
-    # ids are indexed as ids[batch][time]
+def seqs_to_tensor(seqs):
     batch_size = len(seqs)
     maxlen = max_len(seqs)
     ids = torch.LongTensor(batch_size, maxlen).zero_()
@@ -52,27 +31,30 @@ def seqs_logprob(seqs, model):
 
     # indexing is X[time][batch], thus we transpose
     data = ids.t().contiguous()
+    return data, batch_size
+
+def seqs_logprob(seqs, model):
+    ''' Sequence as a list of integers
+    '''
+    data, batch_size = seqs_to_tensor(seqs)
+
     if args.cuda:
         data = data.cuda()
 
     X = Variable(data)
-    hidden = model.init_hidden(batch_size)
-    # proba of first (0-th) word is not a problem -- first word is always the '<s>', so no-one cares
+    h0 = model.init_hidden(batch_size)
 
-    y, _ = model(X, hidden)
-    y = y.data # we do not care about the Variable wrapping
+    y, _ = model(X, h0)
+    y = y.data # extract the Tensor out of the Variable
 
     word_log_scores = pick_ys(y, seqs)
-
     seq_log_scores = [sum(seq) for seq in word_log_scores]
 
     return seq_log_scores
 
-def string_to_pythlm(seq, vocab):
-    tokens = seq.split()
-    tokens = ['<s>'] + tokens + ['</s>']
 
-    return [vocab.w2i(tok) for tok in tokens]
+def tokens_to_pythlm(toks, vocab):
+    return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
 
 def dict_to_list(utts_map):
     list_of_lists = []
@@ -82,6 +64,11 @@ def dict_to_list(utts_map):
         list_of_lists.append(utts_map[key])
 
     return list_of_lists, rev_map
+
+def translate_latt_to_model(words, latt_vocab, model_vocab):
+    words = [latt_vocab.i2w(i) for i in word_ids]
+    return tokens_to_pythlm(words, model_vocab)
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
@@ -115,24 +102,17 @@ if __name__ == '__main__':
         model.cuda()
     model.eval()
 
-    criterion = nn.NLLLoss()
-
+    print("scoring...")
     curr_seg = None
     segment_utts = {}
 
     with open(args.in_filename) as in_f, open(args.out_filename, 'w') as out_f:
         for line in in_f:
             fields = line.split()
-            utt_id = fields[0]
+            segment, trans_id = kaldi_itf.split_nbest_key(fields[0])
+
             word_ids = [int(wi) for wi in fields[1:]]
-
-            words = [latt_vocab.i2w(i) for i in word_ids]
-            ids = string_to_pythlm(" ".join(words), model_vocab)
-            print(utt_id, " UNKs:", words.count("<UNK>"), "\t<unk>s ", ids.count(model_vocab.unk_index_), ' / ', len(words))
-
-            fields = utt_id.split('-')
-            segment = "-".join(fields[:-1])
-            trans_id = fields[-1]
+            ids = translate_latt_to_model(word_ids, latt_vocab, model_vocab)
 
             if not curr_seg:
                 curr_seg = segment
