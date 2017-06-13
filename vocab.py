@@ -41,7 +41,7 @@ class Vocabulary:
     def __len__(self):
         return self.size()
 
-def vocab_from_kaldi_wordlist(f):
+def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     d = {}
     for line in f:
         fields = line.split()
@@ -49,7 +49,7 @@ def vocab_from_kaldi_wordlist(f):
         i = int(fields[1])
         d[w] = i
 
-    vocab = Vocabulary('<unk>', d['<unk>']) 
+    vocab = Vocabulary(unk_word, d[unk_word]) 
     vocab.w2i_ = d
     for w in d:
         vocab.i2w_[d[w]] = w
