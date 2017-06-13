@@ -1,13 +1,7 @@
 import argparse
 
-def split_nbest_key(key):
-    fields = key.split('-')
-    segment = '-'.join(fields[:-1])
-    trans_id = fields[-1]
+import kaldi_itf
 
-    return segment, trans_id
-
-    
 def dict_argmin(dict):
     return min(dict, key=dict.get)
 
@@ -42,7 +36,7 @@ if __name__ == '__main__':
             lm_fields = lm_line.split()
 
             assert ac_fields[0] == gr_fields[0] and gr_fields[0] == lm_fields[0]
-            segment, trans_id = split_nbest_key(ac_fields[0])
+            segment, trans_id = kaldi_itf.split_nbest_key(ac_fields[0])
 
             if not curr_seg:
                 curr_seg = segment
