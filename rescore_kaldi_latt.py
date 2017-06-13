@@ -30,7 +30,7 @@ def max_len(seqs):
     return max([len(seq) for seq in seqs])
 
 def pick_ys(y, seq_x):
-    seqs_ys = [] 
+    seqs_ys = []
     for seq_n, seq in enumerate(seq_x):
         seq_ys = [0] # we WLOG assume that the <s> at the begining has proba 1
         for w_n, w in enumerate(seq[1:]): # starting at position one
@@ -54,32 +54,40 @@ def seqs_logprob(seqs, model):
     data = ids.t().contiguous()
     if args.cuda:
         data = data.cuda()
-    print(data)
-    
+
     X = Variable(data)
-    hidden = model.init_hidden(batch_size) 
+    hidden = model.init_hidden(batch_size)
     # proba of first (0-th) word is not a problem -- first word is always the '<s>', so no-one cares
 
     y, _ = model(X, hidden)
     y = y.data # we do not care about the Variable wrapping
-    print(y.size())
 
     word_log_scores = pick_ys(y, seqs)
-    for line in word_log_scores:
-        print(np.around(line, decimals=2))
 
     seq_log_scores = [sum(seq) for seq in word_log_scores]
-    print(seq_log_scores)
+
+    return seq_log_scores
 
 def string_to_pythlm(seq, vocab):
     tokens = seq.split()
     tokens = ['<s>'] + tokens + ['</s>']
-    
+
     return [vocab.w2i(tok) for tok in tokens]
- 
+
+def dict_to_list(utts_map):
+    list_of_lists = []
+    rev_map = {}
+    for key in utts_map:
+        rev_map[len(list_of_lists)] = key
+        list_of_lists.append(utts_map[key])
+
+    return list_of_lists, rev_map
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
-    parser.add_argument('--wordlist', type=str, required=True,
+    parser.add_argument('--latt-vocab', type=str, required=True,
+                        help='word -> int map; Kaldi style "words.txt"')
+    parser.add_argument('--model-vocab', type=str, required=True,
                         help='word -> int map; Kaldi style "words.txt"')
     parser.add_argument('--batch_size', type=int, default=1, metavar='N',
                         help='batch size')
@@ -87,11 +95,18 @@ if __name__ == '__main__':
                         help='use CUDA')
     parser.add_argument('--model-from', type=str, required=True,
                         help='where to load the model from')
+    parser.add_argument('in_filename', help='second output of nbest-to-linear, textual')
+    parser.add_argument('out_filename', help='where to put the LM scores')
     args = parser.parse_args()
 
-    print("reading vocab...")
-    with open(args.wordlist, 'r') as f:
-        vocab = vocab.vocab_from_kaldi_wordlist(f)
+    print(args)
+
+    print("reading vocabs...")
+    with open(args.latt_vocab, 'r') as f:
+        latt_vocab = vocab.vocab_from_kaldi_wordlist(f, unk_word='<UNK>')
+
+    with open(args.model_vocab, 'r') as f:
+        model_vocab = vocab.vocab_from_kaldi_wordlist(f)
 
     print("reading model...")
     with open(args.model_from, 'rb') as f:
@@ -102,18 +117,43 @@ if __name__ == '__main__':
 
     criterion = nn.NLLLoss()
 
-    strings = []
-    strings.append("ښه د کور مصروفیت دي کار بس کار کښې تېر شي او سبق وایې")
-    strings.append("سکول سبق وایې مکتب")
-    strings.append("څو هم کښې یې")
-    strings.append("دوولسم کښې یې کوم مضمون دي ډېر خوښ دې")
-    strings.append("انګلش دي خوښ دي")
-    strings.append("ښه نه انګلش خو ښه مضمون دې او چې ستا خوښ دې نو بس")
+    curr_seg = None
+    segment_utts = {}
 
-    X = [string_to_pythlm(string, vocab) for string in strings] 
-    for x in X:
-        print(x)
+    with open(args.in_filename) as in_f, open(args.out_filename, 'w') as out_f:
+        for line in in_f:
+            fields = line.split()
+            utt_id = fields[0]
+            word_ids = [int(wi) for wi in fields[1:]]
 
-    print(max_len(X))
+            words = [latt_vocab.i2w(i) for i in word_ids]
+            ids = string_to_pythlm(" ".join(words), model_vocab)
+            print(utt_id, " UNKs:", words.count("<UNK>"), "\t<unk>s ", ids.count(model_vocab.unk_index_), ' / ', len(words))
 
-    seqs_logprob(X, model)
+            fields = utt_id.split('-')
+            segment = "-".join(fields[:-1])
+            trans_id = fields[-1]
+
+            if not curr_seg:
+                curr_seg = segment
+
+            if segment != curr_seg:
+                X, rev_map = dict_to_list(segment_utts) # reform the word sequences
+                y = seqs_logprob(X, model) # score
+
+                # write
+                for i, log_p in enumerate(y):
+                    out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p) + '\n')
+
+                curr_seg = segment
+                segment_utts = {}
+
+            segment_utts[trans_id] = ids
+
+        # Last segment:
+        X, rev_map = dict_to_list(segment_utts) # reform the word sequences
+        y = seqs_logprob(X, model) # score
+
+        # write
+        for i, log_p in enumerate(y):
+            out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p) + '\n')
