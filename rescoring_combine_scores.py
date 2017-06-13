@@ -1,16 +1,5 @@
 import argparse
 
-def best_key(dictionary):
-    best = None
-    best_cost = float('Inf')
-
-    for key in dictionary:
-        if dictionary[key] < best_cost:
-            best = key
-            best_cost = dictionary[key]
-
-    return best
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--ac-scale', type=float, default=1.0, help='weight of acoustic score')
