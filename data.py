@@ -24,8 +24,9 @@ def nb_words(f):
     return n
 
 class Corpus(object):
-    def __init__(self, path, vocab):
+    def __init__(self, path, vocab, randomize=False):
         self.dictionary = vocab
+        self._randomize = randomize
         self.train = self.tokenize(os.path.join(path, 'train.txt'))
         self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
         self.test = self.tokenize(os.path.join(path, 'test.txt'))
@@ -41,10 +42,61 @@ class Corpus(object):
         with open(path, 'r') as f:
             ids = torch.LongTensor(tokens)
             token = 0
-            for line in f:
+
+            lines = f.read().split('\n')
+
+            if self._randomize:
+                import random
+                random.shuffle(lines)
+
+            for line in lines:
                 words = line.split()
                 for word in words:
                     ids[token] = self.dictionary.w2i(word)
                     token += 1
 
         return ids
+
+def _batchify(data, batch_size, randomize):
+    sent_ids = range(len(data))
+
+    if randomize:
+        random.shuffle(sent_ids)
+
+    batches = []
+    i = 0
+    while i + batch_size < len(data):
+        batch_ids = sent_ids[i:i+batch_size]
+        batches.append(batch_ids)
+        i += batch_size
+
+
+
+class LineOrientedCorpus:
+    def __init__(self, path, vocab, randomize=True):
+        self._vocab = vocab
+        self._randomize = randomize
+        self._train_ids = self.tokenize(os.path.join(path, 'train.txt'))
+        self._valid_ids = self.tokenize(os.path.join(path, 'valid.txt'))
+        self._test_ids = self.tokenize(os.path.join(path, 'test.txt'))
+
+    def tokenize(self, path):
+        sentences = []
+
+        with open(path, 'r') as f:
+            for line in f:
+                words = line.split()
+                ids = torch.LongTensor(len(words))
+                for i, w in enumerate(words):
+                    ids[i] = self._vocab.w2i(w)
+
+                sentences.append(ids)
+
+    def batched_train(self, batch_size, randomize=True):
+        pass
+
+    def batched_valid(self, batch_size=10, randomize=False):
+        pass
+
+    def batched_test(self, batch_size=10, randomize=False):
+        pass
