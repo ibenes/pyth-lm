@@ -49,11 +49,11 @@ def get_batch(source, i, evaluation=False):
     return data, target
 
 
-def evaluate(data_source):
+def evaluate(data_source, eval_batch_size=10):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     total_loss = 0
-    ntokens = len(corpus.dictionary)
+    ntokens = len(vocab)
     hidden = model.init_hidden(eval_batch_size)
     for i in range(0, data_source.size(0) - 1, args.bptt):
         data, targets = get_batch(data_source, i, evaluation=True)
@@ -69,7 +69,7 @@ def train():
     model.train()
     total_loss = 0
     start_time = time.time()
-    ntokens = len(corpus.dictionary)
+    ntokens = len(vocab)
     hidden = model.init_hidden(args.batch_size)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i)
@@ -124,7 +124,13 @@ def seq_logprob(seq, model):
         hidden = repackage_hidden(hidden)
     return total_loss[0] / len(data_source)
 
+def format_data(path, vocab, eval_batch_size):
+    corpus = data.Corpus(path, vocab, args.shuffle_lines)
+    train = batchify(corpus.train, args.batch_size)
+    valid = batchify(corpus.valid, eval_batch_size)
+    test = batchify(corpus.test, eval_batch_size)
 
+    return train, valid, test
  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
@@ -156,12 +162,18 @@ if __name__ == '__main__':
                         help='tie the word embedding and softmax weights')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
+    parser.add_argument('--shuffle-lines', action='store_true',
+                        help='shuffle lines before every epoch')
     parser.add_argument('--cuda', action='store_true',
                         help='use CUDA')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='report interval')
-    parser.add_argument('--save', type=str,  default='model.pt',
+    parser.add_argument('--load', type=str,  
+                        help='where to find a pretrained model')
+    parser.add_argument('--save', type=str,  required=True,
                         help='path to save the final model')
+    parser.add_argument('--cpu-save', type=str,
+                        help='path to save a CPU model')
     args = parser.parse_args()
 
     # Set the random seed manually for reproducibility.
@@ -173,16 +185,17 @@ if __name__ == '__main__':
     with open(args.wordlist, 'r') as f:
         vocab = vocab.vocab_from_kaldi_wordlist(f)
 
-    corpus = data.Corpus(args.data, vocab)
-    eval_batch_size = 10
-    train_data = batchify(corpus.train, args.batch_size)
-    val_data = batchify(corpus.valid, eval_batch_size)
-    test_data = batchify(corpus.test, eval_batch_size)
+    train_data, val_data, test_data = format_data(args.data, vocab, eval_batch_size=10)
 
     print("building model...")
-    ntokens = len(corpus.dictionary)
+    ntokens = len(vocab)
 
-    model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
+    if args.load:
+        with open(args.load, 'rb') as f:
+            model = torch.load(f)
+    else:
+        model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
+
     if args.cuda:
         model.cuda()
 
@@ -227,3 +240,8 @@ if __name__ == '__main__':
 
         test_loss, math.exp(test_loss)))
     print('=' * 89)
+
+    model.cpu()
+    if args.cpu_save:
+        with open(args.cpu_save, 'wb') as f:
+            torch.save(model, f)
