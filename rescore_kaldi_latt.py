@@ -8,8 +8,10 @@ import vocab
 
 import kaldi_itf
 
+
 def max_len(seqs):
     return max([len(seq) for seq in seqs])
+
 
 def pick_ys(y, seq_x):
     seqs_ys = []
@@ -20,6 +22,7 @@ def pick_ys(y, seq_x):
         seqs_ys.append(seq_ys)
 
     return seqs_ys
+
 
 def seqs_to_tensor(seqs):
     batch_size = len(seqs)
@@ -32,6 +35,7 @@ def seqs_to_tensor(seqs):
     # indexing is X[time][batch], thus we transpose
     data = ids.t().contiguous()
     return data, batch_size
+
 
 def seqs_logprob(seqs, model):
     ''' Sequence as a list of integers
@@ -56,6 +60,7 @@ def seqs_logprob(seqs, model):
 def tokens_to_pythlm(toks, vocab):
     return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
 
+
 def dict_to_list(utts_map):
     list_of_lists = []
     rev_map = {}
@@ -65,10 +70,11 @@ def dict_to_list(utts_map):
 
     return list_of_lists, rev_map
 
+
 def translate_latt_to_model(words, latt_vocab, model_vocab):
     words = [latt_vocab.i2w(i) for i in word_ids]
     return tokens_to_pythlm(words, model_vocab)
-    
+     
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
