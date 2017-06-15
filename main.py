@@ -10,30 +10,6 @@ import model
 import vocab
 
 
-###############################################################################
-# Load data
-###############################################################################
-def batchify(data, bsz):
-    # Work out how cleanly we can divide the dataset into bsz parts.
-    nbatch = data.size(0) // bsz
-    # Trim off any extra elements that wouldn't cleanly fit (remainders).
-    data = data.narrow(0, 0, nbatch * bsz)
-    # Evenly divide the data across the bsz batches.
-    data = data.view(bsz, -1).t().contiguous()
-    if args.cuda:
-        data = data.cuda()
-    return data
-
-
-###############################################################################
-# Build the model
-###############################################################################
-
-
-###############################################################################
-# Training code
-###############################################################################
-
 def repackage_hidden(h):
     """Wraps hidden states in new Variables, to detach them from their history."""
     if type(h) == Variable:
@@ -53,12 +29,11 @@ def evaluate(data_source, eval_batch_size=10):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     total_loss = 0
-    ntokens = len(vocab)
     hidden = model.init_hidden(eval_batch_size)
     for i in range(0, data_source.size(0) - 1, args.bptt):
         data, targets = get_batch(data_source, i, evaluation=True)
         output, hidden = model(data, hidden)
-        output_flat = output.view(-1, ntokens)
+        output_flat = output.view(-1, len(vocab))
         total_loss += len(data) * criterion(output_flat, targets).data
         hidden = repackage_hidden(hidden)
     return total_loss[0] / len(data_source)
@@ -69,7 +44,6 @@ def train():
     model.train()
     total_loss = 0
     start_time = time.time()
-    ntokens = len(vocab)
     hidden = model.init_hidden(args.batch_size)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i)
@@ -77,8 +51,9 @@ def train():
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
         hidden = repackage_hidden(hidden)
         model.zero_grad()
+
         output, hidden = model(data, hidden)
-        loss = criterion(output.view(-1, ntokens), targets)
+        loss = criterion(output.view(-1, len(vocab)), targets)
         loss.backward()
 
         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
@@ -98,37 +73,12 @@ def train():
             total_loss = 0
             start_time = time.time()
 
-def seq_logprob(seq, model):
-    ''' Sequence as a list of integers
-    '''
-    ids = torch.LongTensor(seq)
-    data = ids.t().contiguous()
-    if args.cuda:
-        data = data.cuda()
-    
-    x = Variable(data)
-
-    hidden = model.init_hidden(1) # batch of 1 sequence
-
-    model.eval()
-    total_loss = 0
-    ntokens = len(corpus.dictionary)
-
-    # TODO: proba of first (0-th) word?
-
-    for i in range(0, data_source.size(0) - 1, args.bptt):
-        data, targets = get_batch(data_source, i, evaluation=True)
-        output, hidden = model(data, hidden)
-        output_flat = output.view(-1, ntokens)
-        total_loss += len(data) * criterion(output_flat, targets).data
-        hidden = repackage_hidden(hidden)
-    return total_loss[0] / len(data_source)
 
 def format_data(path, vocab, eval_batch_size):
     corpus = data.Corpus(path, vocab, args.shuffle_lines)
-    train = batchify(corpus.train, args.batch_size)
-    valid = batchify(corpus.valid, eval_batch_size)
-    test = batchify(corpus.test, eval_batch_size)
+    train = data.batchify(corpus.train, args.batch_size, args.cuda)
+    valid = data.batchify(corpus.valid, eval_batch_size, args.cuda)
+    test = data.batchify(corpus.test, eval_batch_size, args.cuda)
 
     return train, valid, test
  
@@ -188,13 +138,12 @@ if __name__ == '__main__':
     train_data, val_data, test_data = format_data(args.data, vocab, eval_batch_size=10)
 
     print("building model...")
-    ntokens = len(vocab)
 
     if args.load:
         with open(args.load, 'rb') as f:
             model = torch.load(f)
     else:
-        model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
+        model = model.RNNModel(args.model, len(vocab), args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
 
     if args.cuda:
         model.cuda()
@@ -237,11 +186,10 @@ if __name__ == '__main__':
     test_loss = evaluate(test_data)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
-
         test_loss, math.exp(test_loss)))
     print('=' * 89)
 
-    model.cpu()
     if args.cpu_save:
+        model.cpu()
         with open(args.cpu_save, 'wb') as f:
             torch.save(model, f)
