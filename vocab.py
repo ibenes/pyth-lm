@@ -20,6 +20,8 @@ class Vocabulary:
         self.ind_gen_ = IndexGenerator([unk_index])
 
     def add_from_text(self, text):
+        assert self.ind_gen_
+
         words = text.split()
         for word in words:
             if word not in self.w2i_: # unknown word
@@ -33,13 +35,16 @@ class Vocabulary:
         return self.w2i_.get(word, self.unk_index_)
 
     def i2w(self, index):
-        return self.i2w_.get(index, self.unk_word_)
+        return self.i2w_[index]
 
     def size(self):
         return len(self.w2i_)
 
     def __len__(self):
-        return self.size()
+        if self.ind_gen_:
+            return self.ind_gen_.next_
+        else:
+            return self.size_
 
 def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     d = {}
@@ -47,11 +52,15 @@ def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
         fields = line.split()
         w = fields[0]
         i = int(fields[1])
+        assert i >= 0
         d[w] = i
 
     vocab = Vocabulary(unk_word, d[unk_word]) 
+    vocab.ind_gen_ = None
     vocab.w2i_ = d
     for w in d:
         vocab.i2w_[d[w]] = w
+
+    vocab.size_ = max(d.values()) + 1
 
     return vocab
