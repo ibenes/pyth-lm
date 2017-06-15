@@ -84,18 +84,10 @@ def format_data(path, vocab, eval_batch_size):
  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
-    parser.add_argument('--data', type=str, default='./data/penn',
+    parser.add_argument('--data', type=str, required=True,
                         help='location of the data corpus')
     parser.add_argument('--wordlist', type=str, required=True,
                         help='word -> int map; Kaldi style "words.txt"')
-    parser.add_argument('--model', type=str, default='LSTM',
-                        help='type of recurrent net (RNN_TANH, RNN_RELU, LSTM, GRU)')
-    parser.add_argument('--emsize', type=int, default=200,
-                        help='size of word embeddings')
-    parser.add_argument('--nhid', type=int, default=200,
-                        help='number of hidden units per layer')
-    parser.add_argument('--nlayers', type=int, default=2,
-                        help='number of layers')
     parser.add_argument('--lr', type=float, default=20,
                         help='initial learning rate')
     parser.add_argument('--clip', type=float, default=0.25,
@@ -106,10 +98,6 @@ if __name__ == '__main__':
                         help='batch size')
     parser.add_argument('--bptt', type=int, default=35,
                         help='sequence length')
-    parser.add_argument('--dropout', type=float, default=0.2,
-                        help='dropout applied to layers (0 = no dropout)')
-    parser.add_argument('--tied', action='store_true',
-                        help='tie the word embedding and softmax weights')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
     parser.add_argument('--shuffle-lines', action='store_true',
@@ -118,8 +106,8 @@ if __name__ == '__main__':
                         help='use CUDA')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='report interval')
-    parser.add_argument('--load', type=str,  
-                        help='where to find a pretrained model')
+    parser.add_argument('--load', type=str, required=True,
+                        help='where to load a model from')
     parser.add_argument('--save', type=str,  required=True,
                         help='path to save the final model')
     parser.add_argument('--cpu-save', type=str,
@@ -139,11 +127,8 @@ if __name__ == '__main__':
 
     print("building model...")
 
-    if args.load:
-        with open(args.load, 'rb') as f:
-            model = torch.load(f)
-    else:
-        model = model.RNNModel(args.model, len(vocab), args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
+    with open(args.load, 'rb') as f:
+        model = torch.load(f)
 
     if args.cuda:
         model.cuda()
