@@ -48,8 +48,11 @@ class Vocabulary:
 
 def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     d = {}
-    for line in f:
+    for i, line in enumerate(f):
         fields = line.split()
+        if len(fields) != 2:
+            raise ValueError("Wierd line {}: '{}'".format(i, line))
+             
         w = fields[0]
         i = int(fields[1])
         assert i >= 0
