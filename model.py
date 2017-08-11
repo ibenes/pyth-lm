@@ -70,7 +70,7 @@ class ResidualMemoryModel(nn.Module):
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
 
-        self._nb_layers = 2
+        self._nb_layers = nlayers
 
         self._cs = nn.ModuleList()
         self._ps = nn.ModuleList()
