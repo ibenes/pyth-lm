@@ -1,4 +1,6 @@
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Variable
 
 class RNNModel(nn.Module):
@@ -65,7 +67,13 @@ class ResidualMemoryModel(nn.Module):
         super(ResidualMemoryModel, self).__init__()
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
-        self.rnn = nn.LSTM(ninp, nhid, nlayers, dropout=dropout)
+
+        self.p0 = nn.Linear(nhid, nhid)
+        self.c0 = nn.Linear(nhid, nhid)
+
+        self.p1 = nn.Linear(nhid, nhid)
+        self.c1 = nn.Linear(nhid, nhid)
+
         self.decoder = nn.Linear(nhid, ntoken)
 
         if tie_weights:
@@ -85,13 +93,34 @@ class ResidualMemoryModel(nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, input, hidden):
+        nb_steps = input.size()[0]
+
         emb = self.drop(self.encoder(input))
-        output, hidden = self.rnn(emb, hidden)
+        top_hiddens = []
+
+        for step in range(nb_steps):
+            curr_hidden = []
+            curr_hidden.append(emb[step])
+            curr_hidden.append(F.relu(self.c0(curr_hidden[0]) + self.p0(hidden[0][0])))
+
+            top_hiddens.append(F.relu(self.c1(curr_hidden[1])) + self.p1(hidden[1][1]))
+
+            # add these hidden representation in the current timestep to the "history"
+            # while also cutting anything too old
+            hidden = list(hidden)
+            for i, old_hid in enumerate(hidden):
+                hidden[i] = (curr_hidden[i], ) + old_hid[:-1]
+
+
+        output = torch.stack(top_hiddens)
+
         output = self.drop(output)
         decoded = nn.LogSoftmax()(self.decoder(output.view(output.size(0)*output.size(1), output.size(2))))
         return decoded.view(output.size(0), output.size(1), decoded.size(1)), hidden
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
-        return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+        initial = ([Variable(weight.new(bsz, self.nhid).zero_()) for i in range(3)], # old embeddings
+                   [Variable(weight.new(bsz, self.nhid).zero_()) for i in range(2)]) # outputs of 2nd layer
+
+        return tuple([tuple(layer_initial) for layer_initial in initial])
