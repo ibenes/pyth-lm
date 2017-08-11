@@ -132,7 +132,11 @@ class ResidualMemoryModel(nn.Module):
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
-        initial = ([Variable(weight.new(bsz, self.nhid).zero_()) for i in range(1)], # old embeddings
-                   [Variable(weight.new(bsz, self.nhid).zero_()) for i in range(2)]) # outputs of 2nd layer
+
+        initial = []
+        for i in range(self._nb_layers):
+            hist_len = i + 1
+            layer_initial = [Variable(weight.new(bsz, self.nhid).zero_()) for i in range(hist_len)]
+            initial.append(layer_initial)
 
         return tuple([tuple(layer_initial) for layer_initial in initial])
