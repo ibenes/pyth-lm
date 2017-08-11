@@ -45,12 +45,14 @@ def train():
     total_loss = 0
     start_time = time.time()
     hidden = model.init_hidden(args.batch_size)
+
+    optim = torch.optim.SGD(model.parameters(), lr=20.00)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i)
         # Starting each batch, we detach the hidden state from how it was previously produced.
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
         hidden = repackage_hidden(hidden)
-        model.zero_grad()
+        optim.zero_grad()
 
         output, hidden = model(data, hidden)
         loss = criterion(output.view(-1, len(vocab)), targets)
@@ -58,8 +60,7 @@ def train():
 
         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
         torch.nn.utils.clip_grad_norm(model.parameters(), args.clip)
-        for p in model.parameters():
-            p.data.add_(-lr, p.grad.data)
+        optim.step()
 
         total_loss += loss.data
 
