@@ -46,7 +46,7 @@ def train():
     start_time = time.time()
     hidden = model.init_hidden(args.batch_size)
 
-    optim = torch.optim.SGD(model.parameters(), lr=20.00)
+    optim = torch.optim.Adam(model.parameters(), lr=args.lr)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i)
         # Starting each batch, we detach the hidden state from how it was previously produced.
