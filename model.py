@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+import IPython
+
 class RNNModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
@@ -68,11 +70,14 @@ class ResidualMemoryModel(nn.Module):
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
 
-        self.p0 = nn.Linear(nhid, nhid)
-        self.c0 = nn.Linear(nhid, nhid)
+        self._nb_layers = 2
 
-        self.p1 = nn.Linear(nhid, nhid)
-        self.c1 = nn.Linear(nhid, nhid)
+        self._cs = nn.ModuleList()
+        self._ps = nn.ModuleList()
+
+        for i in range(self._nb_layers):
+            self._cs.append(nn.Linear(nhid, nhid))
+            self._ps.append(nn.Linear(nhid, nhid))
 
         self.decoder = nn.Linear(nhid, ntoken)
 
@@ -101,9 +106,16 @@ class ResidualMemoryModel(nn.Module):
         for step in range(nb_steps):
             curr_hidden = []
             curr_hidden.append(emb[step])
-            curr_hidden.append(F.relu(self.c0(curr_hidden[0]) + self.p0(hidden[0][0])))
+            for i in range(self._nb_layers-1):
+                h_i = F.relu(
+                    self._cs[i](curr_hidden[i]) + self._ps[i](hidden[i][i])
+                )
+                curr_hidden.append(h_i)
 
-            top_hiddens.append(F.relu(self.c1(curr_hidden[1])) + self.p1(hidden[1][1]))
+            h_top = F.relu(
+                self._cs[-1](curr_hidden[-1])) + self._ps[-1](hidden[-1][self._nb_layers-1]
+            )
+            top_hiddens.append(h_top)
 
             # add these hidden representation in the current timestep to the "history"
             # while also cutting anything too old
