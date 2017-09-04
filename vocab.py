@@ -51,7 +51,7 @@ def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     for i, line in enumerate(f):
         fields = line.split()
         if len(fields) != 2:
-            raise ValueError("Wierd line {}: '{}'".format(i, line))
+            raise ValueError("Weird line {}: '{}'".format(i, line))
              
         w = fields[0]
         i = int(fields[1])
