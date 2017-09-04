@@ -106,16 +106,12 @@ class ResidualMemoryModel(nn.Module):
         for step in range(nb_steps):
             curr_hidden = []
             curr_hidden.append(emb[step])
-            for i in range(self._nb_layers-1):
-                h_i = F.relu(
-                    self._cs[i](curr_hidden[i]) + self._ps[i](hidden[i][i])
-                )
+            for i in range(self._nb_layers):
+                h_i = self._cs[i](curr_hidden[i]) + self._ps[i](hidden[i][i])
+                h_i = F.relu(h_i)
                 curr_hidden.append(h_i)
 
-            h_top = F.relu(
-                self._cs[-1](curr_hidden[-1])) + self._ps[-1](hidden[-1][self._nb_layers-1]
-            )
-            top_hiddens.append(h_top)
+            top_hiddens.append(curr_hidden[-1])
 
             # add these hidden representation in the current timestep to the "history"
             # while also cutting anything too old
