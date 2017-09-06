@@ -71,6 +71,7 @@ class ResidualMemoryModel(nn.Module):
         self.encoder = nn.Embedding(ntoken, ninp)
 
         self._nb_layers = nlayers
+        self._residals_f = 3
 
         self._cs = nn.ModuleList()
         self._ps = nn.ModuleList()
@@ -108,6 +109,8 @@ class ResidualMemoryModel(nn.Module):
             curr_hidden.append(emb[step])
             for i in range(self._nb_layers):
                 h_i = self._cs[i](curr_hidden[i]) + self._ps[i](hidden[i][i])
+                if i > 0 and i % self._residals_f == 0:
+                    h_i += curr_hidden[i-self._residals_f]
                 h_i = F.relu(h_i)
                 curr_hidden.append(h_i)
 
