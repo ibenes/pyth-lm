@@ -109,7 +109,7 @@ class ResidualMemoryModel(nn.Module):
             curr_hidden.append(emb[step])
             for i in range(self._nb_layers):
                 h_i = self._cs[i](curr_hidden[i]) + self._ps[i](hidden[i][i])
-                if i > 0 and i % self._residals_f == 0:
+                if i % self._residals_f == self._residals_f-1:
                     h_i += curr_hidden[i-self._residals_f]
                 h_i = F.relu(h_i)
                 curr_hidden.append(h_i)
