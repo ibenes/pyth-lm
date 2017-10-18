@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+import math
+
 import IPython
 
 class RNNModel(nn.Module):
@@ -74,11 +76,11 @@ class ResidualMemoryModel(nn.Module):
         self._residals_f = 3
 
         self._cs = nn.ModuleList()
-        self._ps = nn.ModuleList()
+        self._ps = nn.ParameterList()
 
         for i in range(self._nb_layers):
             self._cs.append(nn.Linear(nhid, nhid))
-            self._ps.append(nn.Linear(nhid, nhid))
+            self._ps.append(nn.Parameter(torch.FloatTensor(nhid, )))
 
         self.decoder = nn.Linear(nhid, ntoken)
 
@@ -92,12 +94,23 @@ class ResidualMemoryModel(nn.Module):
         self.nhid = nhid
         self.nlayers = nlayers
 
+        self._hs = [0] * self._nb_layers # for inspection purpose only
+
     def init_weights(self):
-        initrange = 0.1
+        # TODO this HAS to be changed :-)
+        initrange = math.sqrt(6.0/(10000+100))
         self.encoder.weight.data.uniform_(-initrange, initrange)
+
+        weight_range = math.sqrt(6.0/(100+100))
+        for i in range(self._nb_layers):
+            self._cs[i].weight.data.uniform_(-weight_range, weight_range)
+            self._cs[i].bias.data.uniform_(0,0.1)
+            self._ps[i].data.uniform_(0,0.1)
+
         self.decoder.bias.data.fill_(0)
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
+    # @profile
     def forward(self, input, hidden):
         nb_steps = input.size()[0]
 
@@ -108,10 +121,14 @@ class ResidualMemoryModel(nn.Module):
             curr_hidden = []
             curr_hidden.append(emb[step])
             for i in range(self._nb_layers):
-                h_i = self._cs[i](curr_hidden[i]) + self._ps[i](hidden[i][i])
+                curr_proj = self._cs[i](curr_hidden[i]) 
+                hist_h_projected = self._cs[i](hidden[i][i])
+                hist_proj = self._ps[i].expand_as(hist_h_projected) *  hist_h_projected
+                h_i = curr_proj + hist_proj
                 if i % self._residals_f == self._residals_f-1:
                     h_i += curr_hidden[i-self._residals_f]
                 h_i = F.relu(h_i)
+                self._hs[i] = h_i.data.cpu().numpy()
                 curr_hidden.append(h_i)
 
             top_hiddens.append(curr_hidden[-1])
@@ -128,6 +145,11 @@ class ResidualMemoryModel(nn.Module):
         output = self.drop(output)
         decoded = nn.LogSoftmax()(self.decoder(output.view(output.size(0)*output.size(1), output.size(2))))
         return decoded.view(output.size(0), output.size(1), decoded.size(1)), hidden
+
+
+    def grads(self):
+        return [self._cs[i].weight.grad.data for i in range(self.nlayers)]
+
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data

@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     print("reading vocabs...")
     with open(args.latt_vocab, 'r') as f:
-        latt_vocab = vocab.vocab_from_kaldi_wordlist(f, unk_word='<UNK>')
+        latt_vocab = vocab.vocab_from_kaldi_wordlist(f, unk_word='<unk>')
 
     with open(args.model_vocab, 'r') as f:
         model_vocab = vocab.vocab_from_kaldi_wordlist(f)

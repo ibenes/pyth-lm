@@ -9,6 +9,9 @@ import data
 import model
 import vocab
 
+import IPython
+import pickle
+
 
 def repackage_hidden(h):
     """Wraps hidden states in new Variables, to detach them from their history."""
@@ -39,14 +42,16 @@ def evaluate(data_source, eval_batch_size=10):
     return total_loss[0] / len(data_source)
 
 
-def train():
+# @profile
+def train(heavy_logging, epoch_no):
     # Turn on training mode which enables dropout.
     model.train()
     total_loss = 0
     start_time = time.time()
     hidden = model.init_hidden(args.batch_size)
 
-    optim = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.beta)
+    optim = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.beta)
+    # optim = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.beta)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i)
         # Starting each batch, we detach the hidden state from how it was previously produced.
@@ -64,6 +69,12 @@ def train():
 
         total_loss += loss.data
 
+        # if batch == args.log_interval:
+        #     print("storing grads...")
+        #     with open("grads-" + str(batch) + ".pkl", 'wb') as f:
+        #         pickle.dump(all_grads, f)
+        #     print("stored")
+
         if batch % args.log_interval == 0 and batch > 0:
             cur_loss = total_loss[0] / args.log_interval
             elapsed = time.time() - start_time
@@ -73,6 +84,13 @@ def train():
                 elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
+
+            if heavy_logging:
+                with open(heavy_logging + "/" + str(epoch_no) + "-" + str(batch) + ".grads.pkl", 'wb') as f:
+                    pickle.dump([c.weight.grad.data.cpu().numpy() for c in model._cs], f)
+                with open(heavy_logging + "/" + str(epoch_no) + "-" + str(batch) + ".hs.pkl", 'wb') as f:
+                    pickle.dump(model._hs, f)
+
 
 
 def format_data(path, vocab, eval_batch_size):
@@ -115,6 +133,8 @@ if __name__ == '__main__':
                         help='path to save the final model')
     parser.add_argument('--cpu-save', type=str,
                         help='path to save a CPU model')
+    parser.add_argument('--heavy-logging', type=str,
+                        help='path to a directory to store saved dumps of gradients and weights')
     args = parser.parse_args()
 
     # Set the random seed manually for reproducibility.
@@ -147,7 +167,8 @@ if __name__ == '__main__':
     try:
         for epoch in range(1, args.epochs+1):
             epoch_start_time = time.time()
-            train()
+
+            train(args.heavy_logging, epoch)
             val_loss = evaluate(val_data)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
@@ -158,10 +179,18 @@ if __name__ == '__main__':
             if not best_val_loss or val_loss < best_val_loss:
                 with open(args.save, 'wb') as f:
                     torch.save(model, f)
+                if args.cpu_save:
+                    model.cpu()
+                    with open(args.cpu_save, 'wb') as f:
+                        torch.save(model, f)
+                if args.cuda:
+                    model.cuda()
                 best_val_loss = val_loss
             else:
                 # Anneal the learning rate if no improvement has been seen in the validation dataset.
-                lr /= 4.0
+                # lr /= 4.0
+                pass
+
     except KeyboardInterrupt:
         print('-' * 89)
         print('Exiting from training early')
