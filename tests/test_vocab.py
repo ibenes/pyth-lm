@@ -64,3 +64,9 @@ class VocabularyTests(unittest.TestCase):
         vocabulary = vocab.Vocabulary('<unk>', 0) 
         vocabulary.add_word('<unk>')
         self.assertEqual(len(vocabulary), 1)
+
+    def test_backward_translation_consistent(self):
+        vocabulary = vocab.Vocabulary('<unk>', 0) 
+        vocabulary.add_word('hi')
+        self.assertEqual(vocabulary.i2w(vocabulary['hi']), 'hi')
+        
