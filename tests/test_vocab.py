@@ -1,6 +1,24 @@
 import unittest
 import vocab
 
+class IndexGeneratorTest(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_zero_start(self):
+        ig = vocab.IndexGenerator([])
+        self.assertEqual(ig.next(), 0)
+
+    def test_respects_assigned(self):
+        ig = vocab.IndexGenerator([0, 1])
+        self.assertEqual(ig.next(), 2)
+        
+    def test_respects_sparse_assigned(self):
+        ig = vocab.IndexGenerator([0, 2, 3])
+        nexts = [ig.next() for i in range(2)]
+        self.assertEqual(nexts, [1, 4])
+
+
 class VocabularyTests(unittest.TestCase):
     def setUp(self):
         self.example_line = "hello world of vocabularies !"
