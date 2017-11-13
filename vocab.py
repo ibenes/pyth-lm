@@ -24,27 +24,28 @@ class Vocabulary:
 
         words = text.split()
         for word in words:
-            if word not in self.w2i_: # unknown word
-                index = self.ind_gen_.next()
-                self.w2i_[word] = index
-                self.i2w_[index] = word
-            else:
-                pass # do not do anything for known words
+            self.add_word(word)
+
+    def add_word(self, word):
+        if word not in self.w2i_:
+            index = self.ind_gen_.next()
+            self.w2i_[word] = index
+            self.i2w_[index] = word
+        else:
+            pass # do not do anything for known words
+        
 
     def w2i(self, word):
         return self.w2i_.get(word, self.unk_index_)
 
+    def __getitem__(self, idx):
+        return self.w2i(idx)
+
     def i2w(self, index):
         return self.i2w_[index]
 
-    def size(self):
-        return len(self.w2i_)
-
     def __len__(self):
-        if self.ind_gen_:
-            return self.ind_gen_.next_
-        else:
-            return self.size_
+        return len(self.w2i_)
 
 def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     d = {}
