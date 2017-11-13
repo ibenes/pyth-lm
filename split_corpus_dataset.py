@@ -1,14 +1,18 @@
 import vocab
 
 class BatchBuilder():
-    def __init__(self, f, unroll):
+    def __init__(self, fs, max_batch_size, unroll):
         """
             Args:
-                f (file): File opened for reading. Each line is a path to a split.
+                fs ([file]): List of opened files to construct batches from
         """
         pass
         # Construct TokenizedSplit()s for all files in the file list
         # Construct as many IvecAppenders as needed
+
+    def __iter__(self):
+        pass
+        # 
 
     def batches(self):
         pass 
@@ -29,22 +33,19 @@ class BatchBuilder():
 
 
 class CheatingIvecAppender():
-    def __init__(self, tokens):
+    def __init__(self, tokens, ivec_eetor):
         """
             Args:
                 tokens (TokenizedSplit): Source of tokens, represents single 'document'.
         """
-        pass
-        # Learn how many words there are in the sequence
-        # Get an i-vector for the whole token sequence
+        self.tokens = tokens
+        self.ivec_eetor = ivec_eetor
+        self._ivec = ivec_eetor(self.tokens._tokens)
 
 
-    def chunk(self):
-        pass
-        # Get next unroll from the TokenizedSplit
-        # On failure report it 
-        # Attach i-vector
-        # Return words, as LongTensor(), and the ivector
+    def __iter__(self):
+        for x, t in self.tokens:
+            yield (x, t, self._ivec)
 
 
 class TokenizedSplit():
