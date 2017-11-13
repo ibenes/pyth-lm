@@ -1,35 +1,40 @@
 import vocab
+import torch
 
 class BatchBuilder():
-    def __init__(self, fs, max_batch_size, unroll):
+    def __init__(self, tokens_streams, ivec_app_ctor, max_batch_size):
         """
             Args:
                 fs ([file]): List of opened files to construct batches from
         """
         pass
-        # Construct TokenizedSplit()s for all files in the file list
-        # Construct as many IvecAppenders as needed
+        self.streams = [iter(ivec_app_ctor(ts)) for ts in tokens_streams]
+
+        if max_batch_size <= 0:
+            raise ValueError("BatchBuilder must be constructed"
+                "with a positive batch size, (got {})".format(max_batch_size)
+            )
+        self._max_bsz = max_batch_size
 
     def __iter__(self):
-        pass
-        # 
+        while True:
+            batch = []
+            for s in self.streams:
+                if len(batch) == self._max_bsz:
+                    break
+                try:
+                    batch.append(next(s))
+                except StopIteration:
+                    pass
 
-    def batches(self):
-        pass 
-        # Ask every IvecAppenders for a chunk
-        # If any fails:
-        #       Delete it
-        #       Construct new
-        #       Get a chunk from it
-        # Stack words
-        # Stack i-vectors
-        # Return both as a batch
-
-    def _new_chunker(self):
-        pass
-        # Pick a non-used TokenizedSplit
-        # Build a Chunker around
-
+            if len(batch) == 0:
+                raise StopIteration
+            else:
+                yield (
+                    torch.LongTensor([x for x,t,i in batch]).t(),
+                    torch.LongTensor([t for x,t,i in batch]).t(),
+                    torch.stack([torch.from_numpy(i) for x,t,i in batch])
+                )
 
 
 class CheatingIvecAppender():
