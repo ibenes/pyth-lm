@@ -252,6 +252,19 @@ class BatchBuilderTest(unittest.TestCase):
 
         self.batch_equal(batch, expectation)
 
+    def test_reproducibility(self):
+        test_seqs = [self.three_word_seqs[0], self.two_word_seqs[0], self.three_word_seqs[1]]
+        tss = self.get_tokenized_splits(test_seqs, unroll=1)
+        tokens = self.get_tokens(test_seqs)
+
+        batches = split_corpus_dataset.BatchBuilder(tss, self.ivec_app_ctor, 2)
+        epoch1 = list(iter(batches))
+        epoch2 = list(iter(batches))
+
+        self.assertEqual(len(epoch1), len(epoch2))
+        for b_e1, b_e2 in zip(epoch1, epoch2):
+            self.batch_equal(b_e1, b_e2)
+
 
 class CheatingIvecAppenderTests(unittest.TestCase):
     def setUp(self):

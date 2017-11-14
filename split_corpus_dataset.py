@@ -2,13 +2,14 @@ import vocab
 import torch
 
 class BatchBuilder():
-    def __init__(self, tokens_streams, ivec_app_ctor, max_batch_size):
+    def __init__(self, token_streams, ivec_app_ctor, max_batch_size):
         """
             Args:
                 fs ([file]): List of opened files to construct batches from
         """
         pass
-        self.streams = [iter(ivec_app_ctor(ts)) for ts in tokens_streams]
+        self._token_streams = token_streams
+        self._ivec_app_ctor = ivec_app_ctor
 
         if max_batch_size <= 0:
             raise ValueError("BatchBuilder must be constructed"
@@ -17,9 +18,10 @@ class BatchBuilder():
         self._max_bsz = max_batch_size
 
     def __iter__(self):
+        streams = [iter(self._ivec_app_ctor(ts)) for ts in self._token_streams]
         while True:
             batch = []
-            for s in self.streams:
+            for s in streams:
                 if len(batch) == self._max_bsz:
                     break
                 try:
