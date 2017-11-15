@@ -75,4 +75,4 @@ class TokenizedSplit():
             yield(self._tokens[lend:rend], self._tokens[lend+1:rend+1])
 
     def __len__(self):
-        return len(self._tokens) - self._unroll_length
+        return max(len(self._tokens) - self._unroll_length, 0)

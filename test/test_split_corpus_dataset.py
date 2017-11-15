@@ -383,6 +383,11 @@ class TokenizedSplitTests(unittest.TestCase):
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         self.assertEqual(len(ts), len(self.test_words_short)-1)
 
+    def test_len_no_output(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 5)
+        self.assertEqual(len(ts), 0)
+
     def test_two_word_seq(self):
         data_source = getStream(self.test_words_short)
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 2)
