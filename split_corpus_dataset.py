@@ -7,7 +7,6 @@ class BatchBuilder():
             Args:
                 fs ([file]): List of opened files to construct batches from
         """
-        pass
         self._token_streams = token_streams
         self._ivec_app_ctor = ivec_app_ctor
 
@@ -19,13 +18,29 @@ class BatchBuilder():
 
     def __iter__(self):
         streams = [iter(self._ivec_app_ctor(ts)) for ts in self._token_streams]
+        active_streams = streams[:self._max_bsz]
+        reserve_streams = streams[self._max_bsz:]
         while True:
             batch = []
-            for s in streams:
-                if len(batch) == self._max_bsz:
-                    break
+            streams_continued = []
+            for i, s in enumerate(active_streams):
                 try:
                     batch.append(next(s))
+                    streams_continued.append(i)
+                except StopIteration:
+                    pass
+
+            active_streams = [active_streams[i] for i in streams_continued]
+
+            while len(reserve_streams) > 0:
+                if len(batch) == self._max_bsz:
+                    break
+
+                stream = reserve_streams[0]
+                del reserve_streams[0]
+                try:
+                    batch.append(next(stream))
+                    active_streams.append(stream)
                 except StopIteration:
                     pass
 
@@ -35,7 +50,8 @@ class BatchBuilder():
                 yield (
                     torch.LongTensor([x for x,t,i in batch]).t(),
                     torch.LongTensor([t for x,t,i in batch]).t(),
-                    torch.stack([torch.from_numpy(i) for x,t,i in batch])
+                    torch.stack([torch.from_numpy(i) for x,t,i in batch]),
+                    torch.LongTensor(streams_continued)
                 )
 
 
