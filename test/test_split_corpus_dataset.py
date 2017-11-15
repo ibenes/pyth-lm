@@ -21,6 +21,8 @@ class BatchBuilderTest(unittest.TestCase):
             print(expected)
             print(actual)
 
+        self.assertEqual(len(actual), len(expected))
+
         for act_comp, exp_comp in zip(actual, expected):
             self.assertTrue(torch.equal(act_comp, exp_comp))
 
