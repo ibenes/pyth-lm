@@ -20,6 +20,7 @@ class BatchBuilder():
         streams = [iter(self._ivec_app_ctor(ts)) for ts in self._token_streams]
         active_streams = streams[:self._max_bsz]
         reserve_streams = streams[self._max_bsz:]
+
         while True:
             batch = []
             streams_continued = []
@@ -32,6 +33,7 @@ class BatchBuilder():
 
             active_streams = [active_streams[i] for i in streams_continued]
 
+            # refill the batch (of active streams)
             while len(reserve_streams) > 0:
                 if len(batch) == self._max_bsz:
                     break
@@ -46,13 +48,13 @@ class BatchBuilder():
 
             if len(batch) == 0:
                 raise StopIteration
-            else:
-                yield (
-                    torch.LongTensor([x for x,t,i in batch]).t(),
-                    torch.LongTensor([t for x,t,i in batch]).t(),
-                    torch.stack([torch.from_numpy(i) for x,t,i in batch]),
-                    torch.LongTensor(streams_continued)
-                )
+
+            yield (
+                torch.LongTensor([x for x,t,i in batch]).t(),
+                torch.LongTensor([t for x,t,i in batch]).t(),
+                torch.stack([torch.from_numpy(i) for x,t,i in batch]),
+                torch.LongTensor(streams_continued)
+            )
 
 
 class CheatingIvecAppender():
