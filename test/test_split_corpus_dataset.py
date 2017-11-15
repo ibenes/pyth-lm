@@ -8,18 +8,6 @@ import torch
 
 class BatchBuilderTest(unittest.TestCase):
     def setUp(self):
-        self.two_word_seqs = [
-            "a b".split(),
-            "b b".split(),
-            "b c".split(),
-            "c a".split()
-        ]
-
-        self.three_word_seqs = [
-            "a b c".split(),
-            "b b b".split(),
-        ]
-
         self.vocab = {
             "a": 0,
             "b": 1,
@@ -46,7 +34,10 @@ class BatchBuilderTest(unittest.TestCase):
         return tss
 
     def test_even_batch_single_sample1(self):
-        test_seqs = self.two_word_seqs[0:2]
+        test_seqs = [
+            "a b".split(),
+            "b b".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -63,7 +54,10 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_even_batch_single_sample2(self):
-        test_seqs = self.two_word_seqs[1:3]
+        test_seqs = [
+            "b b".split(),
+            "b c".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -80,7 +74,10 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_even_batch_single_sample_unroll2(self):
-        test_seqs = self.three_word_seqs
+        test_seqs = [
+            "a b c".split(),
+            "b b b".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=2)
         tokens = self.get_tokens(test_seqs)
 
@@ -97,7 +94,10 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_even_batch_multi_sample(self):
-        test_seqs = self.three_word_seqs
+        test_seqs = [
+            "a b c".split(),
+            "b b b".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -123,7 +123,10 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_even_batch_multi_sample_len(self):
-        test_seqs = self.three_word_seqs
+        test_seqs = [
+            "a b c".split(),
+            "b b b".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -133,7 +136,10 @@ class BatchBuilderTest(unittest.TestCase):
         self.assertEqual(len(list(batches)), 2)
 
     def test_uneven_batch(self):
-        test_seqs = [self.two_word_seqs[0], self.three_word_seqs[1]]
+        test_seqs = [
+            "a b".split(), 
+            "b b b".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -159,14 +165,20 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_batcher_requires_nonzero_bsz(self):
-        test_seqs = self.two_word_seqs[1:3]
+        test_seqs = [
+            "b b".split(), 
+            "b c".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
         self.assertRaises(ValueError, split_corpus_dataset.BatchBuilder, tss, self.ivec_app_ctor, 0)
 
     def test_even_lenght_small_batch(self):
-        test_seqs = self.two_word_seqs[1:3]
+        test_seqs = [
+            "b b".split(), 
+            "b c".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -192,7 +204,12 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_even_lenght_small_batch_2(self):
-        test_seqs = self.two_word_seqs[0:4]
+        test_seqs = [
+            "a b".split(), 
+            "b b".split(), 
+            "b c".split(),
+            "c a".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -218,7 +235,11 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_uneven_length_small_batch(self):
-        test_seqs = [self.three_word_seqs[0], self.two_word_seqs[0], self.three_word_seqs[1]]
+        test_seqs = [
+            "a b c".split(),
+            "a b".split(),
+            "b b b".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
@@ -253,7 +274,11 @@ class BatchBuilderTest(unittest.TestCase):
         self.batch_equal(batch, expectation)
 
     def test_reproducibility(self):
-        test_seqs = [self.three_word_seqs[0], self.two_word_seqs[0], self.three_word_seqs[1]]
+        test_seqs = [
+            "a b c".split(),
+            "a b".split(),
+            "b b b".split(),
+        ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
