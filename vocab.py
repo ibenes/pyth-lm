@@ -59,7 +59,10 @@ def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
         assert i >= 0
         d[w] = i
 
-    vocab = Vocabulary(unk_word, d[unk_word]) 
+    try:
+        vocab = Vocabulary(unk_word, d[unk_word]) 
+    except KeyError:
+        raise ValueError("Unk word {} not present in the kaldi wordlist!".format(unk_word))
     vocab.ind_gen_ = None
     vocab.w2i_ = d
     for w in d:

@@ -1,5 +1,6 @@
 import unittest
 import vocab
+from io import StringIO
 
 class IndexGeneratorTest(unittest.TestCase):
     def setUp(self):
@@ -69,4 +70,55 @@ class VocabularyTests(unittest.TestCase):
         vocabulary = vocab.Vocabulary('<unk>', 0) 
         vocabulary.add_word('hi')
         self.assertEqual(vocabulary.i2w(vocabulary['hi']), 'hi')
-        
+    
+
+class VocabFromKaldiTests(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_simple(self):
+        kaldi_vocab = StringIO( """ <unk> 0
+                                    a 1
+                                    b 2 """) 
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertEqual(len(vocabulary), 3)
+        self.assertEqual(vocabulary['<unk>'], 0)
+        self.assertEqual(vocabulary['a'], 1)
+        self.assertEqual(vocabulary['b'], 2)
+        self.assertEqual(vocabulary['nonexistent'], 0)
+
+    def test_nonzero_unk(self):
+        kaldi_vocab = StringIO( """ a 0
+                                    <unk> 1
+                                    b 2 """) 
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertEqual(len(vocabulary), 3)
+        self.assertEqual(vocabulary['<unk>'], 1)
+        self.assertEqual(vocabulary['a'], 0)
+        self.assertEqual(vocabulary['b'], 2)
+        self.assertEqual(vocabulary['nonexistent'], 1)
+
+    def test_unk_not_present(self):
+        kaldi_vocab = StringIO( """ a 0
+                                    b 1 """) 
+        with self.assertRaises(ValueError):
+            vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+
+    def test_non_continuous(self):
+        kaldi_vocab = StringIO( """ <unk> 0
+                                    a 3
+                                    b 7 """) 
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertEqual(len(vocabulary), 3)
+        self.assertEqual(vocabulary['<unk>'], 0)
+        self.assertEqual(vocabulary['a'], 3)
+        self.assertEqual(vocabulary['b'], 7)
+        self.assertEqual(vocabulary['nonexistent'], 0)
+
+
+    def test_malformed_line(self):
+        kaldi_vocab = StringIO( """ a 0 junk
+                                    <unk> 1
+                                    b 2 """) 
+        with self.assertRaises(ValueError):
+            vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
