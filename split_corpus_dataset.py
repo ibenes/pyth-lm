@@ -18,8 +18,8 @@ class BatchBuilder():
 
     def __iter__(self):
         streams = [iter(self._ivec_app_ctor(ts)) for ts in self._token_streams]
-        active_streams = streams[:self._max_bsz]
-        reserve_streams = streams[self._max_bsz:]
+        active_streams = []
+        reserve_streams = streams
 
         while True:
             batch = []
