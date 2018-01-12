@@ -9,8 +9,8 @@ class Dummy_lstm():
 
     def init_hidden(self, batch_size):
         return ( 
-            torch.FloatTensor([[0.0] * self._nb_hidden] * batch_size),
-            torch.FloatTensor([[0.0] * self._nb_hidden] * batch_size)
+            torch.FloatTensor([[[0.0] * self._nb_hidden] * batch_size]),
+            torch.FloatTensor([[[0.0] * self._nb_hidden] * batch_size])
         )
 
 class HiddenStateReorganizerTests(unittest.TestCase):
@@ -25,8 +25,8 @@ class HiddenStateReorganizerTests(unittest.TestCase):
 
     def test_passing(self):
         last_h = (
-            torch.FloatTensor([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]),
-            torch.FloatTensor([[1, 1], [2, 2], [3, 3]]),
+            torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]),
+            torch.FloatTensor([[[1, 1], [2, 2], [3, 3]]]),
         )
 
         mask = torch.LongTensor([0, 1, 2])
@@ -37,8 +37,8 @@ class HiddenStateReorganizerTests(unittest.TestCase):
 
     def test_shrinks(self):
         last_h = (
-            torch.FloatTensor([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]),
-            torch.FloatTensor([[1, 1], [2, 2], [3, 3]]),
+            torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]),
+            torch.FloatTensor([[[1, 1], [2, 2], [3, 3]]]),
         )
 
         mask = torch.LongTensor([0, 2])
@@ -46,15 +46,15 @@ class HiddenStateReorganizerTests(unittest.TestCase):
 
         new_h = self.reorganizer(last_h, mask, bsz)
         expected = (
-            torch.FloatTensor([[0.1, 0.1], [0.3, 0.3]]),
-            torch.FloatTensor([[1, 1], [3, 3]]),
+            torch.FloatTensor([[[0.1, 0.1], [0.3, 0.3]]]),
+            torch.FloatTensor([[[1, 1], [3, 3]]]),
         )
         self.hidden_equal(new_h, expected)
 
     def test_requires_bsz_greater_than_mask(self):
         last_h = (
-            torch.FloatTensor([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]),
-            torch.FloatTensor([[1, 1], [2, 2], [3, 3]]),
+            torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]),
+            torch.FloatTensor([[[1, 1], [2, 2], [3, 3]]]),
         )
 
         mask = torch.LongTensor([0, 1, 2])
@@ -64,8 +64,8 @@ class HiddenStateReorganizerTests(unittest.TestCase):
 
     def test_on_empty_mask_zeros(self):
         last_h = (
-            torch.FloatTensor([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]),
-            torch.FloatTensor([[1, 1], [2, 2], [3, 3]]),
+            torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]),
+            torch.FloatTensor([[[1, 1], [2, 2], [3, 3]]]),
         )
 
         mask = torch.LongTensor([])
@@ -73,15 +73,15 @@ class HiddenStateReorganizerTests(unittest.TestCase):
 
         new_h = self.reorganizer(last_h, mask, bsz)
         expected = (
-            torch.FloatTensor([[0.0, 0.0], [0.0, 0.0]]),
-            torch.FloatTensor([[0.0, 0.0], [0.0, 0.0]]),
+            torch.FloatTensor([[[0.0, 0.0], [0.0, 0.0]]]),
+            torch.FloatTensor([[[0.0, 0.0], [0.0, 0.0]]]),
         )
         self.hidden_equal(new_h, expected)
 
     def test_completion_by_zeros(self):
         last_h = (
-            torch.FloatTensor([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]),
-            torch.FloatTensor([[1, 1], [2, 2], [3, 3]]),
+            torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]),
+            torch.FloatTensor([[[1, 1], [2, 2], [3, 3]]]),
         )
 
         mask = torch.LongTensor([1])
@@ -89,7 +89,23 @@ class HiddenStateReorganizerTests(unittest.TestCase):
 
         new_h = self.reorganizer(last_h, mask, bsz)
         expected = (
-            torch.FloatTensor([[0.2, 0.2], [0.0, 0.0]]),
-            torch.FloatTensor([[2.0, 2.0], [0.0, 0.0]]),
+            torch.FloatTensor([[[0.2, 0.2], [0.0, 0.0]]]),
+            torch.FloatTensor([[[2.0, 2.0], [0.0, 0.0]]]),
+        )
+        self.hidden_equal(new_h, expected)
+
+    def test_bug_regression_single_addition(self):
+        last_h = (
+            torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]),
+            torch.FloatTensor([[[1, 1], [2, 2], [3, 3]]]),
+        )
+
+        mask = torch.LongTensor([1,2])
+        bsz = 3
+
+        new_h = self.reorganizer(last_h, mask, bsz)
+        expected = (
+            torch.FloatTensor([[[0.2, 0.2], [0.3, 0.3], [0.0, 0.0]]]),
+            torch.FloatTensor([[[2.0, 2.0], [3.0, 3.0], [0.0, 0.0]]]),
         )
         self.hidden_equal(new_h, expected)
