@@ -309,7 +309,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation, True)
+        self.batch_equal(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -337,6 +337,79 @@ class BatchBuilderTest(unittest.TestCase):
         self.assertEqual(len(epoch1), len(epoch2))
         for b_e1, b_e2 in zip(epoch1, epoch2):
             self.batch_equal(b_e1, b_e2)
+
+    def test_no_discard_even_lenght_small_batch(self):
+        test_seqs = [
+            "b b".split(), 
+            "b c".split(),
+        ]
+        tss = self.get_tokenized_splits(test_seqs, unroll=1)
+        tokens = self.get_tokens(test_seqs)
+
+        batches = split_corpus_dataset.BatchBuilder(tss, self.ivec_app_ctor, 1, discard_h=False)
+        batches = iter(batches)
+
+        batch = next(batches)
+        expectation = (
+            torch.LongTensor([[1]]),
+            torch.LongTensor([[1]]),
+            torch.stack([torch.from_numpy(self.ivec_eetor(tokens[0]))]),
+            torch.LongTensor([]),
+        )
+
+        self.batch_equal(batch, expectation)
+
+        batch = next(batches)
+        expectation = (
+            torch.LongTensor([[1]]),
+            torch.LongTensor([[2]]),
+            torch.stack([torch.from_numpy(self.ivec_eetor(tokens[1]))]),
+            torch.LongTensor([0]),
+        )
+
+        self.batch_equal(batch, expectation)
+
+    def test_no_discard_uneven_length_small_batch(self):
+        test_seqs = [
+            "a b c".split(),
+            "a b".split(),
+            "b b b".split(),
+        ]
+        tss = self.get_tokenized_splits(test_seqs, unroll=1)
+        tokens = self.get_tokens(test_seqs)
+
+        batches = split_corpus_dataset.BatchBuilder(tss, self.ivec_app_ctor, 2, discard_h=False)
+        batches = iter(batches)
+
+        batch = next(batches)
+        expectation = (
+            torch.LongTensor([[0, 0]]),
+            torch.LongTensor([[1, 1]]),
+            torch.stack([torch.from_numpy(self.ivec_eetor(toks)) for toks in [tokens[0], tokens[1]]]),
+            torch.LongTensor([]),
+        )
+
+        self.batch_equal(batch, expectation)
+
+        batch = next(batches)
+        expectation = (
+            torch.LongTensor([[1, 1]]),
+            torch.LongTensor([[2, 1]]),
+            torch.stack([torch.from_numpy(self.ivec_eetor(toks)) for toks in [tokens[0], tokens[2]]]),
+            torch.LongTensor([0,1]),
+        )
+
+        self.batch_equal(batch, expectation)
+
+        batch = next(batches)
+        expectation = (
+            torch.LongTensor([[1]]),
+            torch.LongTensor([[1]]),
+            torch.stack([torch.from_numpy(self.ivec_eetor(toks)) for toks in [tokens[2]]]),
+            torch.LongTensor([1]),
+        )
+
+        self.batch_equal(batch, expectation)
 
 
 class CheatingIvecAppenderTests(unittest.TestCase):

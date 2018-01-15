@@ -2,7 +2,7 @@ import vocab
 import torch
 
 class BatchBuilder():
-    def __init__(self, token_streams, ivec_app_ctor, max_batch_size):
+    def __init__(self, token_streams, ivec_app_ctor, max_batch_size, discard_h=True):
         """
             Args:
                 fs ([file]): List of opened files to construct batches from
@@ -15,6 +15,7 @@ class BatchBuilder():
                 "with a positive batch size, (got {})".format(max_batch_size)
             )
         self._max_bsz = max_batch_size
+        self._discard_h = discard_h
 
     def __iter__(self):
         streams = [iter(self._ivec_app_ctor(ts)) for ts in self._token_streams]
@@ -24,12 +25,14 @@ class BatchBuilder():
         while True:
             batch = []
             streams_continued = []
+            streams_ended = []
             for i, s in enumerate(active_streams):
                 try:
                     batch.append(next(s))
                     streams_continued.append(i)
                 except StopIteration:
-                    pass
+                    streams_ended.append(i)
+
 
             active_streams = [active_streams[i] for i in streams_continued]
 
@@ -49,11 +52,16 @@ class BatchBuilder():
             if len(batch) == 0:
                 raise StopIteration
 
+            if self._discard_h:
+                hs_passed_on = streams_continued
+            else:
+                hs_passed_on = (streams_continued + streams_ended)[:len(batch)]
+
             yield (
                 torch.LongTensor([x for x,t,i in batch]).t(),
                 torch.LongTensor([t for x,t,i in batch]).t(),
                 torch.stack([torch.from_numpy(i) for x,t,i in batch]),
-                torch.LongTensor(streams_continued)
+                torch.LongTensor(hs_passed_on)
             )
 
 
