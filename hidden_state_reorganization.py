@@ -20,7 +20,7 @@ class HiddenStateReorganizer():
                 reorg = [torch.cat([r_h, a_h], dim=1) for r_h, a_h in zip(reorg, additional_h)]
             return tuple(reorg)
 
-        elif isinstance(last_h, torch._TensorBase):
+        elif isinstance(last_h, torch._TensorBase) or (last_h, torch.autograd.Variable):
             reorg = last_h[:,mask]
             if mask.size(0) < batch_size:
                 nb_needed_h0 = batch_size - mask.size(0)
@@ -29,5 +29,8 @@ class HiddenStateReorganizer():
             return reorg
 
         else:
-            raise TypeError("last_h has unsupported type {}, only tuples and tensors are accepted",
+            raise TypeError(
+                "last_h has unsupported type {}, "
+                "only tuples, Tensors, and Variables are accepted".format(
                         last_h.__class__)
+            )

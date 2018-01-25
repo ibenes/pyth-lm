@@ -2,6 +2,7 @@ import unittest
 from hidden_state_reorganization import HiddenStateReorganizer
 
 import torch
+from torch.autograd import Variable
 
 class Dummy_lstm():
     def __init__(self, nb_hidden):
@@ -138,6 +139,15 @@ class HiddenStateReorganizerTests_SRN(unittest.TestCase):
 
     def test_passing(self):
         last_h = torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]])
+
+        mask = torch.LongTensor([0, 1, 2])
+        bsz = 3
+
+        new_h = self.reorganizer(last_h, mask, bsz)
+        self.hidden_equal(new_h, last_h)
+
+    def test_passing_variables(self):
+        last_h = Variable(torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]))
 
         mask = torch.LongTensor([0, 1, 2])
         bsz = 3
