@@ -79,7 +79,10 @@ def train(logger, data):
 
     optim = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.beta)
     for batch, (X, targets, ivecs, mask) in enumerate(data):
-        if X.size(0) < args.min_batch_size:
+        if X.size(1) < args.min_batch_size:
+            sys.stderr.write( "Cutting epoch short,"
+                              " as there are only {} sequences in minibatch"
+                              "\n".format(X.size(1)))
             break
 
         hidden = hs_reorganizer(hidden, mask, X.size(1))
