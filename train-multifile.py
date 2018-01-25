@@ -1,6 +1,8 @@
 import argparse
 import time
 import math
+import random
+
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -77,6 +79,9 @@ def train(logger, data):
 
     optim = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.beta)
     for batch, (X, targets, ivecs, mask) in enumerate(data):
+        if X.size(0) < args.min_batch_size:
+            break
+
         hidden = hs_reorganizer(hidden, mask, X.size(1))
         hidden = repackage_hidden(hidden)
 
@@ -100,7 +105,10 @@ def filelist_to_tokenized_splits(filelist_filename, vocab, bptt):
             with open(filename, 'r') as f:
                 tss.append(split_corpus_dataset.TokenizedSplit(f, vocab, bptt)) 
 
-        return tss
+    if args.shuffle_articles:
+        random.shuffle(tss)
+
+    return tss
 
  
 if __name__ == '__main__':
@@ -127,6 +135,12 @@ if __name__ == '__main__':
                         help='random seed')
     parser.add_argument('--cuda', action='store_true',
                         help='use CUDA')
+    parser.add_argument('--concat-articles', action='store_true',
+                        help='pass hidden states over article boundaries')
+    parser.add_argument('--shuffle-articles', action='store_true',
+                        help='shuffle the order of articles (at the start of the training)')
+    parser.add_argument('--min-batch-size', type=int, default=1,
+                        help='stop, once batch is smaller than given size')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='report interval')
     parser.add_argument('--load', type=str, required=True,
@@ -134,7 +148,9 @@ if __name__ == '__main__':
     parser.add_argument('--save', type=str,  required=True,
                         help='path to save the final model')
     args = parser.parse_args()
+    print(args)
 
+    random.seed(args.seed)
     torch.manual_seed(args.seed)
     if args.cuda and torch.cuda.is_available():
         torch.cuda.manual_seed(args.seed)
@@ -152,19 +168,22 @@ if __name__ == '__main__':
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
-    train_data = split_corpus_dataset.BatchBuilder(train_tss, ivec_app_creator, args.batch_size)
+    train_data = split_corpus_dataset.BatchBuilder(train_tss, ivec_app_creator, args.batch_size,
+                                                   discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
-    valid_data = split_corpus_dataset.BatchBuilder(valid_tss, ivec_app_creator, args.batch_size)
+    valid_data = split_corpus_dataset.BatchBuilder(valid_tss, ivec_app_creator, args.batch_size,
+                                                   discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
     print("\ttesting...")
     test_tss = filelist_to_tokenized_splits(args.test_list, vocab, args.bptt)
-    test_data = split_corpus_dataset.BatchBuilder(test_tss, ivec_app_creator, args.batch_size)
+    test_data = split_corpus_dataset.BatchBuilder(test_tss, ivec_app_creator, args.batch_size,
+                                                   discard_h=not args.concat_articles)
     if args.cuda:
         test_data = CudaStream(test_data)
 
@@ -183,8 +202,8 @@ if __name__ == '__main__':
             train(logger, train_data)
             val_loss = evaluate(valid_data)
             print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-                    'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(),
+            print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
+                    'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
                                                val_loss, math.exp(val_loss)))
             print('-' * 89)
             # Save the model if the validation loss is the best we've seen so far.
@@ -193,6 +212,7 @@ if __name__ == '__main__':
                     lm.save(f)
                 best_val_loss = val_loss
             else:
+                lr /= 2.0
                 pass
 
     except KeyboardInterrupt:
