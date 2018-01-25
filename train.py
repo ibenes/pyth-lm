@@ -4,13 +4,16 @@ import math
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import sys
 
 import data
 import model
+import lstm_model
 import vocab
+import language_model
 
-import IPython
 import pickle
+from loggers import ProgressLogger
 
 
 def repackage_hidden(h):
@@ -21,76 +24,43 @@ def repackage_hidden(h):
         return tuple(repackage_hidden(v) for v in h)
 
 
-def get_batch(source, i, evaluation=False):
-    seq_len = min(args.bptt, len(source) - 1 - i)
-    data = Variable(source[i:i+seq_len], volatile=evaluation)
-    target = Variable(source[i+1:i+1+seq_len].view(-1))
-    return data, target
-
-
 def evaluate(data_source, eval_batch_size=10):
+    if args.cuda:
+        model.cuda()
     # Turn on evaluation mode which disables dropout.
     model.eval()
     total_loss = 0
+    total_timesteps = 0
     hidden = model.init_hidden(eval_batch_size)
-    for i in range(0, data_source.size(0) - 1, args.bptt):
-        data, targets = get_batch(data_source, i, evaluation=True)
-        output, hidden = model(data, hidden)
+    for X, targets in data_source:
+        output, hidden = model(X, hidden)
         output_flat = output.view(-1, len(vocab))
-        total_loss += len(data) * criterion(output_flat, targets).data
+        total_loss += len(X) * criterion(output_flat, targets).data
+        total_timesteps += len(X)
         hidden = repackage_hidden(hidden)
-    return total_loss[0] / len(data_source)
+    return total_loss[0] / total_timesteps
 
 
-# @profile
-def train(heavy_logging, epoch_no):
-    # Turn on training mode which enables dropout.
+def train(logger):
+    if args.cuda:
+        model.cuda()
     model.train()
-    total_loss = 0
-    start_time = time.time()
     hidden = model.init_hidden(args.batch_size)
 
     optim = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.beta)
-    # optim = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.beta)
-    for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
-        data, targets = get_batch(train_data, i)
-        # Starting each batch, we detach the hidden state from how it was previously produced.
-        # If we didn't, the model would try backpropagating all the way to start of the dataset.
+    for batch, (X, targets) in enumerate(train_gen.iterable_data()):
         hidden = repackage_hidden(hidden)
-        optim.zero_grad()
 
-        output, hidden = model(data, hidden)
+        output, hidden = model(X, hidden)
         loss = criterion(output.view(-1, len(vocab)), targets)
-        loss.backward()
 
-        # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
+        optim.zero_grad()
+        loss.backward()
         torch.nn.utils.clip_grad_norm(model.parameters(), args.clip)
+
         optim.step()
 
-        total_loss += loss.data
-
-        # if batch == args.log_interval:
-        #     print("storing grads...")
-        #     with open("grads-" + str(batch) + ".pkl", 'wb') as f:
-        #         pickle.dump(all_grads, f)
-        #     print("stored")
-
-        if batch % args.log_interval == 0 and batch > 0:
-            cur_loss = total_loss[0] / args.log_interval
-            elapsed = time.time() - start_time
-            print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:.3e} | ms/batch {:5.2f} | '
-                    'loss {:5.2f} | ppl {:8.2f}'.format(
-                epoch, batch, len(train_data) // args.bptt, lr,
-                elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss)))
-            total_loss = 0
-            start_time = time.time()
-
-            if heavy_logging:
-                with open(heavy_logging + "/" + str(epoch_no) + "-" + str(batch) + ".grads.pkl", 'wb') as f:
-                    pickle.dump([c.weight.grad.data.cpu().numpy() for c in model._cs], f)
-                with open(heavy_logging + "/" + str(epoch_no) + "-" + str(batch) + ".hs.pkl", 'wb') as f:
-                    pickle.dump(model._hs, f)
-
+        logger.log(loss.data)
 
 
 def format_data(path, vocab, eval_batch_size):
@@ -100,13 +70,12 @@ def format_data(path, vocab, eval_batch_size):
     test = data.batchify(corpus.test, eval_batch_size, args.cuda)
 
     return train, valid, test
+
  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--data', type=str, required=True,
                         help='location of the data corpus')
-    parser.add_argument('--wordlist', type=str, required=True,
-                        help='word -> int map; Kaldi style "words.txt"')
     parser.add_argument('--lr', type=float, default=20,
                         help='initial learning rate')
     parser.add_argument('--beta', type=float, default=0,
@@ -131,30 +100,28 @@ if __name__ == '__main__':
                         help='where to load a model from')
     parser.add_argument('--save', type=str,  required=True,
                         help='path to save the final model')
-    parser.add_argument('--cpu-save', type=str,
-                        help='path to save a CPU model')
-    parser.add_argument('--heavy-logging', type=str,
-                        help='path to a directory to store saved dumps of gradients and weights')
     args = parser.parse_args()
+    print(args)
 
     # Set the random seed manually for reproducibility.
     torch.manual_seed(args.seed)
     if args.cuda and torch.cuda.is_available():
         torch.cuda.manual_seed(args.seed)
 
-    print("preparing data...")
-    with open(args.wordlist, 'r') as f:
-        vocab = vocab.vocab_from_kaldi_wordlist(f)
-
-    train_data, val_data, test_data = format_data(args.data, vocab, eval_batch_size=10)
-
-    print("building model...")
-
+    print("loading model...")
     with open(args.load, 'rb') as f:
-        model = torch.load(f)
+        lm = language_model.load(f)
+    vocab = lm.vocab
+    model = lm.model
+    print(model)
 
-    if args.cuda:
-        model.cuda()
+
+    print("preparing data...")
+    train_data, val_data, test_data = format_data(args.data, vocab, eval_batch_size=10)
+    train_gen = data.DataIteratorBuilder(train_data, args.bptt)
+    val_gen = data.DataIteratorBuilder(val_data, args.bptt)
+    test_gen = data.DataIteratorBuilder(test_data, args.bptt)
+
 
     criterion = nn.NLLLoss()
 
@@ -168,27 +135,22 @@ if __name__ == '__main__':
         for epoch in range(1, args.epochs+1):
             epoch_start_time = time.time()
 
-            train(args.heavy_logging, epoch)
-            val_loss = evaluate(val_data)
+            logger = ProgressLogger(epoch, args.log_interval, lr, len(train_data)//args.bptt)
+            train(logger)
+            val_loss = evaluate(val_gen.iterable_data())
             print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-                    'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
+            print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
+                    'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
                                                val_loss, math.exp(val_loss)))
             print('-' * 89)
             # Save the model if the validation loss is the best we've seen so far.
             if not best_val_loss or val_loss < best_val_loss:
                 with open(args.save, 'wb') as f:
-                    torch.save(model, f)
-                if args.cpu_save:
-                    model.cpu()
-                    with open(args.cpu_save, 'wb') as f:
-                        torch.save(model, f)
-                if args.cuda:
-                    model.cuda()
+                    lm.save(f)
                 best_val_loss = val_loss
             else:
                 # Anneal the learning rate if no improvement has been seen in the validation dataset.
-                # lr /= 4.0
+                lr /= 2.0
                 pass
 
     except KeyboardInterrupt:
@@ -197,16 +159,13 @@ if __name__ == '__main__':
 
     # Load the best saved model.
     with open(args.save, 'rb') as f:
-        model = torch.load(f)
+        lm = language_model.load(f)
+    vocab = lm.vocab
+    model = lm.model
 
     # Run on test data.
-    test_loss = evaluate(test_data)
+    test_loss = evaluate(test_gen.iterable_data())
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
         test_loss, math.exp(test_loss)))
     print('=' * 89)
-
-    if args.cpu_save:
-        model.cpu()
-        with open(args.cpu_save, 'wb') as f:
-            torch.save(model, f)
