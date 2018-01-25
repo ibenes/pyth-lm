@@ -1,5 +1,7 @@
 import os
 import torch
+from torch.autograd import Variable
+import torch.utils.data
 
 class Dictionary(object):
     def __init__(self):
@@ -14,6 +16,28 @@ class Dictionary(object):
 
     def __len__(self):
         return len(self.idx2word)
+
+
+class DataIteratorBuilder():
+    def __init__(self, data, seq_len):
+        self._data = data
+        self._seq_len = seq_len
+
+    def iterable_data(self):
+        """
+            The data is expected to be arranged as [time][batch], 
+            slices along the time dimension will be provided
+        """
+
+        for i in range(0, self._data.size(0) -1, self._seq_len):
+            yield self._get_batch(self._data, i)
+
+    def _get_batch(self, source, i, evaluation=False):
+        act_seq_len = min(self._seq_len, len(source) - 1 - i)
+        data = Variable(source[i:i+act_seq_len], volatile=evaluation)
+        target = Variable(source[i+1:i+1+act_seq_len].view(-1))
+        return data, target
+
 
 def batchify(data, bsz, cuda):
     # Work out how cleanly we can divide the dataset into bsz parts.
@@ -68,31 +92,22 @@ class Corpus(object):
 
         return ids
 
-def _batchify(data, batch_size, randomize):
-    sent_ids = range(len(data))
 
-    if randomize:
-        random.shuffle(sent_ids)
-
-    batches = []
-    i = 0
-    while i + batch_size < len(data):
-        batch_ids = sent_ids[i:i+batch_size]
-        batches.append(batch_ids)
-        i += batch_size
-
-
-
-class LineOrientedCorpus:
-    def __init__(self, path, vocab, randomize=True):
+class LineOrientedCorpus(torch.utils.data.Dataset):
+    def __init__(self, path, vocab, cuda):
         self._vocab = vocab
-        self._randomize = randomize
-        self._train_ids = self.tokenize(os.path.join(path, 'train.txt'))
-        self._valid_ids = self.tokenize(os.path.join(path, 'valid.txt'))
-        self._test_ids = self.tokenize(os.path.join(path, 'test.txt'))
+        self._cuda = cuda
+
+        self.tokenize(path)
+
+    def __len__(self):
+        return len(self._sentences)
+
+    def __getitem__(self, i):
+        return self._sentences[i][:-1], self._sentences[i][1:]
 
     def tokenize(self, path):
-        sentences = []
+        self._sentences = []
 
         with open(path, 'r') as f:
             for line in f:
@@ -101,13 +116,34 @@ class LineOrientedCorpus:
                 for i, w in enumerate(words):
                     ids[i] = self._vocab.w2i(w)
 
-                sentences.append(ids)
+                if self._cuda:
+                    ids.cuda()
 
-    def batched_train(self, batch_size, randomize=True):
-        pass
+                self._sentences.append(ids)
 
-    def batched_valid(self, batch_size=10, randomize=False):
-        pass
+def pad_to_length(x, length):
+    assert x.size(0) <= length 
 
-    def batched_test(self, batch_size=10, randomize=False):
-        pass
+    if x.size(0) < length:
+        data_size = x.size()[1:]
+        app_length = length - x.size(0)
+        appendix = torch.zeros((app_length, )).long()
+        return torch.cat([x, appendix])
+    else:
+        return x
+
+def packing_collate(batch):
+    batch_x, batch_t = zip(*batch)
+
+    lengts = torch.LongTensor([len(x) for x in batch_x])
+    max_len = lengts.max()
+
+    padded_xs = torch.stack([pad_to_length(x, max_len) for x in batch_x])
+    padded_ts = torch.stack([pad_to_length(t, max_len) for t in batch_t])
+
+    lengts, perm_idx = lengts.sort(0, descending=True)
+    padded_xs = padded_xs[perm_idx]
+    padded_ts = padded_ts[perm_idx]
+
+    # transpose to get TxB order
+    return  Variable(padded_xs.t()), Variable(padded_ts.t()), lengts
