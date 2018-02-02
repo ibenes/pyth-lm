@@ -16,6 +16,7 @@ import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
 from runtime_utils import CudaStream, repackage_hidden, filelist_to_tokenized_splits
+from runtime_multifile import evaluate
 
 import pickle
 from loggers import InfinityLogger
@@ -26,32 +27,6 @@ import IPython
 
 def variablilize_targets(targets):
     return Variable(targets.contiguous().view(-1))
-
-def evaluate(data_source):
-    model.eval()
-
-    total_loss = 0.0
-    total_timesteps = 0
-
-    hs_reorganizer = HiddenStateReorganizer(model)
-    hidden = model.init_hidden(args.batch_size)
-
-    if args.cuda:
-        model.cuda()
-        hidden = tuple(h.cuda() for h in hidden)
-
-    for X, targets, ivecs, mask in data_source:
-        hidden = hs_reorganizer(hidden, mask, X.size(1))
-        hidden = repackage_hidden(hidden)
-
-        output, hidden = model(Variable(X), hidden, Variable(ivecs))
-        output_flat = output.view(-1, len(vocab))
-        curr_loss = len(X) * criterion(output_flat, variablilize_targets(targets)).data
-        total_loss += curr_loss
-        total_timesteps += len(X)
-
-    return total_loss[0] / total_timesteps
-
 
 
 def train(logger, data):
@@ -203,7 +178,7 @@ if __name__ == '__main__':
 
             logger = InfinityLogger(epoch, args.log_interval, lr)
             train(logger, train_data)
-            val_loss = evaluate(valid_data)
+            val_loss = evaluate(lm, valid_data, args.batch_size, args.cuda)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                     'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
@@ -229,7 +204,7 @@ if __name__ == '__main__':
     model = lm.model
 
     # Run on test data.
-    test_loss = evaluate(test_data)
+    test_loss = evaluate(lm, test_data, args.batch_size, args.cuda)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
         test_loss, math.exp(test_loss)))
