@@ -15,7 +15,7 @@ import language_model
 import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
-from runtime_utils import CudaStream, repackage_hidden
+from runtime_utils import CudaStream, repackage_hidden, filelist_to_tokenized_splits
 
 import pickle
 from loggers import InfinityLogger
@@ -105,20 +105,6 @@ def train(logger, data):
         )
 
 
-def filelist_to_tokenized_splits(filelist_filename, vocab, bptt):
-    with open(filelist_filename) as filelist: 
-        files = filelist.read().split()
-        tss = []
-        for filename in files:
-            with open(filename, 'r') as f:
-                tss.append(split_corpus_dataset.TokenizedSplit(f, vocab, bptt)) 
-
-    if args.shuffle_articles:
-        random.shuffle(tss)
-
-    return tss
-
- 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--train-list', type=str, required=True,

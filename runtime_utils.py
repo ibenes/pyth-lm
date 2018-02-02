@@ -16,3 +16,15 @@ def repackage_hidden(h):
         return Variable(h.data)
     else:
         return tuple(repackage_hidden(v) for v in h)
+
+
+def filelist_to_tokenized_splits(filelist_filename, vocab, bptt):
+    with open(filelist_filename) as filelist: 
+        files = filelist.read().split()
+        tss = []
+        for filename in files:
+            with open(filename, 'r') as f:
+                tss.append(split_corpus_dataset.TokenizedSplit(f, vocab, bptt)) 
+
+        return tss
+
