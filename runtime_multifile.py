@@ -9,7 +9,7 @@ from runtime_utils import repackage_hidden
 
 from hidden_state_reorganization import HiddenStateReorganizer
 
-def evaluate(lm, data_source, batch_size, cuda):
+def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
     model = lm.model
 
     model.eval()
@@ -29,7 +29,10 @@ def evaluate(lm, data_source, batch_size, cuda):
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
-        output, hidden = model(Variable(X), hidden, Variable(ivecs))
+        if use_ivecs:
+            output, hidden = model(Variable(X), hidden, Variable(ivecs))
+        else:
+            output, hidden = model(Variable(X), hidden)
         output_flat = output.view(-1, len(lm.vocab))
         curr_loss = len(X) * criterion(output_flat, variablilize_targets(targets)).data
         total_loss += curr_loss

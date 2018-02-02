@@ -12,38 +12,9 @@ import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
 from runtime_utils import CudaStream, repackage_hidden, filelist_to_tokenized_splits
+from runtime_multifile import evaluate
 
 import numpy as np
-
-
-def variablilize_targets(targets):
-    return Variable(targets.contiguous().view(-1))
-
-
-def evaluate(data_source):
-    model.eval()
-
-    total_loss = 0.0
-    total_timesteps = 0
-
-    hs_reorganizer = HiddenStateReorganizer(model)
-    hidden = model.init_hidden(args.batch_size)
-
-    if args.cuda:
-        model.cuda()
-        hidden = tuple(h.cuda() for h in hidden)
-
-    for X, targets, ivecs, mask in data_source:
-        hidden = hs_reorganizer(hidden, mask, X.size(1))
-        hidden = repackage_hidden(hidden)
-
-        output, hidden = model(Variable(X), hidden)
-        output_flat = output.view(-1, len(vocab))
-        curr_loss = len(X) * criterion(output_flat, variablilize_targets(targets)).data
-        total_loss += curr_loss
-        total_timesteps += len(X)
-
-    return total_loss[0] / total_timesteps
 
 
 if __name__ == '__main__':
@@ -88,5 +59,5 @@ if __name__ == '__main__':
 
     criterion = nn.NLLLoss()
 
-    loss = evaluate(data)
+    loss = evaluate(lm, data, args.batch_size, args.cuda, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
