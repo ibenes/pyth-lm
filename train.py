@@ -12,16 +12,10 @@ import lstm_model
 import vocab
 import language_model
 
+from runtime_utils import repackage_hidden
+
 import pickle
 from loggers import ProgressLogger
-
-
-def repackage_hidden(h):
-    """Wraps hidden states in new Variables, to detach them from their history."""
-    if type(h) == Variable:
-        return Variable(h.data)
-    else:
-        return tuple(repackage_hidden(v) for v in h)
 
 
 def evaluate(data_source, eval_batch_size=10):

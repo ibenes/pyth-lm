@@ -9,7 +9,7 @@ from torch.autograd import Variable
 import sys
 
 import model
-import lstm_model
+import smm_lstm_models
 import vocab
 import language_model
 import split_corpus_dataset
@@ -26,7 +26,6 @@ import IPython
 
 def variablilize_targets(targets):
     return Variable(targets.contiguous().view(-1))
-
 
 def evaluate(data_source):
     model.eval()
@@ -45,7 +44,7 @@ def evaluate(data_source):
         hidden = hs_reorganizer(hidden, mask, X.size(1))
         hidden = repackage_hidden(hidden)
 
-        output, hidden = model(Variable(X), hidden)
+        output, hidden = model(Variable(X), hidden, Variable(ivecs))
         output_flat = output.view(-1, len(vocab))
         curr_loss = len(X) * criterion(output_flat, variablilize_targets(targets)).data
         total_loss += curr_loss
@@ -85,7 +84,7 @@ def train(logger, data):
         hidden = hs_reorganizer(hidden, mask, X.size(1))
         hidden = repackage_hidden(hidden)
 
-        output, hidden = model(Variable(X), hidden)
+        output, hidden = model(Variable(X), hidden, Variable(ivecs))
         loss = criterion(output.view(-1, len(vocab)), variablilize_targets(targets))
 
         optim.zero_grad()
@@ -103,7 +102,6 @@ def train(logger, data):
             "\n".format(nb_skipped_updates, nb_skipped_words, nb_skipped_seqs/nb_skipped_updates,
                         nb_skipped_words/(args.batch_size*args.bptt))
         )
-
 
 def filelist_to_tokenized_splits(filelist_filename, vocab, bptt):
     with open(filelist_filename) as filelist: 
@@ -173,7 +171,7 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    ivec_eetor = lambda x: np.asarray([sum(x) % 1337])
+    ivec_eetor = lambda x: np.asarray([float(sum(x) % 1337 - 668)/1337]*2, dtype=np.float32)
     ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_eetor)
 
     print("\ttraining...")
