@@ -16,67 +16,13 @@ import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
 from runtime_utils import CudaStream, repackage_hidden, filelist_to_tokenized_splits
-from runtime_multifile import evaluate
+from runtime_multifile import evaluate, train
 
 import pickle
 from loggers import InfinityLogger
 import numpy as np
 
 import IPython
-
-
-def variablilize_targets(targets):
-    return Variable(targets.contiguous().view(-1))
-
-
-def train(logger, data):
-    model.train()
-    hs_reorganizer = HiddenStateReorganizer(model)
-    hidden = model.init_hidden(args.batch_size)
-
-    if args.cuda:
-        model.cuda()
-        hidden = tuple(h.cuda() for h in hidden)
-
-    optim = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.beta)
-    
-    skipping = False
-    nb_skipped_updates = 0
-    nb_skipped_words = 0
-    nb_skipped_seqs = 0 # accumulates size of skipped batches
-
-
-    for batch, (X, targets, ivecs, mask) in enumerate(data):
-        if X.size(1) < args.min_batch_size:
-            skipping = True
-
-        if skipping:
-            nb_skipped_updates += 1
-            nb_skipped_words += X.size(0) * X.size(1)
-            nb_skipped_seqs += X.size(1)
-            continue
-
-        hidden = hs_reorganizer(hidden, mask, X.size(1))
-        hidden = repackage_hidden(hidden)
-
-        output, hidden = model(Variable(X), hidden)
-        loss = criterion(output.view(-1, len(vocab)), variablilize_targets(targets))
-
-        optim.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(), args.clip)
-
-        optim.step()
-
-        logger.log(loss.data)
-
-    if skipping:
-        sys.stderr.write(
-            "WARNING: due to skipping, a total of {} updates was skipped,"
-            " containing {} words. Avg batch size {}. Equal to {} full batches"
-            "\n".format(nb_skipped_updates, nb_skipped_words, nb_skipped_seqs/nb_skipped_updates,
-                        nb_skipped_words/(args.batch_size*args.bptt))
-        )
 
 
 if __name__ == '__main__':
@@ -157,8 +103,6 @@ if __name__ == '__main__':
     if args.cuda:
         test_data = CudaStream(test_data)
 
-    criterion = nn.NLLLoss()
-
     print("training...")
     lr = args.lr
     best_val_loss = None
@@ -177,7 +121,14 @@ if __name__ == '__main__':
             epoch_start_time = time.time()
 
             logger = InfinityLogger(epoch, args.log_interval, lr)
-            train(logger, train_data)
+            optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
+            train(
+                lm, train_data, optim, logger, 
+                batch_size=args.batch_size, bptt=args.bptt,
+                min_batch_size=args.min_batch_size, 
+                clip=args.clip, cuda=args.cuda,
+                use_ivecs=False
+            )
             val_loss = evaluate(lm, valid_data, args.batch_size, args.cuda, use_ivecs=False)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '

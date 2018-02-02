@@ -41,7 +41,7 @@ def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
     return total_loss[0] / total_timesteps
 
 
-def train(lm, data, optim, logger, batch_size, bptt, min_batch_size, clip, cuda):
+def train(lm, data, optim, logger, batch_size, bptt, min_batch_size, clip, cuda, use_ivecs=True):
     model = lm.model
     model.train()
     hs_reorganizer = HiddenStateReorganizer(model)
@@ -70,7 +70,10 @@ def train(lm, data, optim, logger, batch_size, bptt, min_batch_size, clip, cuda)
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
-        output, hidden = model(Variable(X), hidden, Variable(ivecs))
+        if use_ivecs:
+            output, hidden = model(Variable(X), hidden, Variable(ivecs))
+        else:
+            output, hidden = model(Variable(X), hidden)
         loss = criterion(output.view(-1, len(lm.vocab)), variablilize_targets(targets))
 
         optim.zero_grad()
