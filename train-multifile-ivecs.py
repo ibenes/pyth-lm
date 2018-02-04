@@ -4,10 +4,7 @@ import math
 import random
 
 import torch
-import torch.nn as nn
-import sys
 
-import model
 import smm_lstm_models
 import vocab
 import language_model
@@ -17,11 +14,8 @@ from hidden_state_reorganization import HiddenStateReorganizer
 from runtime_utils import CudaStream, repackage_hidden, filelist_to_tokenized_splits
 from runtime_multifile import train, evaluate
 
-import pickle
 from loggers import InfinityLogger
 import numpy as np
-
-import IPython
 
 
 if __name__ == '__main__':
