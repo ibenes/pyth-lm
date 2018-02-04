@@ -5,7 +5,6 @@ import random
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import sys
 
 import model
