@@ -12,7 +12,7 @@ import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
-from runtime_multifile import train, evaluate
+from runtime_multifile import train, evaluate, BatchFilter
 
 from loggers import InfinityLogger
 import numpy as np
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
-    init_seeds(args.seed, args.cuda):
+    init_seeds(args.seed, args.cuda)
 
     print("loading model...")
     with open(args.load, 'rb') as f:
@@ -112,13 +112,17 @@ if __name__ == '__main__':
             epoch_start_time = time.time()
 
             logger = InfinityLogger(epoch, args.log_interval, lr)
+            train_data_filtered = BatchFilter(
+                train_data, args.batch_size, args.bptt, args.min_batch_size
+            )
             optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
             train(
-                lm, train_data, optim, logger, 
-                batch_size=args.batch_size, bptt=args.bptt,
-                min_batch_size=args.min_batch_size, 
+                lm, train_data_filtered, optim, logger, 
+                batch_size=args.batch_size, 
                 clip=args.clip, cuda=args.cuda
             )
+            train_data_filtered.report()
+
             val_loss = evaluate(lm, valid_data, args.batch_size, args.cuda)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '

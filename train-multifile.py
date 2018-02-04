@@ -13,7 +13,7 @@ import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
-from runtime_multifile import evaluate, train
+from runtime_multifile import evaluate, train, BatchFilter
 
 from loggers import InfinityLogger
 import numpy as np
@@ -112,14 +112,20 @@ if __name__ == '__main__':
             epoch_start_time = time.time()
 
             logger = InfinityLogger(epoch, args.log_interval, lr)
+            train_data_filtered = BatchFilter(
+                train_data, args.batch_size, args.bptt, args.min_batch_size
+            )
             optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
+
             train(
-                lm, train_data, optim, logger, 
-                batch_size=args.batch_size, bptt=args.bptt,
-                min_batch_size=args.min_batch_size, 
+                lm, train_data_filtered, optim, logger, 
+                batch_size=args.batch_size,
                 clip=args.clip, cuda=args.cuda,
                 use_ivecs=False
             )
+            train_data_filtered.report()
+
+
             val_loss = evaluate(lm, valid_data, args.batch_size, args.cuda, use_ivecs=False)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '

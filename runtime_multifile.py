@@ -76,7 +76,7 @@ class BatchFilter:
             )
 
 
-def train(lm, data, optim, logger, batch_size, bptt, min_batch_size, clip, cuda, use_ivecs=True):
+def train(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True):
     model = lm.model
     model.train()
     hs_reorganizer = HiddenStateReorganizer(model)
@@ -86,9 +86,8 @@ def train(lm, data, optim, logger, batch_size, bptt, min_batch_size, clip, cuda,
         model.cuda()
         hidden = tuple(h.cuda() for h in hidden)
 
-    data_filter = BatchFilter(data, batch_size, bptt, min_batch_size)
 
-    for batch, (X, targets, ivecs, mask) in enumerate(data_filter):
+    for batch, (X, targets, ivecs, mask) in enumerate(data):
         hidden = hs_reorganizer(hidden, mask, X.size(1))
         hidden = repackage_hidden(hidden)
 
@@ -105,8 +104,6 @@ def train(lm, data, optim, logger, batch_size, bptt, min_batch_size, clip, cuda,
 
         optim.step()
         logger.log(loss.data)
-
-    data_filter.report()
 
 
 def variablilize_targets(targets):
