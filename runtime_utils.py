@@ -1,3 +1,6 @@
+import random
+import torch
+
 from torch.autograd import Variable
 import split_corpus_dataset
 
@@ -30,3 +33,9 @@ def filelist_to_tokenized_splits(filelist_filename, vocab, bptt):
 
         return tss
 
+
+def init_seeds(seed, cuda):
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if cuda and torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)

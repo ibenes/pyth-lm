@@ -9,7 +9,7 @@ import language_model
 import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
-from runtime_utils import CudaStream, filelist_to_tokenized_splits
+from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
 from runtime_multifile import evaluate
 
 import numpy as np
@@ -34,9 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
-    torch.manual_seed(args.seed)
-    if args.cuda and torch.cuda.is_available():
-        torch.cuda.manual_seed(args.seed)
+    init_seeds(args.seed, args.cuda)
 
     print("loading model...")
     with open(args.load, 'rb') as f:

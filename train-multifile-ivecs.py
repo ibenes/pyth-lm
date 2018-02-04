@@ -11,7 +11,7 @@ import language_model
 import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
 
-from runtime_utils import CudaStream, repackage_hidden, filelist_to_tokenized_splits
+from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import train, evaluate
 
 from loggers import InfinityLogger
@@ -59,10 +59,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
-    random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    if args.cuda and torch.cuda.is_available():
-        torch.cuda.manual_seed(args.seed)
+    init_seeds(args.seed, args.cuda):
 
     print("loading model...")
     with open(args.load, 'rb') as f:
