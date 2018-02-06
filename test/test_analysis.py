@@ -34,6 +34,16 @@ class CategoricalEntropyTests(unittest.TestCase):
 
         self.assertTrue(torch.equal(H_x_hat, H_x))
 
+    def test_uniform_2_dists(self):
+        p_x = torch.FloatTensor([[0.5, 0.5], [0.0, 1.0]])
+        H_x = torch.FloatTensor([1.0, 0.0])
+
+        H_x_hat = categorical_entropy(p_x) 
+        print(H_x_hat)
+
+        self.assertTrue(torch.equal(H_x_hat, H_x))
+
+
 
 class CategoricalCrossEntropyTests(unittest.TestCase):
     def setUp(self):
