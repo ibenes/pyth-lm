@@ -126,3 +126,13 @@ class CategoricalKLDTests(unittest.TestCase):
         kld = categorical_kld(p_x, q_x)
 
         self.assertEqual(kld[0], float("inf"))
+
+    def test_2_dists(self):
+        p_x = torch.FloatTensor([[0.5, 0.5], [0.5, 0.5]])
+        q_x = torch.FloatTensor([[0.0, 1.0], [0.5, 0.5]])
+
+        kld = categorical_kld(p_x, q_x)
+
+        self.assertEqual(kld[0], float("inf"))
+        self.assertEqual(kld[1], 0.0)
+        
