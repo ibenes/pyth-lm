@@ -2,6 +2,8 @@ import unittest
 import vocab
 from io import StringIO
 
+from collections import Mapping
+
 class IndexGeneratorTest(unittest.TestCase):
     def setUp(self):
         pass
@@ -27,6 +29,10 @@ class VocabularyTests(unittest.TestCase):
     def test_getitem(self):
         vocabulary = vocab.Vocabulary('<unk>', 0) 
         self.assertEqual(vocabulary['<unk>'], 0)
+
+    def test_is_mapping(self):
+        vocabulary = vocab.Vocabulary('<unk>', 0) 
+        self.assertTrue(isinstance(vocabulary, Mapping))
 
     def test_getitem_for_unknown(self):
         vocabulary = vocab.Vocabulary('<unk>', 0) 

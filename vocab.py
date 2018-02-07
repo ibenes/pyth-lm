@@ -1,3 +1,4 @@
+from collections import Mapping
 class IndexGenerator():
     def __init__(self, assigned):
         self.next_ = 0
@@ -11,7 +12,7 @@ class IndexGenerator():
         self.next_ += 1
         return retval
 
-class Vocabulary:
+class Vocabulary(Mapping):
     def __init__(self, unk_word, unk_index):
         self.w2i_ = {unk_word:unk_index}
         self.i2w_ = {unk_index:unk_word}
@@ -46,6 +47,9 @@ class Vocabulary:
 
     def __len__(self):
         return len(self.w2i_)
+
+    def __iter__(self):
+        return iter(self.w2i_)
 
 def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     d = {}
