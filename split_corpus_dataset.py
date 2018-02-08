@@ -73,8 +73,8 @@ class CheatingIvecAppender():
         """
         # TODO tokens to ivec_eetor translation
         self.tokens = tokens
-        self.ivec_eetor = ivec_eetor
-        self._ivec = ivec_eetor(self.tokens._tokens)
+        all_words = " ".join(self.tokens.input_words())
+        self._ivec = ivec_eetor(all_words)
 
 
     def __iter__(self):
