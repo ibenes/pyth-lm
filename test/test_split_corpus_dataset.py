@@ -514,7 +514,7 @@ class TokenizedSplitTests(unittest.TestCase):
         data_source = getStream(self.test_words_short)
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         tokens_strings = list(iter(ts))
-        expectation = ([0], [1])
+        expectation = ([0], [1]) # input, target
         self.assertEqual(tokens_strings[0], expectation)
 
     def test_single_word_seq(self):
@@ -547,3 +547,15 @@ class TokenizedSplitTests(unittest.TestCase):
         tokens_strings = list(iter(ts))
         expectation = [([0, 1], [1, 2]), ([2, 0], [0, 0])]
         self.assertEqual(tokens_strings, expectation)
+
+    def test_single_word_retrieval(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
+        words = list(ts.input_words())
+        self.assertEqual(words, ['a', 'b', 'c']) # we expect the input words
+
+    def test_two_word_retrieval(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 2)
+        words = list(ts.input_words())
+        self.assertEqual(words, ['a b']) # we expect the input words

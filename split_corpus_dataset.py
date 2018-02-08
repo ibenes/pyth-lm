@@ -71,6 +71,7 @@ class CheatingIvecAppender():
             Args:
                 tokens (TokenizedSplit): Source of tokens, represents single 'document'.
         """
+        # TODO tokens to ivec_eetor translation
         self.tokens = tokens
         self.ivec_eetor = ivec_eetor
         self._ivec = ivec_eetor(self.tokens._tokens)
@@ -90,8 +91,8 @@ class TokenizedSplit():
         """
         pass
         sentence = f.read()
-        words = sentence.split()
-        self._tokens = [vocab[w] for w in words]
+        self._words = sentence.split()
+        self._tokens = [vocab[w] for w in self._words]
         self._unroll_length = unroll_length
 
     def __iter__(self):
@@ -102,3 +103,9 @@ class TokenizedSplit():
 
     def __len__(self):
         return max(len(self._tokens) - self._unroll_length, 0)
+
+    def input_words(self):
+        for i in range(0, len(self), self._unroll_length):
+            lend = i
+            rend = i + self._unroll_length
+            yield " ".join(self._words[lend:rend])
