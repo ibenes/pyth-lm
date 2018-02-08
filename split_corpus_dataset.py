@@ -95,17 +95,24 @@ class TokenizedSplit():
         self._tokens = [vocab[w] for w in self._words]
         self._unroll_length = unroll_length
 
+
     def __iter__(self):
-        for i in range(0, len(self), self._unroll_length):
-            lend = i
-            rend = i + self._unroll_length
+        for lend, rend in self._ranges():
             yield(self._tokens[lend:rend], self._tokens[lend+1:rend+1])
+
 
     def __len__(self):
         return max(len(self._tokens) - self._unroll_length, 0)
 
+
     def input_words(self):
+        for lend, rend in self._ranges():
+            yield " ".join(self._words[lend:rend])
+
+
+    def _ranges(self):
         for i in range(0, len(self), self._unroll_length):
             lend = i
             rend = i + self._unroll_length
-            yield " ".join(self._words[lend:rend])
+            yield lend, rend
+            
