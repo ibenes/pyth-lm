@@ -60,7 +60,7 @@ class BatchBuilder():
             yield (
                 torch.LongTensor([x for x,t,i in batch]).t(),
                 torch.LongTensor([t for x,t,i in batch]).t(),
-                torch.stack([torch.from_numpy(i) for x,t,i in batch]),
+                torch.stack([i for x,t,i in batch]),
                 torch.LongTensor(hs_passed_on)
             )
 
@@ -71,7 +71,6 @@ class CheatingIvecAppender():
             Args:
                 tokens (TokenizedSplit): Source of tokens, represents single 'document'.
         """
-        # TODO tokens to ivec_eetor translation
         self.tokens = tokens
         all_words = " ".join(self.tokens.input_words())
         self._ivec = ivec_eetor(all_words)

@@ -13,7 +13,7 @@ class BatchBuilderTest(unittest.TestCase):
             "b": 1,
             "c": 2
         }
-        self.ivec_eetor = lambda x: np.asarray([hash(x) % 1337])
+        self.ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337], dtype=np.float32))
         self.ivec_app_ctor = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, self.ivec_eetor)
 
     def batch_equal(self, actual, expected, print_them=False):
@@ -50,7 +50,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 1]]),
             torch.LongTensor([[1, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs]),
             torch.LongTensor([]),
         )
 
@@ -71,7 +71,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1, 1]]),
             torch.LongTensor([[1, 2]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs]),
             torch.LongTensor([]),
         )
 
@@ -92,7 +92,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 1], [1, 1]]),
             torch.LongTensor([[1, 1], [2, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs]),
             torch.LongTensor([]),
         )
 
@@ -113,7 +113,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 1]]),
             torch.LongTensor([[1, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs]),
             torch.LongTensor([]),
         )
 
@@ -123,7 +123,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1, 1]]),
             torch.LongTensor([[2, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs]),
             torch.LongTensor([0, 1]),
         )
 
@@ -157,7 +157,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 1]]),
             torch.LongTensor([[1, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs]),
             torch.LongTensor([]),
         )
 
@@ -167,7 +167,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1]]),
             torch.LongTensor([[1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs[1:]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs[1:]]),
             torch.LongTensor([1])
         )
 
@@ -198,7 +198,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1]]),
             torch.LongTensor([[1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(test_seqs[0][:-1])))]),
+            torch.stack([self.ivec_eetor(" ".join(test_seqs[0][:-1]))]),
             torch.LongTensor([]),
         )
 
@@ -208,7 +208,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1]]),
             torch.LongTensor([[2]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(test_seqs[1][:-1])))]),
+            torch.stack([self.ivec_eetor(" ".join(test_seqs[1][:-1]))]),
             torch.LongTensor([]),
         )
 
@@ -231,7 +231,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 1]]),
             torch.LongTensor([[1, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs[0:2]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs[0:2]]),
             torch.LongTensor([]),
         )
 
@@ -241,7 +241,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1, 2]]),
             torch.LongTensor([[2, 0]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in test_seqs[2:4]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in test_seqs[2:4]]),
             torch.LongTensor([]),
         )
 
@@ -263,7 +263,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 0]]),
             torch.LongTensor([[1, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[0], test_seqs[1]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[0], test_seqs[1]]]),
             torch.LongTensor([]),
         )
 
@@ -273,7 +273,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1, 1]]),
             torch.LongTensor([[2, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[0], test_seqs[2]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[0], test_seqs[2]]]),
             torch.LongTensor([0]),
         )
 
@@ -283,7 +283,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1]]),
             torch.LongTensor([[1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[2]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[2]]]),
             torch.LongTensor([1]),
         )
 
@@ -305,7 +305,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 1]]),
             torch.LongTensor([[1, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[0], test_seqs[2]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[0], test_seqs[2]]]),
             torch.LongTensor([]),
         )
 
@@ -315,7 +315,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1, 1]]),
             torch.LongTensor([[2, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[0], test_seqs[2]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[0], test_seqs[2]]]),
             torch.LongTensor([0,1]),
         )
 
@@ -353,7 +353,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1]]),
             torch.LongTensor([[1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(test_seqs[0][:-1])))]),
+            torch.stack([self.ivec_eetor(" ".join(test_seqs[0][:-1]))]),
             torch.LongTensor([]),
         )
 
@@ -363,7 +363,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1]]),
             torch.LongTensor([[2]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(test_seqs[1][:-1])))]),
+            torch.stack([self.ivec_eetor(" ".join(test_seqs[1][:-1]))]),
             torch.LongTensor([0]),
         )
 
@@ -385,7 +385,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[0, 0]]),
             torch.LongTensor([[1, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[0], test_seqs[1]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[0], test_seqs[1]]]),
             torch.LongTensor([]),
         )
 
@@ -395,7 +395,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1, 1]]),
             torch.LongTensor([[2, 1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[0], test_seqs[2]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[0], test_seqs[2]]]),
             torch.LongTensor([0,1]),
         )
 
@@ -405,7 +405,7 @@ class BatchBuilderTest(unittest.TestCase):
         expectation = (
             torch.LongTensor([[1]]),
             torch.LongTensor([[1]]),
-            torch.stack([torch.from_numpy(self.ivec_eetor(" ".join(words[:-1]))) for words in [test_seqs[2]]]),
+            torch.stack([self.ivec_eetor(" ".join(words[:-1])) for words in [test_seqs[2]]]),
             torch.LongTensor([1]),
         )
 
