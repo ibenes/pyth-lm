@@ -36,7 +36,14 @@ class IvecExtractor():
         for i in range(self._nb_iters):
             loss = update_ws(self._model, opt_w, loss, X)
 
-        return self._model.W.data.t()
+        return self._model.W.data.squeeze()
+
+    def __str__(self):
+        name = "IvecExtractor"
+        ivec_size = self._model.W.size(0)
+
+        fmt_str = "{} (\n\tiVectors size: {}\n\tLearning rate: {}\n\t # iterations: {}\n)\n"
+        return fmt_str.format(name, ivec_size, self._lr, self._nb_iters)
 
     def save(self, f):
         tmp_f = tempfile.TemporaryFile()
@@ -59,7 +66,7 @@ class IvecExtractor():
         pickle.dump(complete_smm, f)
 
 
-def load_smm(f):
+def load(f):
     complete_lm = pickle.load(f)
 
     model_bytes = complete_lm['model']
