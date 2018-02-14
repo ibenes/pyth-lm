@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     print("building model...")
 
-    model = smm_lstm_models.OutputMultiplicativeLM(
+    model = smm_lstm_models.OutputEnhancedLM(
         len(vocab), args.emsize, args.nhid, 
         args.nlayers, args.ivec_size, args.dropout, args.tied
     )
