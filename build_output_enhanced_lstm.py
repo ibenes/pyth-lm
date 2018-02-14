@@ -22,6 +22,8 @@ if __name__ == '__main__':
                         help='number of layers')
     parser.add_argument('--dropout', type=float, default=0.2,
                         help='dropout applied to layers (0 = no dropout)')
+    parser.add_argument('--dropout-ivec', action='store_true',
+                        help='apply dropout also on ivectors')
     parser.add_argument('--tied', action='store_true',
                         help='tie the word embedding and softmax weights')
     parser.add_argument('--seed', type=int, default=1111,
@@ -41,7 +43,8 @@ if __name__ == '__main__':
 
     model = smm_lstm_models.OutputEnhancedLM(
         len(vocab), args.emsize, args.nhid, 
-        args.nlayers, args.ivec_size, args.dropout, args.tied
+        args.nlayers, args.ivec_size, args.dropout, args.tied,
+        dropout_ivec=args.dropout_ivec
     )
 
     lm = language_model.LanguageModel(model, vocab)
