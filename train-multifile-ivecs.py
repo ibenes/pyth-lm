@@ -10,6 +10,7 @@ import vocab
 import language_model
 import split_corpus_dataset
 from hidden_state_reorganization import HiddenStateReorganizer
+import smm_ivec_extractor
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import train, evaluate, BatchFilter
@@ -52,6 +53,8 @@ if __name__ == '__main__':
                         help='stop, once batch is smaller than given size')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='report interval')
+    parser.add_argument('--ivec-extractor', type=str, required=True,
+                        help='where to load a ivector extractor from')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
     parser.add_argument('--save', type=str,  required=True,
@@ -61,16 +64,20 @@ if __name__ == '__main__':
 
     init_seeds(args.seed, args.cuda)
 
-    print("loading model...")
+    print("loading LSTM model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
     vocab = lm.vocab
     model = lm.model
     print(model)
 
+    print("loading SMM iVector extractor ...")
+    with open(args.ivec_extractor, 'rb') as f:
+        ivec_extractor = smm_ivec_extractor.load(f)
+    print(ivec_extractor)
+
     print("preparing data...")
-    ivec_eetor = lambda x: np.asarray([float(sum(x) % 1337 - 668)/1337]*2, dtype=np.float32)
-    ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_eetor)
+    ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
@@ -115,7 +122,9 @@ if __name__ == '__main__':
             train_data_filtered = BatchFilter(
                 train_data, args.batch_size, args.bptt, args.min_batch_size
             )
+
             optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
+            
             train(
                 lm, train_data_filtered, optim, logger, 
                 batch_size=args.batch_size, 

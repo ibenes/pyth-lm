@@ -7,12 +7,10 @@ import lstm_model
 import vocab
 import language_model
 import split_corpus_dataset
-from hidden_state_reorganization import HiddenStateReorganizer
+import smm_ivec_extractor
 
 from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
 from runtime_multifile import evaluate
-
-import numpy as np
 
 
 if __name__ == '__main__':
@@ -31,18 +29,23 @@ if __name__ == '__main__':
                         help='pass hidden states over article boundaries')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
+    parser.add_argument('--ivec-extractor', type=str, required=True,
+                        help='where to load a ivector extractor from')
     args = parser.parse_args()
     print(args)
 
     init_seeds(args.seed, args.cuda)
 
-    print("loading model...")
+    print("loading LM...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
     print(lm.model)
 
-    ivec_eetor = lambda x: np.asarray([float(sum(x) % 1337 - 668)/1337]*2, dtype=np.float32)
-    ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_eetor)
+    print("loading SMM iVector extractor ...")
+    with open(args.ivec_extractor, 'rb') as f:
+        ivec_extractor = smm_ivec_extractor.load(f)
+    print(ivec_extractor)
+    ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_extractor)
 
     print("preparing data...")
     tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
