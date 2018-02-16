@@ -24,15 +24,19 @@ def repackage_hidden(h):
 
 
 def filelist_to_tokenized_splits(filelist_filename, vocab, bptt):
+    filenames = filenames_file_to_filenames(filelist_filename)
+    tss = []
+    for filename in filenames:
+        with open(filename, 'r') as f:
+            tss.append(split_corpus_dataset.TokenizedSplit(f, vocab, bptt)) 
+
+    return tss
+
+def filenames_file_to_filenames(filelist_filename):
     with open(filelist_filename) as filelist: 
-        files = filelist.read().split()
-        tss = []
-        for filename in files:
-            with open(filename, 'r') as f:
-                tss.append(split_corpus_dataset.TokenizedSplit(f, vocab, bptt)) 
-
-        return tss
-
+        filenames = filelist.read().split()
+        
+    return filenames
 
 def init_seeds(seed, cuda):
     random.seed(seed)
