@@ -28,5 +28,5 @@ class HistoryIvecAppender():
         history_words = []
         for (x, t), words in zip(self.tokens, self.tokens.input_words()):
             ivec = self._ivec_eetor(" ".join(history_words))
-            history_words += words
+            history_words += words.split()
             yield (x, t, ivec)
