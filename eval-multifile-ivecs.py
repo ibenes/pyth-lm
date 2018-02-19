@@ -32,6 +32,8 @@ if __name__ == '__main__':
                         help='where to load a model from')
     parser.add_argument('--ivec-extractor', type=str, required=True,
                         help='where to load a ivector extractor from')
+    parser.add_argument('--ivec-nb-iters', type=int, 
+                        help='override the number of iterations when extracting ivectors')
     args = parser.parse_args()
     print(args)
 
@@ -45,6 +47,8 @@ if __name__ == '__main__':
     print("loading SMM iVector extractor ...")
     with open(args.ivec_extractor, 'rb') as f:
         ivec_extractor = smm_ivec_extractor.load(f)
+    if args.ivec_nb_iters:
+        ivec_extractor._nb_iters = args.ivec_nb_iters
     print(ivec_extractor)
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
