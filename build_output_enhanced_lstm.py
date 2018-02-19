@@ -22,8 +22,8 @@ if __name__ == '__main__':
                         help='number of layers')
     parser.add_argument('--dropout', type=float, default=0.2,
                         help='dropout applied to layers (0 = no dropout)')
-    parser.add_argument('--dropout-ivec', action='store_true',
-                        help='apply dropout also on ivectors')
+    parser.add_argument('--dropout-ivec', type=float, default=0.2,
+                        help='dropout applied to ivectors (0 = no dropout)')
     parser.add_argument('--tied', action='store_true',
                         help='tie the word embedding and softmax weights')
     parser.add_argument('--seed', type=int, default=1111,

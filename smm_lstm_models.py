@@ -6,9 +6,10 @@ from torch.autograd import Variable
 class OutputEnhancedLM(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self, ntoken, ninp, nhid, nlayers, ivec_dim, dropout=0.5, dropout_ivec=False, tie_weights=False):
+    def __init__(self, ntoken, ninp, nhid, nlayers, ivec_dim, dropout=0.5, dropout_ivec=0.0, tie_weights=False):
         super().__init__()
         self.drop = nn.Dropout(dropout)
+        self.drop_ivec = nn.Dropout(dropout_ivec)
         self.encoder = nn.Embedding(ntoken, ninp)
         self.rnn = nn.LSTM(ninp, nhid, nlayers, dropout=dropout)
         self.decoder = nn.Linear(nhid, ntoken)
@@ -23,7 +24,6 @@ class OutputEnhancedLM(nn.Module):
 
         self.nhid = nhid
         self.nlayers = nlayers
-        self._dropout_ivec = dropout_ivec
 
     def init_weights(self):
         initrange = 0.1
@@ -36,8 +36,7 @@ class OutputEnhancedLM(nn.Module):
         emb = self.drop(self.encoder(input))
         output, hidden = self.rnn(emb, hidden)
         output = self.drop(output)
-        if self._dropout_ivec:
-            ivec = self.drop(ivec)
+        ivec = self.drop_ivec(ivec)
         decoded = nn.LogSoftmax(dim=2)(self.decoder(output) + self.ivec_proj(ivec))
 
         return decoded, hidden
