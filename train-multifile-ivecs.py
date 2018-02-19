@@ -9,6 +9,7 @@ import smm_lstm_models
 import vocab
 import language_model
 import split_corpus_dataset
+import ivec_appenders
 from hidden_state_reorganization import HiddenStateReorganizer
 import smm_ivec_extractor
 
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     print(ivec_extractor)
 
     print("preparing data...")
-    ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_extractor)
+    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)

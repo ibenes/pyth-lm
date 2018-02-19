@@ -6,6 +6,7 @@ import model
 import lstm_model
 import vocab
 import language_model
+import ivec_appenders
 import split_corpus_dataset
 import smm_ivec_extractor
 
@@ -45,7 +46,7 @@ if __name__ == '__main__':
     with open(args.ivec_extractor, 'rb') as f:
         ivec_extractor = smm_ivec_extractor.load(f)
     print(ivec_extractor)
-    ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_extractor)
+    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
     print("preparing data...")
     tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
