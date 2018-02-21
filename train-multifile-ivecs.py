@@ -115,8 +115,10 @@ if __name__ == '__main__':
         for epoch in range(1, args.epochs+1):
             if args.keep_shuffling:
                 random.shuffle(train_tss)
-                train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss, args.batch_size,
-                                                               discard_h=not args.concat_articles)
+                train_data = split_corpus_dataset.BatchBuilder(
+                    [ivec_app_creator(ts) for ts in train_tss], 
+                    args.batch_size, discard_h=not args.concat_articles
+                )
                 if args.cuda:
                     train_data = CudaStream(train_data)
                 

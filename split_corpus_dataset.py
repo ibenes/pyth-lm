@@ -57,8 +57,6 @@ class BatchBuilder():
 
             parts = zip(*batch)
             parts = [torch.stack(part) for part in parts]
-            parts[0] = parts[0].t()
-            parts[1] = parts[1].t()
             yield tuple(parts) + (torch.LongTensor(hs_passed_on), )
 
 

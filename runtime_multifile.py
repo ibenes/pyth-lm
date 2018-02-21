@@ -25,14 +25,15 @@ def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
         hidden = tuple(h.cuda() for h in hidden)
 
     for X, targets, ivecs, mask in data_source:
+        X = Variable(X.t())
         hidden = hs_reorganizer(hidden, mask, X.size(1))
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
         if use_ivecs:
-            output, hidden = model(Variable(X), hidden, Variable(ivecs))
+            output, hidden = model(X, hidden, Variable(ivecs))
         else:
-            output, hidden = model(Variable(X), hidden)
+            output, hidden = model(X, hidden)
         output_flat = output.view(-1, len(lm.vocab))
         curr_loss = len(X) * criterion(output_flat, variablilize_targets(targets)).data
         total_loss += curr_loss
@@ -88,14 +89,15 @@ def train(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True):
 
 
     for batch, (X, targets, ivecs, mask) in enumerate(data):
+        X = Variable(X.t())
         hidden = hs_reorganizer(hidden, mask, X.size(1))
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
         if use_ivecs:
-            output, hidden = model(Variable(X), hidden, Variable(ivecs))
+            output, hidden = model(X, hidden, Variable(ivecs))
         else:
-            output, hidden = model(Variable(X), hidden)
+            output, hidden = model(X, hidden)
         loss = criterion(output.view(-1, len(lm.vocab)), variablilize_targets(targets))
 
         optim.zero_grad()
@@ -107,4 +109,4 @@ def train(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True):
 
 
 def variablilize_targets(targets):
-    return Variable(targets.contiguous().view(-1))
+    return Variable(targets.t().contiguous().view(-1))
