@@ -48,6 +48,26 @@ class BatchBuilderTest(common.TestCase):
 
         self.assertEqual(batch, expectation)
 
+    def test_even_batch_single_sample_no_ivecs(self):
+        test_seqs = [
+            "a b".split(),
+            "b b".split(),
+        ]
+        tss = self.get_tokenized_splits(test_seqs, unroll=1)
+        tokens = self.get_tokens(test_seqs)
+
+        batches = split_corpus_dataset.BatchBuilder(tss, len(tss))
+        batches = iter(batches)
+
+        batch = next(batches)
+        expectation = (
+            torch.LongTensor([[0, 1]]),
+            torch.LongTensor([[1, 1]]),
+            torch.LongTensor([]),
+        )
+
+        self.assertEqual(batch, expectation)
+
     def test_even_batch_single_sample2(self):
         test_seqs = [
             "b b".split(),

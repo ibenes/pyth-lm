@@ -55,12 +55,11 @@ class BatchBuilder():
             else:
                 hs_passed_on = (streams_continued + streams_ended)[:len(batch)]
 
-            yield (
-                torch.stack([x for x,t,i in batch]).t(),
-                torch.stack([t for x,t,i in batch]).t(),
-                torch.stack([i for x,t,i in batch]),
-                torch.LongTensor(hs_passed_on)
-            )
+            parts = zip(*batch)
+            parts = [torch.stack(part) for part in parts]
+            parts[0] = parts[0].t()
+            parts[1] = parts[1].t()
+            yield tuple(parts) + (torch.LongTensor(hs_passed_on), )
 
 
 class TokenizedSplit():
