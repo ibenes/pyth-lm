@@ -2,13 +2,12 @@ import vocab
 import torch
 
 class BatchBuilder():
-    def __init__(self, token_streams, ivec_app_ctor, max_batch_size, discard_h=True):
+    def __init__(self, streams, max_batch_size, discard_h=True):
         """
             Args:
                 fs ([file]): List of opened files to construct batches from
         """
-        self._token_streams = token_streams
-        self._ivec_app_ctor = ivec_app_ctor
+        self._streams = streams
 
         if max_batch_size <= 0:
             raise ValueError("BatchBuilder must be constructed"
@@ -18,7 +17,7 @@ class BatchBuilder():
         self._discard_h = discard_h
 
     def __iter__(self):
-        streams = [iter(self._ivec_app_ctor(ts)) for ts in self._token_streams]
+        streams = [iter(s) for s in self._streams]
         active_streams = []
         reserve_streams = streams
 
@@ -32,7 +31,6 @@ class BatchBuilder():
                     streams_continued.append(i)
                 except StopIteration:
                     streams_ended.append(i)
-
 
             active_streams = [active_streams[i] for i in streams_continued]
 
@@ -58,8 +56,8 @@ class BatchBuilder():
                 hs_passed_on = (streams_continued + streams_ended)[:len(batch)]
 
             yield (
-                torch.LongTensor([x for x,t,i in batch]).t(),
-                torch.LongTensor([t for x,t,i in batch]).t(),
+                torch.stack([x for x,t,i in batch]).t(),
+                torch.stack([t for x,t,i in batch]).t(),
                 torch.stack([i for x,t,i in batch]),
                 torch.LongTensor(hs_passed_on)
             )
@@ -81,7 +79,10 @@ class TokenizedSplit():
 
     def __iter__(self):
         for lend, rend in self._ranges():
-            yield(self._tokens[lend:rend], self._tokens[lend+1:rend+1])
+            yield (
+                torch.LongTensor(self._tokens[lend:rend]),
+                torch.LongTensor(self._tokens[lend+1:rend+1])
+            )
 
 
     def __len__(self):

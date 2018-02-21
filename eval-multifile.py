@@ -49,7 +49,7 @@ if __name__ == '__main__':
     ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_eetor)
 
     tss = filelist_to_tokenized_splits(args.file_list, vocab, args.bptt)
-    data = split_corpus_dataset.BatchBuilder(tss, ivec_app_creator, args.batch_size,
+    data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in tss], args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)

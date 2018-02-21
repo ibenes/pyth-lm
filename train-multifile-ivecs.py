@@ -82,25 +82,25 @@ if __name__ == '__main__':
     print(ivec_extractor)
 
     print("preparing data...")
-    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
+    ivec_app_creator = lambda ts: ivec_appenders.HistoryIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
-    train_data = split_corpus_dataset.BatchBuilder(train_tss, ivec_app_creator, args.batch_size,
+    train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
-    valid_data = split_corpus_dataset.BatchBuilder(valid_tss, ivec_app_creator, args.batch_size,
+    valid_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
     print("\ttesting...")
     test_tss = filelist_to_tokenized_splits(args.test_list, vocab, args.bptt)
-    test_data = split_corpus_dataset.BatchBuilder(test_tss, ivec_app_creator, args.batch_size,
+    test_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in test_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         test_data = CudaStream(test_data)
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         for epoch in range(1, args.epochs+1):
             if args.keep_shuffling:
                 random.shuffle(train_tss)
-                train_data = split_corpus_dataset.BatchBuilder(train_tss, ivec_app_creator, args.batch_size,
+                train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss, args.batch_size,
                                                                discard_h=not args.concat_articles)
                 if args.cuda:
                     train_data = CudaStream(train_data)
