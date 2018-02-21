@@ -8,7 +8,7 @@ import common
 
 from utils import getStream
 
-class BatchBuilderTest(unittest.TestCase):
+class BatchBuilderTest(common.TestCase):
     def setUp(self):
         self.vocab = {
             "a": 0,
@@ -17,16 +17,6 @@ class BatchBuilderTest(unittest.TestCase):
         }
         self.ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337], dtype=np.float32))
         self.ivec_app_ctor = lambda ts: ivec_appenders.CheatingIvecAppender(ts, self.ivec_eetor)
-
-    def batch_equal(self, actual, expected, print_them=False):
-        if print_them:
-            print(expected)
-            print(actual)
-
-        self.assertEqual(len(actual), len(expected))
-
-        for act_comp, exp_comp in zip(actual, expected):
-            self.assertTrue(torch.equal(act_comp, exp_comp))
 
     def get_tokens(self, word_seqs):
         return [[self.vocab[w] for w in seq] for seq in word_seqs]
@@ -56,7 +46,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_even_batch_single_sample2(self):
         test_seqs = [
@@ -77,7 +67,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_even_batch_single_sample_unroll2(self):
         test_seqs = [
@@ -98,7 +88,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_even_batch_multi_sample(self):
         test_seqs = [
@@ -119,7 +109,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -129,7 +119,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([0, 1]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_even_batch_multi_sample_len(self):
         test_seqs = [
@@ -163,7 +153,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -173,7 +163,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([1])
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_batcher_requires_nonzero_bsz(self):
         test_seqs = [
@@ -204,7 +194,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -214,7 +204,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_even_lenght_small_batch_2(self):
         test_seqs = [
@@ -237,7 +227,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -247,7 +237,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_uneven_length_small_batch(self):
         test_seqs = [
@@ -269,7 +259,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -279,7 +269,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([0]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -289,7 +279,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([1]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_insufficient_stream_length(self):
         test_seqs = [
@@ -311,7 +301,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -321,7 +311,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([0,1]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_reproducibility(self):
         test_seqs = [
@@ -336,9 +326,7 @@ class BatchBuilderTest(unittest.TestCase):
         epoch1 = list(iter(batches))
         epoch2 = list(iter(batches))
 
-        self.assertEqual(len(epoch1), len(epoch2))
-        for b_e1, b_e2 in zip(epoch1, epoch2):
-            self.batch_equal(b_e1, b_e2)
+        self.assertEqual(epoch1, epoch2)
 
     def test_no_discard_even_lenght_small_batch(self):
         test_seqs = [
@@ -359,7 +347,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -369,7 +357,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([0]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
     def test_no_discard_uneven_length_small_batch(self):
         test_seqs = [
@@ -391,7 +379,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -401,7 +389,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([0,1]),
         )
 
-        self.batch_equal(batch, expectation)
+        self.assertEqual(batch, expectation)
 
         batch = next(batches)
         expectation = (
@@ -411,10 +399,7 @@ class BatchBuilderTest(unittest.TestCase):
             torch.LongTensor([1]),
         )
 
-        self.batch_equal(batch, expectation)
-
-def flatten(list_of_lists):
-    return [item for sublist in list_of_lists for item in sublist]
+        self.assertEqual(batch, expectation)
 
 
 class TokenizedSplitTests(common.TestCase):
