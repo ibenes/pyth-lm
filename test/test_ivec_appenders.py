@@ -3,10 +3,11 @@ import unittest
 import split_corpus_dataset
 import ivec_appenders
 import numpy as np
+import common
 
 from utils import getStream
 
-class CheatingIvecAppenderTests(unittest.TestCase):
+class CheatingIvecAppenderTests(common.TestCase):
     def setUp(self):
         self.ivec_eetor = lambda x: np.asarray([hash(x) % 1337])
         self.test_words_short = "a b c a".split()
@@ -25,9 +26,9 @@ class CheatingIvecAppenderTests(unittest.TestCase):
          # cannot acces ts._tokens, it's an implementation 
         tokens = [self.vocab[w] for w in self.test_words_short]
 
-        expectation = ([0], [1], self.ivec_eetor(" ".join(self.test_words_short[:-1])))
-        seqs = list(iter(appender))
-        first = seqs[0]
+        expectation = self.ivec_eetor(" ".join(self.test_words_short[:-1]))
+        seqs = next(iter(appender))
+        first = seqs[2]
 
         self.assertEqual(first, expectation)
 
@@ -40,12 +41,12 @@ class CheatingIvecAppenderTests(unittest.TestCase):
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = [
-            ([0], [1], self.ivec_eetor(" ".join(self.test_words_short[:-1]))),
-            ([1], [2], self.ivec_eetor(" ".join(self.test_words_short[:-1]))),
-            ([2], [0], self.ivec_eetor(" ".join(self.test_words_short[:-1])))
+            self.ivec_eetor(" ".join(self.test_words_short[:-1])),
+            self.ivec_eetor(" ".join(self.test_words_short[:-1])),
+            self.ivec_eetor(" ".join(self.test_words_short[:-1]))
         ]
 
-        seqs = list(iter(appender))
+        seqs = [x[2] for x in (iter(appender))]
         self.assertEqual(seqs, expectation)
 
     def test_whole_seq_with_next(self):
@@ -57,18 +58,18 @@ class CheatingIvecAppenderTests(unittest.TestCase):
          # cannot acces ts._tokens, it's an implementation 
         tokens = [self.vocab[w] for w in self.test_words_short]
         expectation = [
-            ([0], [1], self.ivec_eetor(" ".join(self.test_words_short[:-1]))),
-            ([1], [2], self.ivec_eetor(" ".join(self.test_words_short[:-1]))),
-            ([2], [0], self.ivec_eetor(" ".join(self.test_words_short[:-1])))
+            self.ivec_eetor(" ".join(self.test_words_short[:-1])),
+            self.ivec_eetor(" ".join(self.test_words_short[:-1])),
+            self.ivec_eetor(" ".join(self.test_words_short[:-1]))
         ]
 
-        seq0 = next(appender)
+        seq0 = next(appender)[2]
         self.assertEqual(seq0, expectation[0])
 
-        seq1 = next(appender)
+        seq1 = next(appender)[2]
         self.assertEqual(seq1, expectation[1])
 
-        seq2 = next(appender)
+        seq2 = next(appender)[2]
         self.assertEqual(seq2, expectation[2])
 
     def test_iter_ends(self):
@@ -84,7 +85,7 @@ class CheatingIvecAppenderTests(unittest.TestCase):
         self.assertRaises(StopIteration, next, appender)
 
 
-class HistoryIvecAppenderTests(unittest.TestCase):
+class HistoryIvecAppenderTests(common.TestCase):
     def setUp(self):
         self.ivec_eetor = lambda x: np.asarray([hash(x) % 1337])
         self.test_words_short = "a b c a".split()
@@ -106,9 +107,9 @@ class HistoryIvecAppenderTests(unittest.TestCase):
          # cannot acces ts._tokens, it's an implementation 
         tokens = [self.vocab[w] for w in self.test_words_short]
 
-        expectation = ([0], [1], self.ivec_eetor(" ".join([])))
-        seqs = list(iter(appender))
-        first = seqs[0]
+        expectation = self.ivec_eetor(" ".join([]))
+        seqs = next(iter(appender))
+        first = seqs[2]
 
         self.assertEqual(first, expectation)
 
@@ -121,11 +122,11 @@ class HistoryIvecAppenderTests(unittest.TestCase):
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = [
-            ([0], [1], self.ivec_eetor(" ".join(self.test_words_short[:0]))),
-            ([1], [2], self.ivec_eetor(" ".join(self.test_words_short[:1]))),
-            ([2], [0], self.ivec_eetor(" ".join(self.test_words_short[:2]))),
+            self.ivec_eetor(" ".join(self.test_words_short[:0])),
+            self.ivec_eetor(" ".join(self.test_words_short[:1])),
+            self.ivec_eetor(" ".join(self.test_words_short[:2])),
         ]
-        seqs = list(iter(appender))
+        seqs = [x[2] for x in (iter(appender))]
 
         self.assertEqual(seqs, expectation)
 
@@ -138,11 +139,11 @@ class HistoryIvecAppenderTests(unittest.TestCase):
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = [
-            ([3], [4], self.ivec_eetor(" ".join(self.test_words_long[:0]))),
-            ([4], [5], self.ivec_eetor(" ".join(self.test_words_long[:1]))),
-            ([5], [0], self.ivec_eetor(" ".join(self.test_words_long[:2]))),
-            ([0], [1], self.ivec_eetor(" ".join(self.test_words_long[:3]))),
+            self.ivec_eetor(" ".join(self.test_words_long[:0])),
+            self.ivec_eetor(" ".join(self.test_words_long[:1])),
+            self.ivec_eetor(" ".join(self.test_words_long[:2])),
+            self.ivec_eetor(" ".join(self.test_words_long[:3])),
         ]
-        seqs = list(iter(appender))
+        seqs = [x[2] for x in iter(appender)]
 
         self.assertEqual(seqs, expectation)
