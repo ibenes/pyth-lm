@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 import torch
+import common
 
 from utils import getStream
 
@@ -412,12 +413,11 @@ class BatchBuilderTest(unittest.TestCase):
 
         self.batch_equal(batch, expectation)
 
+def flatten(list_of_lists):
+    return [item for sublist in list_of_lists for item in sublist]
 
 
-
-
-
-class TokenizedSplitTests(unittest.TestCase):
+class TokenizedSplitTests(common.TestCase):
     def setUp(self):
         self.test_words_short = "a b c a".split()
         self.test_words_long = "a b c a a".split()
@@ -432,15 +432,15 @@ class TokenizedSplitTests(unittest.TestCase):
     def test_single_word(self):
         data_source = getStream(self.test_words_short)
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
-        tokens_strings = list(iter(ts))
-        expectation = ([0], [1]) # input, target
-        self.assertEqual(tokens_strings[0], expectation)
+        tokens_string = next(iter(ts))
+        expectation = (torch.LongTensor([0]), torch.LongTensor([1])) # input, target
+        self.assertEqual(tokens_string, expectation)
 
     def test_single_word_seq(self):
         data_source = getStream(self.test_words_short)
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         tokens_strings = list(iter(ts))
-        expectation = [([0], [1]), ([1], [2]), ([2], [0])]
+        expectation = [(torch.LongTensor([0]), torch.LongTensor([1])), (torch.LongTensor([1]), torch.LongTensor([2])), (torch.LongTensor([2]), torch.LongTensor([0]))]
         self.assertEqual(tokens_strings, expectation)
 
     def test_single_word_len(self):
@@ -457,14 +457,14 @@ class TokenizedSplitTests(unittest.TestCase):
         data_source = getStream(self.test_words_short)
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 2)
         tokens_strings = list(iter(ts))
-        expectation = [([0, 1], [1, 2])]
+        expectation = [(torch.LongTensor([0, 1]), torch.LongTensor([1, 2]))]
         self.assertEqual(tokens_strings, expectation)
 
     def test_two_word_seq_long(self):
         data_source = getStream(self.test_words_long)
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 2)
         tokens_strings = list(iter(ts))
-        expectation = [([0, 1], [1, 2]), ([2, 0], [0, 0])]
+        expectation = [(torch.LongTensor([0, 1]), torch.LongTensor([1, 2])), (torch.LongTensor([2, 0]), torch.LongTensor([0, 0]))]
         self.assertEqual(tokens_strings, expectation)
 
     def test_single_word_retrieval(self):
