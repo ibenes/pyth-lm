@@ -65,6 +65,12 @@ class IvecExtractor():
                         'lr': lr_bytes, 'nb_iters': nb_iters_bytes}
         pickle.dump(complete_smm, f)
 
+    def zero_bows(self, nb_bows):
+        empty_docs = ["" for _ in range(nb_bows)]
+        bows = self._tokenizer.transform(empty_docs)
+        bows = torch.from_numpy(bows.A.astype(np.float32))
+        return Variable(bows)
+
 
 def load(f):
     complete_lm = pickle.load(f)
