@@ -3,6 +3,7 @@ from tensor_reorganization import TensorReorganizer
 
 import torch
 from torch.autograd import Variable
+import common
 
 class Dummy_lstm():
     def __init__(self, nb_hidden):
@@ -16,16 +17,10 @@ class Dummy_lstm():
         )
 
 
-class TensorReorganizerTests(unittest.TestCase):
+class TensorReorganizerTests(common.TestCase):
     def setUp(self):
         lm = Dummy_lstm(nb_hidden=2)
         self.reorganizer = TensorReorganizer(lm.init_hidden)
-
-
-    def hidden_equal(self, actual, expected):
-        self.assertEqual(len(actual), len(expected))
-        for a, e in zip(actual, expected):
-            self.assertTrue(torch.equal(a, e))
 
 
     def test_passing(self):
@@ -38,7 +33,7 @@ class TensorReorganizerTests(unittest.TestCase):
         bsz = 3
 
         new_h = self.reorganizer(last_h, mask, bsz)
-        self.hidden_equal(new_h, last_h)
+        self.assertEqual(new_h, last_h)
 
 
     def test_shrinks(self):
@@ -55,7 +50,7 @@ class TensorReorganizerTests(unittest.TestCase):
             torch.FloatTensor([[[0.1, 0.1], [0.3, 0.3]]]),
             torch.FloatTensor([[[1, 1], [3, 3]]]),
         )
-        self.hidden_equal(new_h, expected)
+        self.assertEqual(new_h, expected)
 
 
     def test_requires_bsz_greater_than_mask(self):
@@ -84,7 +79,7 @@ class TensorReorganizerTests(unittest.TestCase):
             torch.FloatTensor([[[0.0, 0.0], [0.0, 0.0]]]),
             torch.FloatTensor([[[0.0, 0.0], [0.0, 0.0]]]),
         )
-        self.hidden_equal(new_h, expected)
+        self.assertEqual(new_h, expected)
 
 
     def test_completion_by_zeros(self):
@@ -101,7 +96,7 @@ class TensorReorganizerTests(unittest.TestCase):
             torch.FloatTensor([[[0.2, 0.2], [0.0, 0.0]]]),
             torch.FloatTensor([[[2.0, 2.0], [0.0, 0.0]]]),
         )
-        self.hidden_equal(new_h, expected)
+        self.assertEqual(new_h, expected)
 
 
     def test_bug_regression_single_addition(self):
@@ -118,7 +113,7 @@ class TensorReorganizerTests(unittest.TestCase):
             torch.FloatTensor([[[0.2, 0.2], [0.3, 0.3], [0.0, 0.0]]]),
             torch.FloatTensor([[[2.0, 2.0], [3.0, 3.0], [0.0, 0.0]]]),
         )
-        self.hidden_equal(new_h, expected)
+        self.assertEqual(new_h, expected)
 
 
 class Dummy_srn():
@@ -131,20 +126,10 @@ class Dummy_srn():
         return torch.FloatTensor(self._nb_layers, batch_size, self._nb_hidden).zero_()
 
 
-class TensorReorganizerTests_SRN(unittest.TestCase):
+class TensorReorganizerTests_SRN(common.TestCase):
     def setUp(self):
         lm = Dummy_srn(nb_hidden=2)
         self.reorganizer = TensorReorganizer(lm.init_hidden)
-
-
-    def hidden_equal(self, actual, expected, print_them=False):
-        if print_them:
-            print("Actual:", actual)
-            print("Expected:", expected)
-
-        self.assertEqual(len(actual), len(expected))
-        for a, e in zip(actual, expected):
-            self.assertTrue(torch.equal(a, e))
 
 
     def test_passing(self):
@@ -154,7 +139,7 @@ class TensorReorganizerTests_SRN(unittest.TestCase):
         bsz = 3
 
         new_h = self.reorganizer(last_h, mask, bsz)
-        self.hidden_equal(new_h, last_h)
+        self.assertEqual(new_h, last_h)
 
 
     def test_passing_variables(self):
@@ -164,7 +149,7 @@ class TensorReorganizerTests_SRN(unittest.TestCase):
         bsz = 3
 
         new_h = self.reorganizer(last_h, mask, bsz)
-        self.hidden_equal(new_h, last_h)
+        self.assertEqual(new_h, last_h)
 
 
     def test_shrinks(self):
@@ -176,7 +161,7 @@ class TensorReorganizerTests_SRN(unittest.TestCase):
         new_h = self.reorganizer(last_h, mask, bsz)
         expected = torch.FloatTensor([[[0.1, 0.1], [0.3, 0.3]]])
         
-        self.hidden_equal(new_h, expected)
+        self.assertEqual(new_h, expected)
 
 
     def test_requires_bsz_greater_than_mask(self):
@@ -196,7 +181,7 @@ class TensorReorganizerTests_SRN(unittest.TestCase):
 
         new_h = self.reorganizer(last_h, mask, bsz)
         expected = torch.FloatTensor([[[0.0, 0.0], [0.0, 0.0]]])
-        self.hidden_equal(new_h, expected)
+        self.assertEqual(new_h, expected)
 
 
     def test_completion_by_zeros(self):
@@ -207,4 +192,4 @@ class TensorReorganizerTests_SRN(unittest.TestCase):
 
         new_h = self.reorganizer(last_h, mask, bsz)
         expected = torch.FloatTensor([[[0.2, 0.2], [0.0, 0.0]]])
-        self.hidden_equal(new_h, expected)
+        self.assertEqual(new_h, expected)
