@@ -19,46 +19,46 @@ class InfiniNoneType(metaclass=Singleton):
 
 InfiniNone = InfiniNoneType()
 
-def reorg_single(last_h, mask, additional_h=None):
-    reorg = last_h[:, mask]
-    if additional_h is not InfiniNone:
-        reorg = torch.cat([reorg, additional_h], dim=1)
+def reorg_single(orig, mask, new=None):
+    reorg = orig[:, mask]
+    if new is not InfiniNone:
+        reorg = torch.cat([reorg, new], dim=1)
 
     return reorg
 
 
 class TensorReorganizer():
-    def __init__(self, h0_provider):
-        self._h0_provider = h0_provider
+    def __init__(self, zeros_provider):
+        self._zeros_provider = zeros_provider
 
-    def __call__(self, last_h, mask, batch_size):
+    def __call__(self, orig, mask, batch_size):
         if len(mask.size()) == 0:
-            return self._h0_provider(batch_size)
+            return self._zeros_provider(batch_size)
 
         if mask.size(0) > batch_size:
             raise ValueError("Cannot reorganize mask {} to batch size {}".format(mask, batch_size))
 
-        if isinstance(last_h, tuple):
+        if isinstance(orig, tuple):
             single_var = False
-        elif isinstance(last_h, torch._TensorBase) or (last_h, torch.autograd.Variable):
+        elif isinstance(orig, torch._TensorBase) or (orig, torch.autograd.Variable):
             single_var = True
         else:
             raise TypeError(
-                "last_h has unsupported type {}, "
+                "orig has unsupported type {}, "
                 "only tuples, Tensors, and Variables are accepted".format(
-                        last_h.__class__)
+                        orig.__class__)
             )
 
         adding = mask.size(0) < batch_size
         if adding:
-            nb_needed_h0 = batch_size - mask.size(0)
-            additional_h = self._h0_provider(nb_needed_h0)
+            nb_needed_new = batch_size - mask.size(0)
+            new = self._zeros_provider(nb_needed_new)
         else:
-            additional_h = InfiniNone
+            new = InfiniNone
 
         if single_var:
-            reorg = reorg_single(last_h, mask, additional_h)
+            reorg = reorg_single(orig, mask, new)
         else:
-            reorg = tuple(reorg_single(h, mask, a_h) for h, a_h in zip(last_h, additional_h))
+            reorg = tuple(reorg_single(o, mask, n) for o, n in zip(orig, new))
 
         return reorg
