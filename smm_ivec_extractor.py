@@ -65,11 +65,28 @@ class IvecExtractor():
                         'lr': lr_bytes, 'nb_iters': nb_iters_bytes}
         pickle.dump(complete_smm, f)
 
+
+    def __eq__(self, other):
+        return (torch.equal(self._model.T, other._model.T) and
+               self._lr == other._lr and
+               self._nb_iters == other._nb_iters and
+               self._tokenizer == other._tokenizer)
+
+
     def zero_bows(self, nb_bows):
         empty_docs = ["" for _ in range(nb_bows)]
         bows = self._tokenizer.transform(empty_docs)
         bows = torch.from_numpy(bows.A.astype(np.float32))
         return Variable(bows)
+
+
+    def build_translator(self, source_vocabulary):  
+        prototypes = [] 
+        for w in source_vocabulary:
+            bow = self._tokenizer.transform([w]) 
+            prototypes.append(torch.from_numpy(bow.A.astype(np.float32)))
+        prototypes = Variable(torch.cat(prototypes, dim=0))
+        return lambda W: prototypes[W.view(-1)].view(W.size() + (-1,)).sum(dim=-2)
 
 
 def load(f):
