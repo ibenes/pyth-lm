@@ -33,7 +33,7 @@ class HiddenStateReorganizer():
 
     def __call__(self, last_h, mask, batch_size):
         if len(mask.size()) == 0:
-            return self._h0_provider.init_hidden(batch_size)
+            return self._h0_provider(batch_size)
 
         if mask.size(0) > batch_size:
             raise ValueError("Cannot reorganize mask {} to batch size {}".format(mask, batch_size))
@@ -52,7 +52,7 @@ class HiddenStateReorganizer():
         adding = mask.size(0) < batch_size
         if adding:
             nb_needed_h0 = batch_size - mask.size(0)
-            additional_h = self._h0_provider.init_hidden(nb_needed_h0)
+            additional_h = self._h0_provider(nb_needed_h0)
         else:
             additional_h = InfiniNone
 

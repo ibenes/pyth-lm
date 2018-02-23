@@ -19,7 +19,7 @@ class Dummy_lstm():
 class HiddenStateReorganizerTests(unittest.TestCase):
     def setUp(self):
         lm = Dummy_lstm(nb_hidden=2)
-        self.reorganizer = HiddenStateReorganizer(lm)
+        self.reorganizer = HiddenStateReorganizer(lm.init_hidden)
 
 
     def hidden_equal(self, actual, expected):
@@ -134,7 +134,7 @@ class Dummy_srn():
 class HiddenStateReorganizerTests_SRN(unittest.TestCase):
     def setUp(self):
         lm = Dummy_srn(nb_hidden=2)
-        self.reorganizer = HiddenStateReorganizer(lm)
+        self.reorganizer = HiddenStateReorganizer(lm.init_hidden)
 
 
     def hidden_equal(self, actual, expected, print_them=False):
