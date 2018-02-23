@@ -1,3 +1,5 @@
+from tensor_reorganization import TensorReorganizer
+
 class CheatingIvecAppender():
     def __init__(self, tokens, ivec_eetor):
         """
@@ -30,3 +32,20 @@ class HistoryIvecAppender():
             ivec = self._ivec_eetor(" ".join(history_words))
             history_words += words.split()
             yield (x, t, ivec)
+
+
+class ParalelIvecAppender:
+    def __init__(self, stream, extractor, translator):
+        self._stream = stream
+        self._extractor = extractor
+        self._translator = translator 
+        self._reorganizer = TensorReorganizer(extractor.zero_bows)
+
+    def __iter__(self):
+        old_bows = None
+        for x, t, mask in self._stream:
+            corresponding_bows = self._reorganizer(old_bows, mask, x.size(0))
+            print("[debug]", "new batch", x.size(), t.size(), mask.size(), corresponding_bows.size())
+            ivectors = self._extractor(corresponding_bows) 
+            old_bows = corresponding_bows + self._translator(x)
+            yield x, t, ivectors, mask
