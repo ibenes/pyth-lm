@@ -21,16 +21,20 @@ class IvecExtractor():
 
     def __call__(self, sentence):
         """ Extract i-vectors given the model and stats """
-        data = self._tokenizer.transform([sentence])
-        data = torch.from_numpy(data.A.astype(np.float32))
+        if isinstance(sentence, str):
+            data = self._tokenizer.transform([sentence])
+            data = torch.from_numpy(data.A.astype(np.float32))
+            if self._model.cuda:
+                data = data.cuda()
 
-        self._model.reset_w(data.size(0))  # initialize i-vectors to zeros
-        opt_w = torch.optim.Adagrad([self._model.W], lr=self._lr)
-
-        if self._model.cuda:
-            data = data.cuda()
+        else:
+            data = sentence
 
         X = Variable(data.t())
+
+        self._model.reset_w(X.size(-1))  # initialize i-vectors to zeros
+        opt_w = torch.optim.Adagrad([self._model.W], lr=self._lr)
+
         loss = self._model.loss(X)
 
         for i in range(self._nb_iters):
@@ -74,10 +78,12 @@ class IvecExtractor():
 
 
     def zero_bows(self, nb_bows):
+        # print("DEBUG", nb_bows)
         empty_docs = ["" for _ in range(nb_bows)]
         bows = self._tokenizer.transform(empty_docs)
         bows = torch.from_numpy(bows.A.astype(np.float32))
-        return Variable(bows)
+        # print("DEBUG", bows)
+        return bows
 
 
     def build_translator(self, source_vocabulary):  
@@ -85,7 +91,7 @@ class IvecExtractor():
         for w in source_vocabulary:
             bow = self._tokenizer.transform([w]) 
             prototypes.append(torch.from_numpy(bow.A.astype(np.float32)))
-        prototypes = Variable(torch.cat(prototypes, dim=0))
+        prototypes = torch.cat(prototypes, dim=0)
         return lambda W: prototypes[W.view(-1)].view(W.size() + (-1,)).sum(dim=-2)
 
 

@@ -40,13 +40,13 @@ class IvecExtractorTests(common.TestCase):
         self.build_neededs(self.documents_six)
         
         ivecs = self.extractor.zero_bows(1)
-        expectation = Variable(torch.zeros(1, 6))
+        expectation = torch.zeros(1, 6)
         self.assertEqual(ivecs, expectation)
 
     def test_two_empty_bows(self):
         self.build_neededs(self.documents_six)
         ivecs = self.extractor.zero_bows(2)
-        expectation = Variable(torch.zeros(2, 6))
+        expectation = torch.zeros(2, 6)
         self.assertEqual(ivecs, expectation)
 
     def test_build_translator_single_word_translation(self):
@@ -55,7 +55,7 @@ class IvecExtractorTests(common.TestCase):
         word = "SIX"
         lm_word = torch.LongTensor([self.vocab[word]])
         cv_word = torch.from_numpy(self.cvect.transform([word]).A.astype(np.float32)).squeeze()
-        self.assertEqual(translator(Variable(lm_word)), Variable(cv_word))
+        self.assertEqual(translator(lm_word), cv_word)
 
     def test_build_translator_two_word_translation(self):
         self.build_neededs(self.documents_six)
@@ -63,7 +63,7 @@ class IvecExtractorTests(common.TestCase):
         words = "SIX words"
         lm_words = torch.LongTensor([self.vocab[w] for w in words.split()])
         cv_words = torch.from_numpy(self.cvect.transform([words]).A.astype(np.float32)).squeeze()
-        self.assertEqual(translator(Variable(lm_words)), Variable(cv_words))
+        self.assertEqual(translator(lm_words), cv_words)
 
     def test_build_translator_two_two_word_translations(self):
         self.build_neededs(self.documents_six)
@@ -71,7 +71,7 @@ class IvecExtractorTests(common.TestCase):
         words = ["SIX words", "of text"]
         lm_words = torch.LongTensor([[self.vocab[w] for w in seq.split()] for seq in words])
         cv_words = torch.from_numpy(self.cvect.transform(words).A.astype(np.float32)).squeeze()
-        self.assertEqual(translator(Variable(lm_words)), Variable(cv_words))
+        self.assertEqual(translator(lm_words), cv_words)
 
     def test_build_translator_two_two_word_translations(self):
         self.build_neededs(self.documents_six)
@@ -79,7 +79,7 @@ class IvecExtractorTests(common.TestCase):
         words = ["SIX words", "of text"]
         lm_words = torch.LongTensor([[self.vocab[w] for w in seq.split()] for seq in words])
         cv_words = torch.from_numpy(self.cvect.transform(words).A.astype(np.float32)).squeeze()
-        self.assertEqual(translator(Variable(lm_words)), Variable(cv_words))
+        self.assertEqual(translator(lm_words), cv_words)
 
     def test_build_translator_two_two_word_translations_different_vocab(self):
         self.build_neededs(self.documents_seven)
@@ -87,4 +87,4 @@ class IvecExtractorTests(common.TestCase):
         words = ["SIX words", "of text"]
         lm_words = torch.LongTensor([[self.vocab[w] for w in seq.split()] for seq in words])
         cv_words = torch.from_numpy(self.cvect.transform(words).A.astype(np.float32)).squeeze()
-        self.assertEqual(translator(Variable(lm_words)), Variable(cv_words))
+        self.assertEqual(translator(lm_words), cv_words)
