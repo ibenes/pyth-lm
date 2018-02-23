@@ -16,7 +16,7 @@ class Dummy_lstm():
         )
 
 
-class HiddenStateReorganizerTests(unittest.TestCase):
+class TensorReorganizerTests(unittest.TestCase):
     def setUp(self):
         lm = Dummy_lstm(nb_hidden=2)
         self.reorganizer = TensorReorganizer(lm.init_hidden)
@@ -131,7 +131,7 @@ class Dummy_srn():
         return torch.FloatTensor(self._nb_layers, batch_size, self._nb_hidden).zero_()
 
 
-class HiddenStateReorganizerTests_SRN(unittest.TestCase):
+class TensorReorganizerTests_SRN(unittest.TestCase):
     def setUp(self):
         lm = Dummy_srn(nb_hidden=2)
         self.reorganizer = TensorReorganizer(lm.init_hidden)
