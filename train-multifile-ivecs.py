@@ -10,7 +10,6 @@ import vocab
 import language_model
 import split_corpus_dataset
 import ivec_appenders
-from hidden_state_reorganization import HiddenStateReorganizer
 import smm_ivec_extractor
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
