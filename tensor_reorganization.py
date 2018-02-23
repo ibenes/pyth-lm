@@ -20,9 +20,9 @@ class InfiniNoneType(metaclass=Singleton):
 InfiniNone = InfiniNoneType()
 
 def reorg_single(orig, mask, new=None):
-    reorg = orig[:, mask]
+    reorg = torch.index_select(orig, dim=-2, index=mask)
     if new is not InfiniNone:
-        reorg = torch.cat([reorg, new], dim=1)
+        reorg = torch.cat([reorg, new], dim=-2)
 
     return reorg
 
