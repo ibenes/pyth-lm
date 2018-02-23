@@ -27,7 +27,7 @@ def reorg_single(last_h, mask, additional_h=None):
     return reorg
 
 
-class HiddenStateReorganizer():
+class TensorReorganizer():
     def __init__(self, h0_provider):
         self._h0_provider = h0_provider
 

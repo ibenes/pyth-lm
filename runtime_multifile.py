@@ -7,7 +7,7 @@ import torch.nn as nn
 
 from runtime_utils import repackage_hidden
 
-from hidden_state_reorganization import HiddenStateReorganizer
+from tensor_reorganization import TensorReorganizer
 
 def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
     model = lm.model
@@ -17,7 +17,7 @@ def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
     total_loss = 0.0
     total_timesteps = 0
 
-    hs_reorganizer = HiddenStateReorganizer(model)
+    hs_reorganizer = TensorReorganizer(model.init_hidden)
     hidden = model.init_hidden(batch_size)
 
     if cuda:
@@ -80,7 +80,7 @@ class BatchFilter:
 def train(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True):
     model = lm.model
     model.train()
-    hs_reorganizer = HiddenStateReorganizer(model)
+    hs_reorganizer = TensorReorganizer(model.init_hidden)
     hidden = model.init_hidden(batch_size)
 
     if cuda:
