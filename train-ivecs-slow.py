@@ -79,7 +79,6 @@ if __name__ == '__main__':
     if args.ivec_nb_iters:
         ivec_extractor._nb_iters = args.ivec_nb_iters
     print(ivec_extractor)
-    translator = ivec_extractor.build_translator(vocab)
 
     print("preparing data...")
     ivec_app_creator = lambda ts: ivec_appenders.HistoryIvecAppender(ts, ivec_extractor)
@@ -113,29 +112,27 @@ if __name__ == '__main__':
     # At any point you can hit Ctrl + C to break out of training early.
     try:
         for epoch in range(1, args.epochs+1):
-            epoch_start_time = time.time()
-
             if args.keep_shuffling:
                 random.shuffle(train_tss)
+                train_data = split_corpus_dataset.BatchBuilder(
+                    [ivec_app_creator(ts) for ts in train_tss], 
+                    args.batch_size, discard_h=not args.concat_articles
+                )
+                if args.cuda:
+                    train_data = CudaStream(train_data)
+                
 
-            train_data = split_corpus_dataset.BatchBuilder(
-                train_tss, args.batch_size, discard_h=not args.concat_articles
-            )
-            if args.cuda:
-                train_data = CudaStream(train_data)
+            epoch_start_time = time.time()
+
+            logger = InfinityLogger(epoch, args.log_interval, lr)
             train_data_filtered = BatchFilter(
                 train_data, args.batch_size, args.bptt, args.min_batch_size
             )
-            train_data_ivecs = ivec_appenders.ParalelIvecAppender(
-                train_data_filtered, ivec_extractor, translator
-            )
 
-
-            logger = InfinityLogger(epoch, args.log_interval, lr)
             optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
             
             train(
-                lm, train_data_ivecs, optim, logger, 
+                lm, train_data_filtered, optim, logger, 
                 batch_size=args.batch_size, 
                 clip=args.clip, cuda=args.cuda
             )
