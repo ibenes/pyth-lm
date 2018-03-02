@@ -82,3 +82,7 @@ class InfinityLogger():
     def _reset(self):
         self._running_loss = 0.0
         self._start_time = time.time()
+
+class NoneLogger():
+    def log(self, *args):
+        pass
