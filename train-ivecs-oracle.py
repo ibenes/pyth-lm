@@ -104,6 +104,8 @@ if __name__ == '__main__':
     # At any point you can hit Ctrl + C to break out of training early.
     try:
         for epoch in range(1, args.epochs+1):
+            epoch_start_time = time.time()
+
             random.shuffle(train_tss)
             train_data = split_corpus_dataset.BatchBuilder(
                 [ivec_app_creator(ts) for ts in train_tss], 
@@ -111,9 +113,6 @@ if __name__ == '__main__':
             )
             if args.cuda:
                 train_data = CudaStream(train_data)
-            
-
-            epoch_start_time = time.time()
 
             logger = InfinityLogger(epoch, args.log_interval, lr)
             train_data_filtered = BatchFilter(
