@@ -50,14 +50,16 @@ if __name__ == '__main__':
     if args.ivec_nb_iters:
         ivec_extractor._nb_iters = args.ivec_nb_iters
     print(ivec_extractor)
-    ivec_app_creator = lambda ts: ivec_appenders.HistoryIvecAppender(ts, ivec_extractor)
 
     print("preparing data...")
     tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
-    data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in tss], args.batch_size,
+    data = split_corpus_dataset.BatchBuilder(tss, args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
+    data_ivecs = ivec_appenders.ParalelIvecAppender(
+        data, ivec_extractor, ivec_extractor.build_translator(lm.vocab)
+    )
 
-    loss = evaluate(lm, data, args.batch_size, args.cuda)
+    loss = evaluate(lm, data_ivecs, args.batch_size, args.cuda)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
