@@ -45,10 +45,6 @@ if __name__ == '__main__':
                         help='use CUDA')
     parser.add_argument('--concat-articles', action='store_true',
                         help='pass hidden states over article boundaries')
-    parser.add_argument('--shuffle-articles', action='store_true',
-                        help='shuffle the order of articles (at the start of the training)')
-    parser.add_argument('--keep-shuffling', action='store_true',
-                        help='shuffle the order of articles for each epoch')
     parser.add_argument('--min-batch-size', type=int, default=1,
                         help='stop, once batch is smaller than given size')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
@@ -86,10 +82,6 @@ if __name__ == '__main__':
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
-    train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
-                                                   discard_h=not args.concat_articles)
-    if args.cuda:
-        train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
@@ -115,9 +107,7 @@ if __name__ == '__main__':
         for epoch in range(1, args.epochs+1):
             epoch_start_time = time.time()
 
-            if args.keep_shuffling:
-                random.shuffle(train_tss)
-
+            random.shuffle(train_tss)
             train_data = split_corpus_dataset.BatchBuilder(
                 train_tss, args.batch_size, discard_h=not args.concat_articles
             )
