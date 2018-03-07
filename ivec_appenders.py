@@ -45,7 +45,10 @@ class ParalelIvecAppender:
         old_bows = None
         for x, t, mask in self._stream:
             corresponding_bows = self._reorganizer(old_bows, mask, x.size(0))
-            print("[debug]", "new batch", x.size(), t.size(), mask.size(), corresponding_bows.size())
-            ivectors = self._extractor(corresponding_bows) 
+            try:
+                ivectors = self._extractor(corresponding_bows)
+            except RuntimeError:
+                print(x.size(), mask, corresponding_bows.size())
+                raise
             old_bows = corresponding_bows + self._translator(x)
             yield x, t, ivectors, mask
