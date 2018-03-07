@@ -24,12 +24,12 @@ class IvecExtractor():
         if isinstance(sentence, str):
             data = self._tokenizer.transform([sentence])
             data = torch.from_numpy(data.A.astype(np.float32))
-            if self._model.cuda:
-                data = data.cuda()
 
         else:
             data = sentence
 
+        if self._model.cuda:
+            data = data.cuda()
         X = Variable(data.t())
 
         self._model.reset_w(X.size(-1))  # initialize i-vectors to zeros
@@ -40,7 +40,7 @@ class IvecExtractor():
         for i in range(self._nb_iters):
             loss = update_ws(self._model, opt_w, loss, X)
 
-        return self._model.W.data.squeeze()
+        return self._model.W.data.t().squeeze()
 
     def __str__(self):
         name = "IvecExtractor"
@@ -78,11 +78,11 @@ class IvecExtractor():
 
 
     def zero_bows(self, nb_bows):
-        # print("DEBUG", nb_bows)
         empty_docs = ["" for _ in range(nb_bows)]
         bows = self._tokenizer.transform(empty_docs)
         bows = torch.from_numpy(bows.A.astype(np.float32))
-        # print("DEBUG", bows)
+        if self._model.T.is_cuda:
+            bows = bows.cuda()
         return bows
 
 
@@ -92,6 +92,8 @@ class IvecExtractor():
             bow = self._tokenizer.transform([w]) 
             prototypes.append(torch.from_numpy(bow.A.astype(np.float32)))
         prototypes = torch.cat(prototypes, dim=0)
+        if self._model.T.is_cuda:
+            prototypes = prototypes.cuda()
         return lambda W: prototypes[W.view(-1)].view(W.size() + (-1,)).sum(dim=-2)
 
 
