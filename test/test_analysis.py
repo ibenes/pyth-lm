@@ -99,6 +99,16 @@ class CategoricalCrossEntropyTests(unittest.TestCase):
         self.assertEqual(xent[1], 2)
 
 
+    def test_one_vs_many(self):
+        p_x = torch.FloatTensor([[0.5, 0.5], [1.0, 0.0]])
+        q_x = torch.FloatTensor([0.25, 0.75])
+
+        xent = categorical_cross_entropy(p_x, q_x)
+
+        self.assertAlmostEqual(xent[0], 1.207518749639422, delta=1e-7)
+        self.assertEqual(xent[1], 2)
+
+
 class CategoricalKLDTests(unittest.TestCase):
     def setUp(self):
         pass

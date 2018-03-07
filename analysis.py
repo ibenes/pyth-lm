@@ -15,6 +15,7 @@ def categorical_cross_entropy(p, q, eps=1e-100):
     zeros = p <= eps
 
     log_q = q.log()
+    log_q = torch.zeros_like(p) + log_q
     log_q.masked_fill_(zeros, 0.0) # eliminates -inf for p[x] = 0.0
 
     Xent = - torch.sum(p*log_q, dim=-1)
