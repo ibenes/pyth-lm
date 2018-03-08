@@ -86,15 +86,49 @@ class IvecExtractor():
         return bows
 
 
+    # def build_translator(self, source_vocabulary):  
+    #     prototypes = [] 
+    #     for w in source_vocabulary:
+    #         bow = self._tokenizer.transform([w]) 
+    #         prototypes.append(torch.from_numpy(bow.A.astype(np.float32)))
+    #     prototypes = torch.cat(prototypes, dim=0)
+    #     if self._model.T.is_cuda:
+    #         prototypes = prototypes.cuda()
+    #     return lambda W: prototypes[W.view(-1)].view(W.size() + (-1,)).sum(dim=-2)
+
     def build_translator(self, source_vocabulary):  
-        prototypes = [] 
+        maxes = []
+        argmaxes = []
         for w in source_vocabulary:
             bow = self._tokenizer.transform([w]) 
-            prototypes.append(torch.from_numpy(bow.A.astype(np.float32)))
-        prototypes = torch.cat(prototypes, dim=0)
+            prototype = torch.from_numpy(bow.A.astype(np.float32))
+            p_max, p_argmax = prototype.max(dim=1)
+            maxes.append(p_max)
+            argmaxes.append(p_argmax)
+
+        maxes = torch.cat(maxes, dim=0)
+        argmaxes = torch.cat(argmaxes, dim=0)
+
         if self._model.T.is_cuda:
-            prototypes = prototypes.cuda()
-        return lambda W: prototypes[W.view(-1)].view(W.size() + (-1,)).sum(dim=-2)
+            maxes = maxes.cuda()
+            argmaxes = argmaxes.cuda()
+
+        return lambda W: translate(W, argmaxes, 1-maxes, prototype.size(1))
+
+
+def translate(W, translation_table, translation_mask, dst_vocab_size):
+    W_flat = W.view(-1) # W was [B, T], W_flat is [BxT]
+    translation = translation_table[W_flat] # [BxT]
+    invalid_translations = translation_mask[W_flat].nonzero().view(-1) # [number of words without translation]
+
+    one_hot = W.new(translation.size() + (dst_vocab_size,)).float() # [BxT, SMM vocab_size]
+    one_hot.zero_()
+    one_hot.scatter_(1,translation.view(-1,1),1) 
+    if len(invalid_translations.size()) > 0:
+        one_hot[invalid_translations] = 0 # zeroes the entries where no translation should ever happen
+
+    one_hot_reshaped = one_hot.view(W.size() + (dst_vocab_size, )) # [B, T, SMM vocab_size]
+    return one_hot_reshaped.sum(dim=-2) # [B, SMM vocab_size]
 
 
 def load(f):
