@@ -97,3 +97,42 @@ class TokenizedSplit():
             rend = i + self._unroll_length
             yield lend, rend
             
+
+class DomainAdaptationSplit(TokenizedSplit):
+    def __init__(self, f, vocab, unroll_length, end_portion):
+        """
+            Args:
+                f (file): File with a document.
+                vocab (Vocabulary): Vocabulary for translation word -> index
+        """
+        pass
+        sentence = f.read()
+        words = sentence.split()
+
+        nb_domain_words = int(len(words)*end_portion-0.01)
+
+        self._tokens = [vocab[w] for w in words[:-nb_domain_words]]
+        self._domain_string = " ".join(words[-nb_domain_words:])
+
+        self._unroll_length = unroll_length
+        self._end_portion = end_portion
+
+
+    def __iter__(self):
+        for lend, rend in self._ranges():
+            yield (
+                torch.LongTensor(self._tokens[lend:rend]),
+                torch.LongTensor(self._tokens[lend+1:rend+1])
+            )
+
+    def __len__(self):
+        return max(len(self._tokens) - self._unroll_length, 0)
+
+    def input_words(self):
+        return [self._domain_string]
+
+    def _ranges(self):
+        for i in range(0, len(self), self._unroll_length):
+            lend = i
+            rend = i + self._unroll_length
+            yield lend, rend
