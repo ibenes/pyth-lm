@@ -85,17 +85,6 @@ class IvecExtractor():
             bows = bows.cuda()
         return bows
 
-
-    # def build_translator(self, source_vocabulary):  
-    #     prototypes = [] 
-    #     for w in source_vocabulary:
-    #         bow = self._tokenizer.transform([w]) 
-    #         prototypes.append(torch.from_numpy(bow.A.astype(np.float32)))
-    #     prototypes = torch.cat(prototypes, dim=0)
-    #     if self._model.T.is_cuda:
-    #         prototypes = prototypes.cuda()
-    #     return lambda W: prototypes[W.view(-1)].view(W.size() + (-1,)).sum(dim=-2)
-
     def build_translator(self, source_vocabulary):  
         maxes = []
         argmaxes = []
