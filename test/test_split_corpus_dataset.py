@@ -485,6 +485,76 @@ class TokenizedSplitTests(common.TestCase):
         self.assertEqual(words, ['a b']) # we expect the input words
 
 
+class TokenizedSplitSingleTargetTests(common.TestCase):
+    def setUp(self):
+        self.test_words_short = "a b c a".split()
+        self.test_words_long = "a b c a a".split()
+
+        self.vocab = {
+            "a": 0,
+            "b": 1,
+            "c": 2
+        }
+        
+
+    def test_single_word(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 1)
+        tokens_string = next(iter(ts))
+        expectation = (torch.LongTensor([0]), torch.LongTensor([1])) # input, target
+        self.assertEqual(tokens_string, expectation)
+
+    def test_single_word_seq(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 1)
+        tokens_strings = list(iter(ts))
+        expectation = [(torch.LongTensor([0]), torch.LongTensor([1])), (torch.LongTensor([1]), torch.LongTensor([2])), (torch.LongTensor([2]), torch.LongTensor([0]))]
+        self.assertEqual(tokens_strings, expectation)
+
+    def test_single_word_len(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 1)
+        self.assertEqual(len(ts), len(self.test_words_short)-1)
+
+    def test_len_no_output(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 5)
+        self.assertEqual(len(ts), 0)
+
+    def test_two_word_seq(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 2)
+        tokens_strings = list(iter(ts))
+        expectation = [
+            (torch.LongTensor([0, 1]), torch.LongTensor([2])),
+            (torch.LongTensor([1, 2]), torch.LongTensor([0]))
+        ]
+        self.assertEqual(tokens_strings, expectation)
+
+    def test_two_word_seq_long(self):
+        data_source = getStream(self.test_words_long)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 2)
+        tokens_strings = list(iter(ts))
+        expectation = [
+            (torch.LongTensor([0, 1]), torch.LongTensor([2])),
+            (torch.LongTensor([1, 2]), torch.LongTensor([0])),
+            (torch.LongTensor([2, 0]), torch.LongTensor([0]))
+        ]
+        self.assertEqual(tokens_strings, expectation)
+
+    def test_single_word_retrieval(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 1)
+        words = list(ts.input_words())
+        self.assertEqual(words, ['a', 'b', 'c']) # we expect the input words
+
+    def test_two_word_retrieval(self):
+        data_source = getStream(self.test_words_short)
+        ts = split_corpus_dataset.TokenizedSplitSingleTarget(data_source, self.vocab, 2)
+        words = list(ts.input_words())
+        self.assertEqual(words, ['a b', 'b c']) # we expect the input words
+
+
 class DomainAdaptationSplitTests(common.TestCase):
     def setUp(self):
         self.test_words_short = "a b c a".split()
