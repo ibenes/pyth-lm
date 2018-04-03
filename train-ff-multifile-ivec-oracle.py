@@ -4,8 +4,9 @@ import math
 import random
 
 import torch
+import torch.nn as nn
 
-import smm_lstm_models
+import lstm_model
 import vocab
 import language_model
 import split_corpus_dataset
@@ -13,7 +14,7 @@ import ivec_appenders
 import smm_ivec_extractor
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
-from runtime_multifile import train, evaluate, BatchFilter
+from runtime_multifile import evaluate_no_transpose, train_no_transpose, BatchFilter
 
 from loggers import InfinityLogger
 import numpy as np
@@ -37,14 +38,18 @@ if __name__ == '__main__':
                         help='upper epoch limit')
     parser.add_argument('--batch_size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
-                        help='sequence length')
+    parser.add_argument('--target-seq-len', type=int, default=35, metavar='N',
+                        help='number of words to take from every sequence in a single step')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
     parser.add_argument('--cuda', action='store_true',
                         help='use CUDA')
     parser.add_argument('--concat-articles', action='store_true',
                         help='pass hidden states over article boundaries')
+    parser.add_argument('--shuffle-articles', action='store_true',
+                        help='shuffle the order of articles (at the start of the training)')
+    parser.add_argument('--keep-shuffling', action='store_true',
+                        help='shuffle the order of articles for each epoch')
     parser.add_argument('--min-batch-size', type=int, default=1,
                         help='stop, once batch is smaller than given size')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
@@ -62,7 +67,7 @@ if __name__ == '__main__':
 
     init_seeds(args.seed, args.cuda)
 
-    print("loading LSTM model...")
+    print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
     vocab = lm.vocab
@@ -80,23 +85,27 @@ if __name__ == '__main__':
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
-    train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
-    train_data_ivecs = [ivec_app_creator(ts) for ts in train_tss]
+    ts_constructor = lambda *x: split_corpus_dataset.TokenizedSplitFFMultiTarget(*x, args.target_seq_len)
+
+    train_tss = filelist_to_tokenized_splits(args.train_list, vocab, model.in_len, ts_constructor)
+    train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
+                                                   discard_h=not args.concat_articles)
+    if args.cuda:
+        train_data = CudaStream(train_data)
 
     print("\tvalidation...")
-    valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
+    valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, model.in_len, ts_constructor)
     valid_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
     print("\ttesting...")
-    test_tss = filelist_to_tokenized_splits(args.test_list, vocab, args.bptt)
+    test_tss = filelist_to_tokenized_splits(args.test_list, vocab, model.in_len, ts_constructor)
     test_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in test_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         test_data = CudaStream(test_data)
-
 
     print("training...")
     lr = args.lr
@@ -105,31 +114,32 @@ if __name__ == '__main__':
     # At any point you can hit Ctrl + C to break out of training early.
     try:
         for epoch in range(1, args.epochs+1):
-            epoch_start_time = time.time()
+            if args.keep_shuffling:
+                random.shuffle(train_tss)
+                train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
+                                                               discard_h=not args.concat_articles)
+                if args.cuda:
+                    train_data = CudaStream(train_data)
+                
 
-            random.shuffle(train_data_ivecs)
-            train_data = split_corpus_dataset.BatchBuilder(
-                train_data_ivecs, 
-                args.batch_size, discard_h=not args.concat_articles
-            )
-            if args.cuda:
-                train_data = CudaStream(train_data)
+            epoch_start_time = time.time()
 
             logger = InfinityLogger(epoch, args.log_interval, lr)
             train_data_filtered = BatchFilter(
-                train_data, args.batch_size, args.bptt, args.min_batch_size
+                train_data, args.batch_size, model.in_len, args.min_batch_size
             )
-
             optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
-            
-            train(
+
+            train_no_transpose(
                 lm, train_data_filtered, optim, logger, 
-                batch_size=args.batch_size, 
-                clip=args.clip, cuda=args.cuda
+                batch_size=args.batch_size,
+                clip=args.clip, cuda=args.cuda,
+                use_ivecs=True
             )
             train_data_filtered.report()
 
-            val_loss = evaluate(lm, valid_data, args.batch_size, args.cuda)
+
+            val_loss = evaluate_no_transpose(lm, valid_data, args.batch_size, args.cuda, use_ivecs=True)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                     'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
@@ -155,7 +165,7 @@ if __name__ == '__main__':
     model = lm.model
 
     # Run on test data.
-    test_loss = evaluate(lm, test_data, args.batch_size, args.cuda)
+    test_loss = evaluate_no_transpose(lm, test_data, args.batch_size, args.cuda, use_ivecs=True)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
         test_loss, math.exp(test_loss)))

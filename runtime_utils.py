@@ -10,9 +10,8 @@ class CudaStream():
         self._source = source
 
     def __iter__(self):
-        for x, target, ivecs, mask in self._source:
-            cuda_batch = x.cuda(), target.cuda(), ivecs.cuda(), mask.cuda()
-            yield cuda_batch
+        for batch in self._source:
+            yield tuple(x.cuda() for x in batch)
 
 
 def repackage_hidden(h):
@@ -23,12 +22,12 @@ def repackage_hidden(h):
         return tuple(repackage_hidden(v) for v in h)
 
 
-def filelist_to_tokenized_splits(filelist_filename, vocab, bptt):
+def filelist_to_tokenized_splits(filelist_filename, vocab, bptt, wrapper=split_corpus_dataset.TokenizedSplit):
     filenames = filenames_file_to_filenames(filelist_filename)
     tss = []
     for filename in filenames:
         with open(filename, 'r') as f:
-            tss.append(split_corpus_dataset.TokenizedSplit(f, vocab, bptt)) 
+            tss.append(wrapper(f, vocab, bptt)) 
 
     return tss
 

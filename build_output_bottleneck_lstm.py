@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     print("building model...")
 
-    model = smm_lstm_models.OutputEnhancedLM(
+    model = smm_lstm_models.OutputBottleneckLM(
         len(vocab), args.emsize, args.nhid, 
         args.nlayers, args.ivec_size, args.dropout, 
         tie_weights=args.tied,

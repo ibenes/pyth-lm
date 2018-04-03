@@ -51,8 +51,8 @@ if __name__ == '__main__':
                         help='report interval')
     parser.add_argument('--ivec-extractor', type=str, required=True,
                         help='where to load a ivector extractor from')
-    parser.add_argument('--ivec-nb-iters', type=int, 
-                        help='override the number of iterations when extracting ivectors')
+    parser.add_argument('--ivec-randomness', type=float, required=True,
+                        help='log_10 of +/- boundary of uniform, from which the ivectors are drawn')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
     parser.add_argument('--save', type=str,  required=True,
@@ -72,8 +72,7 @@ if __name__ == '__main__':
     print("loading SMM iVector extractor ...")
     with open(args.ivec_extractor, 'rb') as f:
         ivec_extractor = smm_ivec_extractor.load(f)
-    if args.ivec_nb_iters:
-        ivec_extractor._nb_iters = args.ivec_nb_iters
+    ivec_extractor._nb_iters = args.ivec_randomness
     print(ivec_extractor)
 
     print("preparing data...")
@@ -81,7 +80,6 @@ if __name__ == '__main__':
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
-    train_data_ivecs = [ivec_app_creator(ts) for ts in train_tss]
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
@@ -107,6 +105,7 @@ if __name__ == '__main__':
         for epoch in range(1, args.epochs+1):
             epoch_start_time = time.time()
 
+            train_data_ivecs = [ivec_app_creator(ts) for ts in train_tss]
             random.shuffle(train_data_ivecs)
             train_data = split_corpus_dataset.BatchBuilder(
                 train_data_ivecs, 

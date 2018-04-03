@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import torch.nn.functional as F
 
 
 class OutputEnhancedLM(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self, ntoken, ninp, nhid, nlayers, ivec_dim, dropout=0.5, dropout_ivec=0.0, tie_weights=False):
+    def __init__(self, ntoken, ninp, nhid, nlayers, ivec_dim, dropout=0.5, dropout_ivec=0.0, ivec_amplification=1.0, tie_weights=False):
         super().__init__()
         self.drop = nn.Dropout(dropout)
         self.drop_ivec = nn.Dropout(dropout_ivec)
@@ -24,6 +25,7 @@ class OutputEnhancedLM(nn.Module):
 
         self.nhid = nhid
         self.nlayers = nlayers
+        self._ivec_amplification = ivec_amplification
 
     def init_weights(self):
         initrange = 0.1
@@ -36,8 +38,64 @@ class OutputEnhancedLM(nn.Module):
         emb = self.drop(self.encoder(input))
         output, hidden = self.rnn(emb, hidden)
         output = self.drop(output)
-        ivec = self.drop_ivec(ivec)
+        try:
+            ivec = self.drop_ivec(self._ivec_amplification * ivec)
+        except AttributeError:
+            ivec = self.drop_ivec(ivec)
+
         decoded = nn.LogSoftmax(dim=2)(self.decoder(output) + self.ivec_proj(ivec))
+
+        return decoded, hidden
+
+    def init_hidden(self, bsz):
+        weight = next(self.parameters()).data
+        return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
+                Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+
+class OutputLinearBottleneckLM(nn.Module):
+    """Container module with an encoder, a recurrent module, and a decoder."""
+
+    def __init__(self, ntoken, ninp, nhid, nlayers, ivec_dim, dropout=0.5, dropout_ivec=0.0, ivec_amplification=1.0, tie_weights=False):
+        super().__init__()
+        self.drop = nn.Dropout(dropout)
+        self.drop_ivec = nn.Dropout(dropout_ivec)
+        self.encoder = nn.Embedding(ntoken, ninp)
+        self.rnn = nn.LSTM(ninp, nhid, nlayers, dropout=dropout)
+        self.bn_proj_lstm = nn.Linear(nhid, nhid)
+        self.bn_proj_ivec = nn.Linear(ivec_dim, nhid)
+        self.decoder = nn.Linear(nhid, ntoken)
+
+        if tie_weights:
+            if nhid != ninp:
+                raise ValueError('When using the tied flag, nhid must be equal to emsize')
+            self.decoder.weight = self.encoder.weight
+
+        self.init_weights()
+
+        self.bn_proj_ivec = nn.utils.weight_norm(self.bn_proj_ivec, name='weight')
+        self.bn_proj_lstm = nn.utils.weight_norm(self.bn_proj_lstm, name='weight')
+
+        self.nhid = nhid
+        self.nlayers = nlayers
+        self._ivec_amplification = ivec_amplification
+
+    def init_weights(self):
+        initrange = 0.1
+        self.encoder.weight.data.uniform_(-initrange, initrange)
+        self.decoder.bias.data.fill_(0)
+        self.decoder.weight.data.uniform_(-initrange, initrange)
+        self.bn_proj_lstm.weight.data.uniform_(-initrange, initrange)
+        self.bn_proj_lstm.bias.data.fill_(0)
+        self.bn_proj_ivec.weight.data.uniform_(-initrange, initrange)
+        self.bn_proj_ivec.bias.data.fill_(0)
+
+    def forward(self, input, hidden, ivec):
+        emb = self.drop(self.encoder(input))
+        output, hidden = self.rnn(emb, hidden)
+        output = self.drop(output)
+        ivec = self.drop_ivec(self._ivec_amplification * ivec)
+        bn = self.bn_proj_lstm(output) + self.bn_proj_ivec(ivec)
+        decoded = nn.LogSoftmax(dim=2)(self.decoder(bn))
 
         return decoded, hidden
 
@@ -49,14 +107,15 @@ class OutputEnhancedLM(nn.Module):
 class OutputBottleneckLM(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self, ntoken, ninp, nhid, nlayers, ivec_dim, dropout=0.5, dropout_ivec=0.0, tie_weights=False):
+    def __init__(self, ntoken, ninp, nhid, nlayers, ivec_dim, dropout=0.5, dropout_ivec=0.0, ivec_amplification=1.0, tie_weights=False):
         super().__init__()
         self.drop = nn.Dropout(dropout)
         self.drop_ivec = nn.Dropout(dropout_ivec)
         self.encoder = nn.Embedding(ntoken, ninp)
         self.rnn = nn.LSTM(ninp, nhid, nlayers, dropout=dropout)
+        self.bn_proj_lstm = nn.Linear(nhid, nhid)
+        self.bn_proj_ivec = nn.Linear(ivec_dim, nhid)
         self.decoder = nn.Linear(nhid, ntoken)
-        self.ivec_proj = nn.Linear(ivec_dim, nhid)
 
         if tie_weights:
             if nhid != ninp:
@@ -65,23 +124,30 @@ class OutputBottleneckLM(nn.Module):
 
         self.init_weights()
 
+        self.bn_proj_ivec = nn.utils.weight_norm(self.bn_proj_ivec, name='weight')
+        self.bn_proj_lstm = nn.utils.weight_norm(self.bn_proj_lstm, name='weight')
+
         self.nhid = nhid
         self.nlayers = nlayers
+        self._ivec_amplification = ivec_amplification
 
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
         self.decoder.bias.data.fill_(0)
         self.decoder.weight.data.uniform_(-initrange, initrange)
-        self.ivec_proj.weight.data.uniform_(-initrange, initrange)
+        self.bn_proj_lstm.weight.data.uniform_(-initrange, initrange)
+        self.bn_proj_ivec.weight.data.uniform_(-initrange, initrange)
+        self.bn_proj_ivec.bias.data.fill_(0)
 
     def forward(self, input, hidden, ivec):
         emb = self.drop(self.encoder(input))
         output, hidden = self.rnn(emb, hidden)
         output = self.drop(output)
-        ivec = self.drop_ivec(ivec)
-        combined = output + self.ivec_proj(ivec)
-        decoded = nn.LogSoftmax(dim=2)(self.decoder(combined))
+        ivec = self.drop_ivec(self._ivec_amplification * ivec)
+        bn = self.bn_proj_lstm(output) + self.bn_proj_ivec(ivec)
+        bn = self.drop(F.tanh(bn))
+        decoded = nn.LogSoftmax(dim=2)(self.decoder(bn))
 
         return decoded, hidden
 
@@ -250,8 +316,11 @@ class IvecOnlyLM(nn.Module):
         self.decoder.bias.data.fill_(0)
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
+    def ivec_to_logprobs(self, ivec):
+        return nn.LogSoftmax(dim=-1)(self.decoder(ivec))
+
     def forward(self, input, hidden, ivec):
-        decoded = nn.LogSoftmax(dim=2)(torch.stack([self.decoder(ivec)] * input.size(0)))
+        decoded = torch.stack([self.ivec_to_logprobs(ivec)] * input.size(0))
 
         return decoded, hidden
 

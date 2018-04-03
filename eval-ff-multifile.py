@@ -11,7 +11,7 @@ import split_corpus_dataset
 import ivec_appenders
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
-from runtime_multifile import evaluate
+from runtime_multifile import evaluate_no_transpose
 
 import numpy as np
 
@@ -22,8 +22,8 @@ if __name__ == '__main__':
                         help='file with paths to training documents')
     parser.add_argument('--batch_size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
-                        help='sequence length')
+    parser.add_argument('--target-seq-len', type=int, default=35, metavar='N',
+                        help='number of words to take from every sequence in a single step')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
     parser.add_argument('--cuda', action='store_true',
@@ -48,7 +48,8 @@ if __name__ == '__main__':
     ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
 
-    tss = filelist_to_tokenized_splits(args.file_list, vocab, args.bptt)
+    ts_constructor = lambda *x: split_corpus_dataset.TokenizedSplitFFMultiTarget(*x, args.target_seq_len)
+    tss = filelist_to_tokenized_splits(args.file_list, vocab, model.in_len, ts_constructor)
     data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in tss], args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
@@ -56,5 +57,5 @@ if __name__ == '__main__':
 
     criterion = nn.NLLLoss()
 
-    loss = evaluate(lm, data, args.batch_size, args.cuda, use_ivecs=False)
+    loss = evaluate_no_transpose(lm, data, args.batch_size, args.cuda, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))

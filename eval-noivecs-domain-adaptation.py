@@ -1,19 +1,18 @@
 import argparse
 import math
 import torch
-import torch.nn as nn
+import numpy as np
 
 import model
 import lstm_model
 import vocab
 import language_model
-import split_corpus_dataset
 import ivec_appenders
+import split_corpus_dataset
+import smm_ivec_extractor
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
+from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
 from runtime_multifile import evaluate
-
-import numpy as np
 
 
 if __name__ == '__main__':
@@ -28,6 +27,8 @@ if __name__ == '__main__':
                         help='random seed')
     parser.add_argument('--cuda', action='store_true',
                         help='use CUDA')
+    parser.add_argument('--domain-portion', type=float, required=True,
+                        help='portion of text to use as domain documents. Taken from the back.')
     parser.add_argument('--concat-articles', action='store_true',
                         help='pass hidden states over article boundaries')
     parser.add_argument('--load', type=str, required=True,
@@ -45,16 +46,15 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
+    ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x)]))
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
 
-    tss = filelist_to_tokenized_splits(args.file_list, vocab, args.bptt)
+    ts_constructor = lambda *x: split_corpus_dataset.DomainAdaptationSplit(*x, end_portion=args.domain_portion)
+    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt, ts_constructor)
     data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in tss], args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
-
-    criterion = nn.NLLLoss()
 
     loss = evaluate(lm, data, args.batch_size, args.cuda, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))

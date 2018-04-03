@@ -28,6 +28,8 @@ if __name__ == '__main__':
                         help='use CUDA')
     parser.add_argument('--concat-articles', action='store_true',
                         help='pass hidden states over article boundaries')
+    parser.add_argument('--domain-portion', type=float, required=True,
+                        help='portion of text to use as domain documents. Taken from the back.')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
     parser.add_argument('--ivec-extractor', type=str, required=True,
@@ -52,15 +54,15 @@ if __name__ == '__main__':
     print(ivec_extractor)
 
     print("preparing data...")
-    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
-    data = split_corpus_dataset.BatchBuilder(tss, args.batch_size,
-                                               discard_h=not args.concat_articles)
+    ts_constructor = lambda *x: split_corpus_dataset.DomainAdaptationSplit(*x, end_portion=args.domain_portion)
+    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt, ts_constructor)
+
+    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
+    tss_ivecs = [ivec_app_creator(ts) for ts in tss]
+    data = split_corpus_dataset.BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
+
     if args.cuda:
         data = CudaStream(data)
-    data_ivecs = ivec_appenders.ParalelIvecAppender(
-        data, ivec_extractor, ivec_extractor.build_translator(lm.vocab)
-    )
 
-    print("evaluating...")
-    loss = evaluate(lm, data_ivecs, args.batch_size, args.cuda)
+    loss = evaluate(lm, data, args.batch_size, args.cuda)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))

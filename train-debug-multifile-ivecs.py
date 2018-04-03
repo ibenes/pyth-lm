@@ -13,9 +13,9 @@ import ivec_appenders
 import smm_ivec_extractor
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
-from runtime_multifile import train, evaluate, BatchFilter
+from runtime_multifile import train_debug, evaluate, BatchFilter
 
-from loggers import InfinityLogger
+from loggers import InfinityLogger, NoneLogger, GradLogger
 import numpy as np
 
 
@@ -57,6 +57,8 @@ if __name__ == '__main__':
                         help='where to load a model from')
     parser.add_argument('--save', type=str,  required=True,
                         help='path to save the final model')
+    parser.add_argument('--save-grad-log', type=str,  required=True,
+                        help='path to file where to put the gradient logs')
     args = parser.parse_args()
     print(args)
 
@@ -75,13 +77,13 @@ if __name__ == '__main__':
     if args.ivec_nb_iters:
         ivec_extractor._nb_iters = args.ivec_nb_iters
     print(ivec_extractor)
+    translator = ivec_extractor.build_translator(vocab)
 
     print("preparing data...")
-    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
+    ivec_app_creator = lambda ts: ivec_appenders.HistoryIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
-    train_data_ivecs = [ivec_app_creator(ts) for ts in train_tss]
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
@@ -103,29 +105,39 @@ if __name__ == '__main__':
     best_val_loss = None
 
     # At any point you can hit Ctrl + C to break out of training early.
+    grad_f = open(args.save_grad_log, 'w')
+    grad_logger = GradLogger(
+        report_period=args.log_interval,
+        named_params=model.named_parameters(),
+        output_file = grad_f
+    )
     try:
         for epoch in range(1, args.epochs+1):
             epoch_start_time = time.time()
 
-            random.shuffle(train_data_ivecs)
+            random.shuffle(train_tss)
             train_data = split_corpus_dataset.BatchBuilder(
-                train_data_ivecs, 
-                args.batch_size, discard_h=not args.concat_articles
+                train_tss, args.batch_size, discard_h=not args.concat_articles
             )
             if args.cuda:
                 train_data = CudaStream(train_data)
-
-            logger = InfinityLogger(epoch, args.log_interval, lr)
             train_data_filtered = BatchFilter(
                 train_data, args.batch_size, args.bptt, args.min_batch_size
             )
+            train_data_ivecs = ivec_appenders.ParalelIvecAppender(
+                train_data_filtered, ivec_extractor, translator
+            )
 
+
+            logger = InfinityLogger(epoch, args.log_interval, lr)
+            # logger = NoneLogger()
             optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
             
-            train(
-                lm, train_data_filtered, optim, logger, 
+            train_debug(
+                lm, train_data_ivecs, optim, logger, 
                 batch_size=args.batch_size, 
-                clip=args.clip, cuda=args.cuda
+                clip=args.clip, cuda=args.cuda,
+                grad_logger=grad_logger
             )
             train_data_filtered.report()
 

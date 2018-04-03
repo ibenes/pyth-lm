@@ -11,7 +11,7 @@ import split_corpus_dataset
 import smm_ivec_extractor
 
 from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
-from runtime_multifile import evaluate
+from runtime_multifile import evaluate_no_transpose
 
 
 if __name__ == '__main__':
@@ -20,7 +20,7 @@ if __name__ == '__main__':
                         help='file with paths to training documents')
     parser.add_argument('--batch_size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
+    parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
@@ -28,6 +28,8 @@ if __name__ == '__main__':
                         help='use CUDA')
     parser.add_argument('--concat-articles', action='store_true',
                         help='pass hidden states over article boundaries')
+    parser.add_argument('--domain-portion', type=float, required=True,
+                        help='portion of text to use as domain documents. Taken from the back.')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
     parser.add_argument('--ivec-extractor', type=str, required=True,
@@ -52,15 +54,15 @@ if __name__ == '__main__':
     print(ivec_extractor)
 
     print("preparing data...")
-    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
-    data = split_corpus_dataset.BatchBuilder(tss, args.batch_size,
-                                               discard_h=not args.concat_articles)
+    ts_constructor = lambda *x: split_corpus_dataset.DomainAdaptationSplitFFMultiTarget(*x, args.target_seq_len, end_portion=args.domain_portion)
+    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, lm.model.in_len, ts_constructor)
+
+    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
+    tss_ivecs = [ivec_app_creator(ts) for ts in tss]
+    data = split_corpus_dataset.BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
+
     if args.cuda:
         data = CudaStream(data)
-    data_ivecs = ivec_appenders.ParalelIvecAppender(
-        data, ivec_extractor, ivec_extractor.build_translator(lm.vocab)
-    )
 
-    print("evaluating...")
-    loss = evaluate(lm, data_ivecs, args.batch_size, args.cuda)
+    loss = evaluate_no_transpose(lm, data, args.batch_size, args.cuda)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))

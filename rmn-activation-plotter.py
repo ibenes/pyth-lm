@@ -10,6 +10,7 @@ import numpy as np
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("--color-bar", action='store_true')
     parser.add_argument("activations")
     args = parser.parse_args()
 
@@ -25,6 +26,7 @@ if __name__ == '__main__':
         'cmap': 'gnuplot',
         'vmin': 0,
         'vmax': 30,
+        'colorbar': args.color_bar,
     }
 
     plotting.grid_plot(activations, lambda x:x, "activations", fig_titles, coloring=color_setup)

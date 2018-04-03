@@ -37,8 +37,15 @@ class IvecExtractor():
 
         loss = self._model.loss(X)
 
-        for i in range(self._nb_iters):
-            loss = update_ws(self._model, opt_w, loss, X)
+        # TODO this is a very nasty hack, needs to be 
+        # completely reworked, a separate class should be 
+        # prepared to implement this
+        if self._nb_iters < 0:
+            initrange = 10**(self._nb_iters)
+            self._model.W.data.uniform_(-initrange, initrange)
+        else: 
+            for i in range(self._nb_iters):
+                loss = update_ws(self._model, opt_w, loss, X)
 
         return self._model.W.data.t().squeeze()
 

@@ -145,7 +145,7 @@ class TensorReorganizerTests_SRN(common.TestCase):
     def test_passing_variables(self):
         last_h = Variable(torch.FloatTensor([[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]]))
 
-        mask = torch.LongTensor([0, 1, 2])
+        mask = Variable(torch.LongTensor([0, 1, 2]))
         bsz = 3
 
         new_h = self.reorganizer(last_h, mask, bsz)

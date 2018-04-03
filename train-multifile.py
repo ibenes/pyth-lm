@@ -10,7 +10,7 @@ import lstm_model
 import vocab
 import language_model
 import split_corpus_dataset
-from hidden_state_reorganization import HiddenStateReorganizer
+import ivec_appenders
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import evaluate, train, BatchFilter
@@ -70,8 +70,8 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    ivec_eetor = lambda x: np.asarray([sum(x) % 1337])
-    ivec_app_creator = lambda ts: split_corpus_dataset.CheatingIvecAppender(ts, ivec_eetor)
+    ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
+    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
