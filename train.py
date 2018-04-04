@@ -12,32 +12,11 @@ import lstm_model
 import vocab
 import language_model
 
-from runtime_utils import repackage_hidden
-from runtime_singlefile import evaluate, format_data
+from runtime_singlefile import evaluate, format_data, train
 
 import pickle
 from loggers import ProgressLogger
 
-
-def train(logger, optim):
-    if args.cuda:
-        model.cuda()
-    model.train()
-    hidden = model.init_hidden(args.batch_size)
-
-    for batch, (X, targets) in enumerate(train_gen.iterable_data()):
-        hidden = repackage_hidden(hidden)
-
-        output, hidden = model(X, hidden)
-        loss = criterion(output.view(-1, len(vocab)), targets)
-
-        optim.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(), args.clip)
-
-        optim.step()
-
-        logger.log(loss.data)
 
 
 if __name__ == '__main__':
@@ -112,7 +91,10 @@ if __name__ == '__main__':
 
             logger = ProgressLogger(epoch, args.log_interval, lr, len(train_data)//args.bptt)
             optim = torch.optim.SGD(model.parameters(), lr, weight_decay=args.beta)
-            train(logger, optim)
+            train(
+                lm, train_gen.iterable_data(), args.batch_size, logger, 
+                optim, args.cuda, args.clip
+            )
             val_loss = evaluate(lm, val_gen.iterable_data(), args.cuda)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
