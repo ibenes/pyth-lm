@@ -13,7 +13,7 @@ import vocab
 import language_model
 
 from runtime_utils import repackage_hidden
-from runtime_singlefile import evaluate
+from runtime_singlefile import evaluate, format_data
 
 import pickle
 from loggers import ProgressLogger
@@ -40,15 +40,6 @@ def train(logger, optim):
         logger.log(loss.data)
 
 
-def format_data(path, vocab, eval_batch_size):
-    corpus = data.Corpus(path, vocab, args.shuffle_lines)
-    train = data.batchify(corpus.train, args.batch_size, args.cuda)
-    valid = data.batchify(corpus.valid, eval_batch_size, args.cuda)
-    test = data.batchify(corpus.test, eval_batch_size, args.cuda)
-
-    return train, valid, test
-
- 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--data', type=str, required=True,
@@ -93,7 +84,15 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    train_data, val_data, test_data = format_data(args.data, vocab, eval_batch_size=10)
+    train_data, val_data, test_data = format_data(
+        args.data, 
+        vocab, 
+        train_batch_size=args.batch_size, 
+        eval_batch_size=10, 
+        cuda=args.cuda,
+        shuffle_lines=args.shuffle_lines
+    )
+
     train_gen = data.DataIteratorBuilder(train_data, args.bptt)
     val_gen = data.DataIteratorBuilder(val_data, args.bptt)
     test_gen = data.DataIteratorBuilder(test_data, args.bptt)

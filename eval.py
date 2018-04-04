@@ -8,16 +8,7 @@ import data
 import lstm_model
 import language_model
 
-from runtime_singlefile import evaluate
-
-
-def format_data(path, vocab):
-    corpus = data.Corpus(path, vocab, args.shuffle_lines)
-    train = data.batchify(corpus.train, args.batch_size, args.cuda)
-    valid = data.batchify(corpus.valid, args.batch_size, args.cuda)
-    test = data.batchify(corpus.test, args.batch_size, args.cuda)
-
-    return train, valid, test
+from runtime_singlefile import evaluate, format_data
 
  
 if __name__ == '__main__':
@@ -52,7 +43,14 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    train_data, val_data, test_data = format_data(args.data, vocab)
+    train_data, val_data, test_data = format_data(
+        args.data, 
+        vocab, 
+        args.batch_size,
+        args.batch_size,
+        args.cuda,
+        shuffle_lines=False
+    )
     train_gen = data.DataIteratorBuilder(train_data, args.bptt)
     val_gen = data.DataIteratorBuilder(val_data, args.bptt)
     test_gen = data.DataIteratorBuilder(test_data, args.bptt)
