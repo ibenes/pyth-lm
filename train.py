@@ -13,26 +13,10 @@ import vocab
 import language_model
 
 from runtime_utils import repackage_hidden
+from runtime_singlefile import evaluate
 
 import pickle
 from loggers import ProgressLogger
-
-
-def evaluate(data_source, eval_batch_size=10):
-    if args.cuda:
-        model.cuda()
-    # Turn on evaluation mode which disables dropout.
-    model.eval()
-    total_loss = 0
-    total_timesteps = 0
-    hidden = model.init_hidden(eval_batch_size)
-    for X, targets in data_source:
-        output, hidden = model(X, hidden)
-        output_flat = output.view(-1, len(vocab))
-        total_loss += len(X) * criterion(output_flat, targets).data
-        total_timesteps += len(X)
-        hidden = repackage_hidden(hidden)
-    return total_loss[0] / total_timesteps
 
 
 def train(logger, optim):
@@ -108,7 +92,6 @@ if __name__ == '__main__':
     model = lm.model
     print(model)
 
-
     print("preparing data...")
     train_data, val_data, test_data = format_data(args.data, vocab, eval_batch_size=10)
     train_gen = data.DataIteratorBuilder(train_data, args.bptt)
@@ -131,7 +114,7 @@ if __name__ == '__main__':
             logger = ProgressLogger(epoch, args.log_interval, lr, len(train_data)//args.bptt)
             optim = torch.optim.SGD(model.parameters(), lr, weight_decay=args.beta)
             train(logger, optim)
-            val_loss = evaluate(val_gen.iterable_data())
+            val_loss = evaluate(lm, val_gen.iterable_data(), args.cuda)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                     'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
@@ -158,7 +141,7 @@ if __name__ == '__main__':
     model = lm.model
 
     # Run on test data.
-    test_loss = evaluate(test_gen.iterable_data())
+    test_loss = evaluate(lm, test_gen.iterable_data(), args.cuda)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
         test_loss, math.exp(test_loss)))

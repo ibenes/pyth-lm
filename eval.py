@@ -8,25 +8,7 @@ import data
 import lstm_model
 import language_model
 
-from runtime_utils import repackage_hidden
-
-
-def evaluate(data_source, batch_size):
-    if args.cuda:
-        model.cuda()
-    # Turn on evaluation mode which disables dropout.
-    model.eval()
-    total_loss = 0
-    total_timesteps = 0
-    hidden = model.init_hidden(batch_size)
-    for X, targets in data_source:
-        output, hidden = model(X, hidden)
-        output_flat = output.view(-1, len(vocab))
-        total_loss += len(X) * criterion(output_flat, targets).data
-        total_timesteps += len(X)
-        hidden = repackage_hidden(hidden)
-    return total_loss[0] / total_timesteps
-
+from runtime_singlefile import evaluate
 
 
 def format_data(path, vocab):
@@ -79,5 +61,5 @@ if __name__ == '__main__':
 
     # Run on test data.
     for name, gen in zip("train val test".split(), [train_gen, val_gen, test_gen]):
-        loss = evaluate(gen.iterable_data(), args.batch_size)
+        loss = evaluate(lm, gen.iterable_data(), args.cuda, args.batch_size)
         print('{} loss {:5.2f} | {} ppl {:8.2f}'.format(name, loss, name, math.exp(loss)))
