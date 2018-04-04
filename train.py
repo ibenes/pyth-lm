@@ -60,6 +60,8 @@ if __name__ == '__main__':
         lm = language_model.load(f)
     vocab = lm.vocab
     model = lm.model
+    if args.cuda:
+        model.cuda()
     print(model)
 
     print("preparing data...")
@@ -93,9 +95,9 @@ if __name__ == '__main__':
             optim = torch.optim.SGD(model.parameters(), lr, weight_decay=args.beta)
             train(
                 lm, train_gen.iterable_data(), args.batch_size, logger, 
-                optim, args.cuda, args.clip
+                optim, args.clip
             )
-            val_loss = evaluate(lm, val_gen.iterable_data(), args.cuda)
+            val_loss = evaluate(lm, val_gen.iterable_data())
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                     'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
@@ -120,9 +122,11 @@ if __name__ == '__main__':
         lm = language_model.load(f)
     vocab = lm.vocab
     model = lm.model
+    if args.cuda:
+        model.cuda()
 
     # Run on test data.
-    test_loss = evaluate(lm, test_gen.iterable_data(), args.cuda)
+    test_loss = evaluate(lm, test_gen.iterable_data())
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
         test_loss, math.exp(test_loss)))

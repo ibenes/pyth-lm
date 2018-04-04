@@ -5,12 +5,10 @@ from runtime_utils import repackage_hidden
 
 import data
 
-def train(lm, data, batch_size, logger, optim, cuda, clip):
+def train(lm, data, batch_size, logger, optim, clip):
     model = lm.model
     vocab = lm.vocab
 
-    if cuda:
-        model.cuda()
     model.train()
     hidden = model.init_hidden(batch_size)
 
@@ -40,12 +38,10 @@ def format_data(path, vocab, train_batch_size, eval_batch_size, cuda, shuffle_li
     return train, valid, test
 
 
-def evaluate(lm, data_source, cuda, eval_batch_size=10):
+def evaluate(lm, data_source, eval_batch_size=10):
     model = lm.model
     vocab = lm.vocab
 
-    if cuda:
-        model.cuda()
     # Turn on evaluation mode which disables dropout.
     model.eval()
     criterion = nn.NLLLoss()

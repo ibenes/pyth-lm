@@ -40,6 +40,8 @@ if __name__ == '__main__':
         lm = language_model.load(f)
     vocab = lm.vocab
     model = lm.model
+    if args.cuda:
+        model.cuda()
     print(model)
 
     print("preparing data...")
@@ -59,5 +61,5 @@ if __name__ == '__main__':
 
     # Run on test data.
     for name, gen in zip("train val test".split(), [train_gen, val_gen, test_gen]):
-        loss = evaluate(lm, gen.iterable_data(), args.cuda, args.batch_size)
+        loss = evaluate(lm, gen.iterable_data(), args.batch_size)
         print('{} loss {:5.2f} | {} ppl {:8.2f}'.format(name, loss, name, math.exp(loss)))
