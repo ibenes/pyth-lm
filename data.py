@@ -58,6 +58,29 @@ def nb_words(f):
 
     return n
 
+def tokens_from_fn(fn, vocab, randomize):
+    with open(fn, 'r') as f:
+        nb_tokens = nb_words(f)
+
+    # Tokenize file content
+    with open(fn, 'r') as f:
+        ids = torch.LongTensor(nb_tokens)
+        token = 0
+
+        lines = f.read().split('\n')
+
+        if randomize:
+            import random
+            random.shuffle(lines)
+
+        for line in lines:
+            words = line.split()
+            for word in words:
+                ids[token] = vocab.w2i(word)
+                token += 1
+
+    return ids
+
 class Corpus(object):
     def __init__(self, path, vocab, randomize=False):
         self.dictionary = vocab
@@ -69,28 +92,8 @@ class Corpus(object):
     def tokenize(self, path):
         """Tokenizes a text file."""
         assert os.path.exists(path)
-        # Add words to the dictionary
-        with open(path, 'r') as f:
-            tokens = nb_words(f)
 
-        # Tokenize file content
-        with open(path, 'r') as f:
-            ids = torch.LongTensor(tokens)
-            token = 0
-
-            lines = f.read().split('\n')
-
-            if self._randomize:
-                import random
-                random.shuffle(lines)
-
-            for line in lines:
-                words = line.split()
-                for word in words:
-                    ids[token] = self.dictionary.w2i(word)
-                    token += 1
-
-        return ids
+        return tokens_from_fn(path, self.dictionary, self._randomize)
 
 
 class LineOrientedCorpus(torch.utils.data.Dataset):
