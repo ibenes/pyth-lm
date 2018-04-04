@@ -20,7 +20,7 @@ python train.py \
     --save=$EXP_DIR/$EXP_NAME.lm || exit 1
 
 python eval.py \
-    --data=$DATA_ROOT/pythlm-symlinks-no-train \
+    --data=$DATA_ROOT/wiki.test.tokens \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME.lm || exit 1
 

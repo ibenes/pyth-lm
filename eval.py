@@ -45,21 +45,12 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    train_data, val_data, test_data = format_data(
-        args.data, 
-        vocab, 
-        args.batch_size,
-        args.batch_size,
-        args.cuda,
-        shuffle_lines=False
-    )
-    train_gen = data.DataIteratorBuilder(train_data, args.bptt)
-    val_gen = data.DataIteratorBuilder(val_data, args.bptt)
-    test_gen = data.DataIteratorBuilder(test_data, args.bptt)
+    ids = data.tokens_from_fn(args.data, lm.vocab, randomize=False)
+    batched = data.batchify(ids, args.batch_size, args.cuda)
+    generator = data.DataIteratorBuilder(batched, args.bptt)
 
     criterion = nn.NLLLoss()
 
     # Run on test data.
-    for name, gen in zip("train val test".split(), [train_gen, val_gen, test_gen]):
-        loss = evaluate(lm, gen.iterable_data(), args.batch_size)
-        print('{} loss {:5.2f} | {} ppl {:8.2f}'.format(name, loss, name, math.exp(loss)))
+    loss = evaluate(lm, generator.iterable_data(), args.batch_size)
+    print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))
