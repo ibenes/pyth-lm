@@ -8,7 +8,7 @@ python build_lstm.py \
     --unk="<unk>" \
     --emsize=20 \
     --nhid=20 \
-    --save=$EXP_DIR/$EXP_NAME.init.lm
+    --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
 
 # 1) train and test in the traditional setup
@@ -17,12 +17,12 @@ python train.py \
     --cuda \
     --epochs=1 \
     --load=$EXP_DIR/$EXP_NAME.init.lm \
-    --save=$EXP_DIR/$EXP_NAME.lm
+    --save=$EXP_DIR/$EXP_NAME.lm || exit 1
 
 python eval.py \
     --data=$DATA_ROOT/pythlm-symlinks-no-train \
     --cuda \
-    --load=$EXP_DIR/$EXP_NAME.lm
+    --load=$EXP_DIR/$EXP_NAME.lm || exit 1
 
 
 # 2) train and test using multifile setup
@@ -33,9 +33,9 @@ python train-multifile.py \
     --cuda \
     --epochs=1 \
     --load=$EXP_DIR/$EXP_NAME.init.lm \
-    --save=$EXP_DIR/$EXP_NAME-mf.lm
+    --save=$EXP_DIR/$EXP_NAME-mf.lm || exit 1
 
 python eval-multifile.py \
     --file-list=$DATA_ROOT/test-list.txt \
     --cuda \
-    --load=$EXP_DIR/$EXP_NAME-mf.lm
+    --load=$EXP_DIR/$EXP_NAME-mf.lm || exit 1
