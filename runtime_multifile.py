@@ -10,7 +10,7 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
-def evaluate(lm, data_source, batch_size, cuda, use_ivecs):
+def evaluate(lm, data_source, cuda, use_ivecs):
     model = lm.model
 
     model.eval()
