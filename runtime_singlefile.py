@@ -28,16 +28,6 @@ def train(lm, data, batch_size, logger, optim, clip):
         logger.log(loss.data)
 
 
-def format_data(path, vocab, train_batch_size, eval_batch_size, cuda, shuffle_lines):
-    corpus = data.Corpus(path, vocab, shuffle_lines)
-
-    train = data.batchify(corpus.train, train_batch_size, cuda)
-    valid = data.batchify(corpus.valid, eval_batch_size, cuda)
-    test = data.batchify(corpus.test, eval_batch_size, cuda)
-
-    return train, valid, test
-
-
 def evaluate(lm, data_source, eval_batch_size=10):
     model = lm.model
     vocab = lm.vocab
