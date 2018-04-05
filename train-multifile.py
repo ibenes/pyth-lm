@@ -1,5 +1,4 @@
 import argparse
-import time
 import math
 import random
 
@@ -14,8 +13,6 @@ from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import evaluate, train, BatchFilter
 
 from loggers import InfinityLogger
-import numpy as np
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
@@ -61,21 +58,19 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
-    print(model)
+    print(lm.model)
 
     print("preparing data...")
 
     print("\ttraining...")
-    train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
+    train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.bptt)
     train_data = split_corpus_dataset.BatchBuilder(train_tss, args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
-    valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
+    valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
     valid_data = split_corpus_dataset.BatchBuilder(valid_tss, args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
@@ -93,13 +88,11 @@ if __name__ == '__main__':
             if args.cuda:
                 train_data = CudaStream(train_data)
 
-        epoch_start_time = time.time()
-
         logger = InfinityLogger(epoch, args.log_interval, lr)
         train_data_filtered = BatchFilter(
             train_data, args.batch_size, args.bptt, args.min_batch_size
         )
-        optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
+        optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
 
         train(
             lm, train_data_filtered, optim, logger, 
