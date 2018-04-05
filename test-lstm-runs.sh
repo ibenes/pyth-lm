@@ -30,7 +30,6 @@ python eval.py \
 python train-multifile.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
-    --test-list=$DATA_ROOT/valid-list.txt \
     --cuda \
     --epochs=1 \
     --load=$EXP_DIR/$EXP_NAME.init.lm \
