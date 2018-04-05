@@ -8,7 +8,6 @@ import lstm_model
 import vocab
 import language_model
 import split_corpus_dataset
-import ivec_appenders
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import evaluate
@@ -45,11 +44,8 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
-    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
-
     tss = filelist_to_tokenized_splits(args.file_list, vocab, args.bptt)
-    data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in tss], args.batch_size,
+    data = split_corpus_dataset.BatchBuilder(tss, args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
