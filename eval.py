@@ -1,14 +1,12 @@
 import argparse
 import math
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
 
 import data
 import lstm_model
 import language_model
 
-from runtime_singlefile import evaluate, format_data
+from runtime_singlefile import evaluate
 
  
 if __name__ == '__main__':
@@ -38,18 +36,14 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
     if args.cuda:
-        model.cuda()
-    print(model)
+        lm.model.cuda()
+    print(lm.model)
 
     print("preparing data...")
     ids = data.tokens_from_fn(args.data, lm.vocab, randomize=False)
     batched = data.batchify(ids, args.batch_size, args.cuda)
     generator = data.DataIteratorBuilder(batched, args.bptt)
-
-    criterion = nn.NLLLoss()
 
     # Run on test data.
     loss = evaluate(lm, generator.iterable_data(), args.batch_size)
