@@ -25,8 +25,6 @@ if __name__ == '__main__':
                         help='location of the train corpus')
     parser.add_argument('--valid', type=str, required=True,
                         help='location of the valid corpus')
-    parser.add_argument('--test', type=str, required=True,
-                        help='location of the test corpus')
     parser.add_argument('--lr', type=float, default=20,
                         help='initial learning rate')
     parser.add_argument('--beta', type=float, default=0,
@@ -77,10 +75,6 @@ if __name__ == '__main__':
     valid_batched = data.batchify(valid_ids, 10, args.cuda)
     valid_gen = data.DataIteratorBuilder(valid_batched, args.bptt)
 
-    test_ids = data.tokens_from_fn(args.test, lm.vocab, randomize=False)
-    test_batched = data.batchify(test_ids, 10, args.cuda)
-    test_gen = data.DataIteratorBuilder(test_batched, args.bptt)
-
     criterion = nn.NLLLoss()
 
     print("training...")
@@ -88,48 +82,27 @@ if __name__ == '__main__':
     lr = args.lr
     best_val_loss = None
 
-    # At any point you can hit Ctrl + C to break out of training early.
-    try:
-        for epoch in range(1, args.epochs+1):
-            epoch_start_time = time.time()
+    for epoch in range(1, args.epochs+1):
+        epoch_start_time = time.time()
 
-            logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.bptt)
-            optim = torch.optim.SGD(model.parameters(), lr, weight_decay=args.beta)
-            train(
-                lm, train_gen.iterable_data(), args.batch_size, logger, 
-                optim, args.clip
-            )
-            val_loss = evaluate(lm, valid_gen.iterable_data())
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
-                    'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
-                                               val_loss, math.exp(val_loss)))
-            print('-' * 89)
-            # Save the model if the validation loss is the best we've seen so far.
-            if not best_val_loss or val_loss < best_val_loss:
-                with open(args.save, 'wb') as f:
-                    lm.save(f)
-                best_val_loss = val_loss
-            else:
-                # Anneal the learning rate if no improvement has been seen in the validation dataset.
-                lr /= 2.0
-                pass
-
-    except KeyboardInterrupt:
+        logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.bptt)
+        optim = torch.optim.SGD(model.parameters(), lr, weight_decay=args.beta)
+        train(
+            lm, train_gen.iterable_data(), args.batch_size, logger, 
+            optim, args.clip
+        )
+        val_loss = evaluate(lm, valid_gen.iterable_data())
         print('-' * 89)
-        print('Exiting from training early')
+        print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
+                'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
+                                           val_loss, math.exp(val_loss)))
+        print('-' * 89)
 
-    # Load the best saved model.
-    with open(args.save, 'rb') as f:
-        lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
-    if args.cuda:
-        model.cuda()
-
-    # Run on test data.
-    test_loss = evaluate(lm, test_gen.iterable_data())
-    print('=' * 89)
-    print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
-        test_loss, math.exp(test_loss)))
-    print('=' * 89)
+        # Save the model if the validation loss is the best we've seen so far.
+        if not best_val_loss or val_loss < best_val_loss:
+            with open(args.save, 'wb') as f:
+                lm.save(f)
+            best_val_loss = val_loss
+        else:
+            lr /= 2.0
+            pass
