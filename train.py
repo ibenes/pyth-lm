@@ -1,22 +1,15 @@
 import argparse
-import time
 import math
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
-import sys
 
 import data
-import model
 import lstm_model
 import vocab
 import language_model
 
-from runtime_singlefile import evaluate, format_data, train
+from runtime_singlefile import evaluate, train
 
-import pickle
 from loggers import ProgressLogger
-
 
 
 if __name__ == '__main__':
@@ -60,11 +53,9 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
     if args.cuda:
-        model.cuda()
-    print(model)
+        lm.model.cuda()
+    print(lm.model)
 
     print("preparing data...")
     train_ids = data.tokens_from_fn(args.train, lm.vocab, randomize=False)
@@ -75,18 +66,13 @@ if __name__ == '__main__':
     valid_batched = data.batchify(valid_ids, 10, args.cuda)
     valid_gen = data.DataIteratorBuilder(valid_batched, args.bptt)
 
-    criterion = nn.NLLLoss()
-
     print("training...")
-    # Loop over epochs.
     lr = args.lr
     best_val_loss = None
 
     for epoch in range(1, args.epochs+1):
-        epoch_start_time = time.time()
-
         logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.bptt)
-        optim = torch.optim.SGD(model.parameters(), lr, weight_decay=args.beta)
+        optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
         train(
             lm, train_gen.iterable_data(), args.batch_size, logger, 
             optim, args.clip
