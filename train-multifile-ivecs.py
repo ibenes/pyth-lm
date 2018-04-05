@@ -88,13 +88,6 @@ if __name__ == '__main__':
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
-    print("\ttesting...")
-    test_tss = filelist_to_tokenized_splits(args.test_list, vocab, args.bptt)
-    test_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in test_tss], args.batch_size,
-                                                   discard_h=not args.concat_articles)
-    if args.cuda:
-        test_data = CudaStream(test_data)
-
 
     print("training...")
     lr = args.lr
