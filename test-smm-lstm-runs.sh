@@ -10,7 +10,7 @@ python build_output_enhanced_lstm.py \
     --unk="<unk>" \
     --emsize=20 \
     --nhid=20 \
-    --save=$EXP_DIR/$EXP_NAME.init.lm
+    --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
 # 2b) train and test SMM-LSTM with partial i-vectors
 python train-multifile-ivecs.py \
@@ -21,14 +21,14 @@ python train-multifile-ivecs.py \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME.init.lm \
     --save=$EXP_DIR/$EXP_NAME-partial.lm \
-    --epochs=1
+    --epochs=1 || exit 1
 
 python eval-multifile-ivecs.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
     --cuda \
-    --load=$EXP_DIR/$EXP_NAME-partial.lm 
+    --load=$EXP_DIR/$EXP_NAME-partial.lm  || exit 1
 
 # 2c) train and test SMM-LSTM with oracle i-vectors
 python train-ivecs-oracle.py \
@@ -40,12 +40,12 @@ python train-ivecs-oracle.py \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME.init.lm \
     --save=$EXP_DIR/$EXP_NAME-oracle.lm \
-    --epochs=1
+    --epochs=1 || exit 1
 
 python eval-ivecs-oracle.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
     --cuda \
-    --load=$EXP_DIR/$EXP_NAME-oracle.lm 
+    --load=$EXP_DIR/$EXP_NAME-oracle.lm  || exit 1
 
