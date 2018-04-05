@@ -1,5 +1,4 @@
 import argparse
-import time
 import math
 import random
 
@@ -16,7 +15,6 @@ from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import train, evaluate, BatchFilter
 
 from loggers import InfinityLogger
-import numpy as np
 
 
 if __name__ == '__main__':
@@ -63,9 +61,7 @@ if __name__ == '__main__':
     print("loading LSTM model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
-    print(model)
+    print(lm.model)
 
     print("loading SMM iVector extractor ...")
     with open(args.ivec_extractor, 'rb') as f:
@@ -78,24 +74,21 @@ if __name__ == '__main__':
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
-    train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
+    train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.bptt)
     train_data_ivecs = [ivec_app_creator(ts) for ts in train_tss]
 
     print("\tvalidation...")
-    valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
+    valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
     valid_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
-
 
     print("training...")
     lr = args.lr
     best_val_loss = None
 
     for epoch in range(1, args.epochs+1):
-        epoch_start_time = time.time()
-
         random.shuffle(train_data_ivecs)
         train_data = split_corpus_dataset.BatchBuilder(
             train_data_ivecs, 
@@ -109,7 +102,7 @@ if __name__ == '__main__':
             train_data, args.batch_size, args.bptt, args.min_batch_size
         )
 
-        optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
+        optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
         
         train(
             lm, train_data_filtered, optim, logger, 
