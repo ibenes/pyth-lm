@@ -62,5 +62,5 @@ if __name__ == '__main__':
     )
 
     print("evaluating...")
-    loss = evaluate(lm, data_ivecs, args.batch_size, args.cuda)
+    loss = evaluate(lm, data_ivecs, args.batch_size, args.cuda, use_ivecs=True)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))

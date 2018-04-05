@@ -114,7 +114,7 @@ if __name__ == '__main__':
         )
         train_data_filtered.report()
 
-        val_loss = evaluate(lm, valid_data, args.batch_size, args.cuda)
+        val_loss = evaluate(lm, valid_data, args.batch_size, args.cuda, use_ivecs=True)
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                 'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
