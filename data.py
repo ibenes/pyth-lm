@@ -81,21 +81,6 @@ def tokens_from_fn(fn, vocab, randomize):
 
     return ids
 
-class Corpus(object):
-    def __init__(self, path, vocab, randomize=False):
-        self.dictionary = vocab
-        self._randomize = randomize
-        self.train = self.tokenize(os.path.join(path, 'train.txt'))
-        self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
-        self.test = self.tokenize(os.path.join(path, 'test.txt'))
-
-    def tokenize(self, path):
-        """Tokenizes a text file."""
-        assert os.path.exists(path)
-
-        return tokens_from_fn(path, self.dictionary, self._randomize)
-
-
 class LineOrientedCorpus(torch.utils.data.Dataset):
     def __init__(self, path, vocab, cuda):
         self._vocab = vocab
