@@ -21,8 +21,12 @@ from loggers import ProgressLogger
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
-    parser.add_argument('--data', type=str, required=True,
-                        help='location of the data corpus')
+    parser.add_argument('--train', type=str, required=True,
+                        help='location of the train corpus')
+    parser.add_argument('--valid', type=str, required=True,
+                        help='location of the valid corpus')
+    parser.add_argument('--test', type=str, required=True,
+                        help='location of the test corpus')
     parser.add_argument('--lr', type=float, default=20,
                         help='initial learning rate')
     parser.add_argument('--beta', type=float, default=0,
@@ -65,19 +69,17 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    train_data, val_data, test_data = format_data(
-        args.data, 
-        vocab, 
-        train_batch_size=args.batch_size, 
-        eval_batch_size=10, 
-        cuda=args.cuda,
-        shuffle_lines=args.shuffle_lines
-    )
+    train_ids = data.tokens_from_fn(args.train, lm.vocab, randomize=False)
+    train_batched = data.batchify(train_ids, args.batch_size, args.cuda)
+    train_gen = data.DataIteratorBuilder(train_batched, args.bptt)
 
-    train_gen = data.DataIteratorBuilder(train_data, args.bptt)
-    val_gen = data.DataIteratorBuilder(val_data, args.bptt)
-    test_gen = data.DataIteratorBuilder(test_data, args.bptt)
+    valid_ids = data.tokens_from_fn(args.valid, lm.vocab, randomize=False)
+    valid_batched = data.batchify(valid_ids, 10, args.cuda)
+    valid_gen = data.DataIteratorBuilder(valid_batched, args.bptt)
 
+    test_ids = data.tokens_from_fn(args.test, lm.vocab, randomize=False)
+    test_batched = data.batchify(test_ids, 10, args.cuda)
+    test_gen = data.DataIteratorBuilder(test_batched, args.bptt)
 
     criterion = nn.NLLLoss()
 
@@ -91,13 +93,13 @@ if __name__ == '__main__':
         for epoch in range(1, args.epochs+1):
             epoch_start_time = time.time()
 
-            logger = ProgressLogger(epoch, args.log_interval, lr, len(train_data)//args.bptt)
+            logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.bptt)
             optim = torch.optim.SGD(model.parameters(), lr, weight_decay=args.beta)
             train(
                 lm, train_gen.iterable_data(), args.batch_size, logger, 
                 optim, args.clip
             )
-            val_loss = evaluate(lm, val_gen.iterable_data())
+            val_loss = evaluate(lm, valid_gen.iterable_data())
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                     'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),

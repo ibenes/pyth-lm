@@ -13,7 +13,9 @@ python build_lstm.py \
 
 # 1) train and test in the traditional setup
 python train.py \
-    --data=$DATA_ROOT/pythlm-symlinks-no-train \
+    --train=$DATA_ROOT/pythlm-symlinks-no-train/train.txt \
+    --valid=$DATA_ROOT/pythlm-symlinks-no-train/valid.txt \
+    --test=$DATA_ROOT/pythlm-symlinks-no-train/test.txt \
     --cuda \
     --epochs=1 \
     --load=$EXP_DIR/$EXP_NAME.init.lm \
