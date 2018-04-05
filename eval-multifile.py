@@ -1,7 +1,6 @@
 import argparse
 import math
 import torch
-import torch.nn as nn
 
 import model
 import lstm_model
@@ -11,8 +10,6 @@ import split_corpus_dataset
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import evaluate
-
-import numpy as np
 
 
 if __name__ == '__main__':
@@ -39,18 +36,14 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
-    print(model)
+    print(lm.model)
 
     print("preparing data...")
-    tss = filelist_to_tokenized_splits(args.file_list, vocab, args.bptt)
+    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
     data = split_corpus_dataset.BatchBuilder(tss, args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
-
-    criterion = nn.NLLLoss()
 
     loss = evaluate(lm, data, args.batch_size, args.cuda, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
