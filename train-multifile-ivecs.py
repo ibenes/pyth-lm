@@ -62,6 +62,8 @@ if __name__ == '__main__':
     print("loading LSTM model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
+    if args.cuda:
+        lm.model.cuda()
     print(lm.model)
 
     print("loading SMM iVector extractor ...")
@@ -114,7 +116,7 @@ if __name__ == '__main__':
         )
         train_data_filtered.report()
 
-        val_loss = evaluate(lm, valid_data, args.cuda, use_ivecs=True)
+        val_loss = evaluate(lm, valid_data, use_ivecs=True)
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                 'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),

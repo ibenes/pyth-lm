@@ -10,7 +10,7 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
-def evaluate(lm, data_source, cuda, use_ivecs):
+def evaluate(lm, data_source, use_ivecs):
     model = lm.model
 
     model.eval()
@@ -20,10 +20,6 @@ def evaluate(lm, data_source, cuda, use_ivecs):
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
     hidden = None
-
-    if cuda:
-        model.cuda()
-        # hidden = tuple(h.cuda() for h in hidden)
 
     for inputs in data_source:
         X = inputs[0] 

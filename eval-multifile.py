@@ -36,6 +36,8 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
+    if args.cuda:
+        lm.model.cuda()
     print(lm.model)
 
     print("preparing data...")
@@ -45,5 +47,5 @@ if __name__ == '__main__':
     if args.cuda:
         data = CudaStream(data)
 
-    loss = evaluate(lm, data, args.batch_size, args.cuda, use_ivecs=False)
+    loss = evaluate(lm, data, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))

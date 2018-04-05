@@ -42,6 +42,8 @@ if __name__ == '__main__':
     print("loading LM...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
+    if args.cuda:
+        lm.model.cuda()
     print(lm.model)
 
     print("loading SMM iVector extractor ...")
@@ -62,5 +64,5 @@ if __name__ == '__main__':
     )
 
     print("evaluating...")
-    loss = evaluate(lm, data_ivecs, args.cuda, use_ivecs=True)
+    loss = evaluate(lm, data_ivecs, use_ivecs=True)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
