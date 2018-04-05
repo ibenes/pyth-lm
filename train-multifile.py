@@ -4,13 +4,11 @@ import math
 import random
 
 import torch
-import torch.nn as nn
 
 import lstm_model
 import vocab
 import language_model
 import split_corpus_dataset
-import ivec_appenders
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import evaluate, train, BatchFilter
@@ -68,19 +66,17 @@ if __name__ == '__main__':
     print(model)
 
     print("preparing data...")
-    ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
-    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, vocab, args.bptt)
-    train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
+    train_data = split_corpus_dataset.BatchBuilder(train_tss, args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, args.bptt)
-    valid_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
+    valid_data = split_corpus_dataset.BatchBuilder(valid_tss, args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
@@ -92,11 +88,10 @@ if __name__ == '__main__':
     for epoch in range(1, args.epochs+1):
         if args.keep_shuffling:
             random.shuffle(train_tss)
-            train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
+            train_data = split_corpus_dataset.BatchBuilder(train_tss, args.batch_size,
                                                            discard_h=not args.concat_articles)
             if args.cuda:
                 train_data = CudaStream(train_data)
-            
 
         epoch_start_time = time.time()
 

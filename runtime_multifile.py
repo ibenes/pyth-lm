@@ -26,8 +26,16 @@ def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
         model.cuda()
         hidden = tuple(h.cuda() for h in hidden)
 
-    for X, targets, ivecs, mask in data_source:
+    for inputs in data_source:
+        X = inputs[0] 
         X = Variable(X.t())
+        inputs = (X,) + inputs[1:]
+
+        X = inputs[0]
+        targets = inputs[1]
+        ivecs = inputs[2]
+        mask = inputs[-1] # 3
+
         hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
         hidden = repackage_hidden(hidden)
 
@@ -123,9 +131,16 @@ def train(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True):
         model.cuda()
         hidden = tuple(h.cuda() for h in hidden)
 
-
-    for batch, (X, targets, ivecs, mask) in enumerate(data):
+    for batch, inputs in enumerate(data):
+        X = inputs[0]
         X = Variable(X.t())
+        inputs = (X,) + inputs[1:]
+
+        X = inputs[0]
+        targets = inputs[1]
+        ivecs = inputs[2]
+        mask = inputs[-1] # 3
+
         hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
         hidden = repackage_hidden(hidden)
 
