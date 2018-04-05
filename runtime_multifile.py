@@ -1,6 +1,5 @@
 import sys
 
-
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
@@ -20,11 +19,11 @@ def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
     total_timesteps = 0
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
-    hidden = model.init_hidden(batch_size)
+    hidden = None
 
     if cuda:
         model.cuda()
-        hidden = tuple(h.cuda() for h in hidden)
+        # hidden = tuple(h.cuda() for h in hidden)
 
     for inputs in data_source:
         X = inputs[0] 
@@ -35,6 +34,9 @@ def evaluate(lm, data_source, batch_size, cuda, use_ivecs=True):
         targets = inputs[1]
         ivecs = inputs[2]
         mask = inputs[-1] # 3
+
+        if hidden is None:
+            hidded = model.init_hidden(X.size(1))
 
         hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
         hidden = repackage_hidden(hidden)
