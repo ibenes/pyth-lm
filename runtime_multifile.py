@@ -126,12 +126,9 @@ class BatchFilter:
 
 # TODO time X batch or vice-versa?
 
-def train(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs):
+def train(lm, data, optim, logger, batch_size, clip, use_ivecs):
     model = lm.model
     model.train()
-
-    if cuda:
-        model.cuda()
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
     hidden = model.init_hidden(batch_size)
