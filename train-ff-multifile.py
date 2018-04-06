@@ -8,13 +8,11 @@ import lstm_model
 import vocab
 import language_model
 import split_corpus_dataset
-import ivec_appenders
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import evaluate_no_transpose, train_no_transpose, BatchFilter
 
 from loggers import InfinityLogger
-import numpy as np
 
 
 if __name__ == '__main__':
@@ -64,9 +62,6 @@ if __name__ == '__main__':
     print(lm.model)
 
     print("preparing data...")
-    ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
-    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
-
     print("\ttraining...")
     ts_constructor = lambda *x: split_corpus_dataset.TokenizedSplitFFMultiTarget(*x, args.target_seq_len)
 
