@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, lm.model.in_len, ts_constructor)
-    valid_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
+    valid_data = split_corpus_dataset.BatchBuilder(valid_tss, args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)

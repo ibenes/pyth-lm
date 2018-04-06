@@ -65,8 +65,16 @@ def evaluate_no_transpose(lm, data_source, batch_size, cuda, use_ivecs=True):
         model.cuda()
         hidden = tuple(h.cuda() for h in hidden)
 
-    for X, targets, ivecs, mask in data_source:
+    for inputs in data_source:
+        X = inputs[0]
         X = Variable(X)
+        inputs = (X,) + inputs[1:]
+
+        X = inputs[0]
+        targets = inputs[1]
+        ivecs = inputs[2]
+        mask = inputs[-1]
+
         # hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
         hidden = repackage_hidden(hidden)
 
