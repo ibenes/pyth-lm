@@ -50,7 +50,7 @@ def evaluate(lm, data_source, use_ivecs):
     return total_loss[0] / total_timesteps
 
 
-def evaluate_no_transpose(lm, data_source, batch_size, cuda, use_ivecs):
+def evaluate_no_transpose(lm, data_source, batch_size, use_ivecs):
     model = lm.model
 
     model.eval()
@@ -60,10 +60,6 @@ def evaluate_no_transpose(lm, data_source, batch_size, cuda, use_ivecs):
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
     hidden = model.init_hidden(batch_size)
-
-    if cuda:
-        model.cuda()
-        hidden = tuple(h.cuda() for h in hidden)
 
     for inputs in data_source:
         X = inputs[0]
