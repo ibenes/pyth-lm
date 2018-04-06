@@ -16,7 +16,6 @@ python build_bengio_ivec_input.py \
 python train-ff-multifile-ivec-oracle.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
-    --test-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
     --cuda \

@@ -26,8 +26,6 @@ if __name__ == '__main__':
                         help='file with paths to training documents')
     parser.add_argument('--valid-list', type=str, required=True,
                         help='file with paths to validation documents')
-    parser.add_argument('--test-list', type=str, required=True,
-                        help='file with paths to testin documents')
     parser.add_argument('--lr', type=float, default=20,
                         help='initial learning rate')
     parser.add_argument('--beta', type=float, default=0,
@@ -100,75 +98,47 @@ if __name__ == '__main__':
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
-    print("\ttesting...")
-    test_tss = filelist_to_tokenized_splits(args.test_list, vocab, model.in_len, ts_constructor)
-    test_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in test_tss], args.batch_size,
-                                                   discard_h=not args.concat_articles)
-    if args.cuda:
-        test_data = CudaStream(test_data)
-
     print("training...")
     lr = args.lr
     best_val_loss = None
 
-    # At any point you can hit Ctrl + C to break out of training early.
-    try:
-        for epoch in range(1, args.epochs+1):
-            if args.keep_shuffling:
-                random.shuffle(train_tss)
-                train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
-                                                               discard_h=not args.concat_articles)
-                if args.cuda:
-                    train_data = CudaStream(train_data)
-                
+    for epoch in range(1, args.epochs+1):
+        if args.keep_shuffling:
+            random.shuffle(train_tss)
+            train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
+                                                           discard_h=not args.concat_articles)
+            if args.cuda:
+                train_data = CudaStream(train_data)
+            
 
-            epoch_start_time = time.time()
+        epoch_start_time = time.time()
 
-            logger = InfinityLogger(epoch, args.log_interval, lr)
-            train_data_filtered = BatchFilter(
-                train_data, args.batch_size, model.in_len, args.min_batch_size
-            )
-            optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
+        logger = InfinityLogger(epoch, args.log_interval, lr)
+        train_data_filtered = BatchFilter(
+            train_data, args.batch_size, model.in_len, args.min_batch_size
+        )
+        optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
 
-            train_no_transpose(
-                lm, train_data_filtered, optim, logger, 
-                batch_size=args.batch_size,
-                clip=args.clip, cuda=args.cuda,
-                use_ivecs=True
-            )
-            train_data_filtered.report()
+        train_no_transpose(
+            lm, train_data_filtered, optim, logger, 
+            batch_size=args.batch_size,
+            clip=args.clip, cuda=args.cuda,
+            use_ivecs=True
+        )
+        train_data_filtered.report()
 
 
-            val_loss = evaluate_no_transpose(lm, valid_data, use_ivecs=True)
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
-                    'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
-                                               val_loss, math.exp(val_loss)))
-            print('-' * 89)
-            # Save the model if the validation loss is the best we've seen so far.
-            if not best_val_loss or val_loss < best_val_loss:
-                with open(args.save, 'wb') as f:
-                    lm.save(f)
-                best_val_loss = val_loss
-            else:
-                lr /= 2.0
-                pass
-
-    except KeyboardInterrupt:
+        val_loss = evaluate_no_transpose(lm, valid_data, use_ivecs=True)
         print('-' * 89)
-        print('Exiting from training early')
-
-    # Load the best saved model.
-    with open(args.save, 'rb') as f:
-        lm = language_model.load(f)
-    if args.cuda:
-        lm.model.cuda()
-    vocab = lm.vocab
-    model = lm.model
-
-    # Run on test data.
-    test_loss = evaluate_no_transpose(lm, test_data, use_ivecs=True)
-    print('=' * 89)
-    print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
-        test_loss, math.exp(test_loss)))
-    print('=' * 89)
+        print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
+                'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
+                                           val_loss, math.exp(val_loss)))
+        print('-' * 89)
+        # Save the model if the validation loss is the best we've seen so far.
+        if not best_val_loss or val_loss < best_val_loss:
+            with open(args.save, 'wb') as f:
+                lm.save(f)
+            best_val_loss = val_loss
+        else:
+            lr /= 2.0
+            pass
