@@ -1,10 +1,8 @@
 import argparse
-import time
 import math
 import random
 
 import torch
-import torch.nn as nn
 
 import lstm_model
 import vocab
@@ -63,9 +61,7 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
-    print(model)
+    print(lm.model)
 
     print("preparing data...")
     ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
@@ -74,14 +70,14 @@ if __name__ == '__main__':
     print("\ttraining...")
     ts_constructor = lambda *x: split_corpus_dataset.TokenizedSplitFFMultiTarget(*x, args.target_seq_len)
 
-    train_tss = filelist_to_tokenized_splits(args.train_list, vocab, model.in_len, ts_constructor)
+    train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, lm.model.in_len, ts_constructor)
     train_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
-    valid_tss = filelist_to_tokenized_splits(args.valid_list, vocab, model.in_len, ts_constructor)
+    valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, lm.model.in_len, ts_constructor)
     valid_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
@@ -100,14 +96,11 @@ if __name__ == '__main__':
             if args.cuda:
                 train_data = CudaStream(train_data)
             
-
-        epoch_start_time = time.time()
-
         logger = InfinityLogger(epoch, args.log_interval, lr)
         train_data_filtered = BatchFilter(
-            train_data, args.batch_size, model.in_len, args.min_batch_size
+            train_data, args.batch_size, lm.model.in_len, args.min_batch_size
         )
-        optim = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=args.beta)
+        optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
 
         train_no_transpose(
             lm, train_data_filtered, optim, logger, 
@@ -116,7 +109,6 @@ if __name__ == '__main__':
             use_ivecs=False
         )
         train_data_filtered.report()
-
 
         val_loss = evaluate_no_transpose(lm, valid_data, args.batch_size, args.cuda, use_ivecs=False)
         print('-' * 89)
