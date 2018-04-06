@@ -1,7 +1,6 @@
 import argparse
 import math
 import torch
-import torch.nn as nn
 
 import model
 import lstm_model
@@ -40,22 +39,18 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
-    vocab = lm.vocab
-    model = lm.model
-    print(model)
+    print(lm.model)
 
     print("preparing data...")
     ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x) % 1337])).float()
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
 
     ts_constructor = lambda *x: split_corpus_dataset.TokenizedSplitFFMultiTarget(*x, args.target_seq_len)
-    tss = filelist_to_tokenized_splits(args.file_list, vocab, model.in_len, ts_constructor)
+    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, lm.model.in_len, ts_constructor)
     data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in tss], args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
-
-    criterion = nn.NLLLoss()
 
     loss = evaluate_no_transpose(lm, data, args.batch_size, args.cuda, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
