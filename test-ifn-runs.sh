@@ -10,7 +10,7 @@ python build_bengio_ivec_input.py \
     --unk="<unk>" \
     --emsize=20 \
     --nhid=20 \
-    --save=$EXP_DIR/$EXP_NAME.init.lm
+    --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
 # 1) train the iFN-LM with oracle ivectors and evaluate using partial ones
 python train-ff-multifile-ivec-oracle.py \
@@ -22,11 +22,11 @@ python train-ff-multifile-ivec-oracle.py \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME.init.lm \
     --save=$EXP_DIR/$EXP_NAME.lm \
-    --epochs=1
+    --epochs=1 || exit 1
 
 python eval-ff-multifile-ivecs.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
     --cuda \
-    --load=$EXP_DIR/$EXP_NAME.lm 
+    --load=$EXP_DIR/$EXP_NAME.lm  || exit 1
