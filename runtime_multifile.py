@@ -50,7 +50,7 @@ def evaluate(lm, data_source, use_ivecs):
     return total_loss[0] / total_timesteps
 
 
-def evaluate_no_transpose(lm, data_source, batch_size, cuda, use_ivecs=True):
+def evaluate_no_transpose(lm, data_source, batch_size, cuda, use_ivecs):
     model = lm.model
 
     model.eval()
