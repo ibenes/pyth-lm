@@ -108,7 +108,6 @@ if __name__ == '__main__':
         
         train(
             lm, train_data_filtered, optim, logger, 
-            batch_size=args.batch_size, 
             clip=args.clip,
             use_ivecs=True
         )

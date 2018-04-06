@@ -126,12 +126,12 @@ class BatchFilter:
 
 # TODO time X batch or vice-versa?
 
-def train(lm, data, optim, logger, batch_size, clip, use_ivecs):
+def train(lm, data, optim, logger, clip, use_ivecs):
     model = lm.model
     model.train()
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
-    hidden = model.init_hidden(batch_size)
+    hidden = None
 
     for batch, inputs in enumerate(data):
         X = inputs[0]
@@ -142,6 +142,9 @@ def train(lm, data, optim, logger, batch_size, clip, use_ivecs):
         targets = inputs[1]
         ivecs = inputs[2]
         mask = inputs[-1] # 3
+
+        if hidden is None:
+            hidden = model.init_hidden(X.size(1))
 
         hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
         hidden = repackage_hidden(hidden)

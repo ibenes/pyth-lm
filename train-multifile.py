@@ -58,6 +58,8 @@ if __name__ == '__main__':
     print("loading model...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
+    if args.cuda:
+        lm.model.cuda()
     print(lm.model)
 
     print("preparing data...")
@@ -96,8 +98,7 @@ if __name__ == '__main__':
 
         train(
             lm, train_data_filtered, optim, logger, 
-            batch_size=args.batch_size,
-            clip=args.clip, cuda=args.cuda,
+            clip=args.clip,
             use_ivecs=False
         )
         train_data_filtered.report()
