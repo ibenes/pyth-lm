@@ -50,7 +50,7 @@ def evaluate(lm, data_source, use_ivecs):
     return total_loss[0] / total_timesteps
 
 
-def evaluate_no_transpose(lm, data_source, batch_size, use_ivecs):
+def evaluate_no_transpose(lm, data_source, use_ivecs):
     model = lm.model
 
     model.eval()
@@ -59,7 +59,7 @@ def evaluate_no_transpose(lm, data_source, batch_size, use_ivecs):
     total_timesteps = 0
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
-    hidden = model.init_hidden(batch_size)
+    hidden = None
 
     for inputs in data_source:
         X = inputs[0]
@@ -70,6 +70,9 @@ def evaluate_no_transpose(lm, data_source, batch_size, use_ivecs):
         targets = inputs[1]
         ivecs = inputs[2]
         mask = inputs[-1]
+
+        if hidden is None:
+            hidden = model.init_hidden(X.size(0))
 
         # hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
         hidden = repackage_hidden(hidden)

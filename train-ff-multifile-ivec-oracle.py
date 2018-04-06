@@ -139,7 +139,7 @@ if __name__ == '__main__':
             train_data_filtered.report()
 
 
-            val_loss = evaluate_no_transpose(lm, valid_data, args.batch_size, use_ivecs=True)
+            val_loss = evaluate_no_transpose(lm, valid_data, use_ivecs=True)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                     'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     model = lm.model
 
     # Run on test data.
-    test_loss = evaluate_no_transpose(lm, test_data, args.batch_size, use_ivecs=True)
+    test_loss = evaluate_no_transpose(lm, test_data, use_ivecs=True)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
         test_loss, math.exp(test_loss)))
