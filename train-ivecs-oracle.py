@@ -109,7 +109,8 @@ if __name__ == '__main__':
         train(
             lm, train_data_filtered, optim, logger, 
             batch_size=args.batch_size, 
-            clip=args.clip, cuda=args.cuda
+            clip=args.clip, cuda=args.cuda,
+            use_ivecs=True
         )
         train_data_filtered.report()
 
