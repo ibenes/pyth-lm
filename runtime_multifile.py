@@ -168,14 +168,19 @@ def train_no_transpose(lm, data, optim, logger, batch_size, clip, cuda, use_ivec
         model.cuda()
         hidden = tuple(h.cuda() for h in hidden)
 
-
-    for batch, (X, targets, ivecs, mask) in enumerate(data):
+    for batch, inputs in enumerate(data):
+        X = inputs[0]
         X = Variable(X)
-        # hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
+        inputs = (X,) + inputs[1:]
+
+        X = inputs[0]
+        targets = inputs[1]
+        ivecs = inputs[2]
+        mask = inputs[-1]
+         
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
-        # print("[debug]", X, hidden, ivecs)
         if use_ivecs:
             output, hidden = model(X, hidden, Variable(ivecs))
         else:
