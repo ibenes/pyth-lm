@@ -10,9 +10,7 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
-def evaluate(lm, data_source, use_ivecs):
-    model = lm.model
-
+def evaluate(model, data_source, use_ivecs):
     model.eval()
 
     total_loss = 0.0
@@ -50,9 +48,7 @@ def evaluate(lm, data_source, use_ivecs):
     return total_loss[0] / total_timesteps
 
 
-def evaluate_no_transpose(lm, data_source, use_ivecs):
-    model = lm.model
-
+def evaluate_no_transpose(model, data_source, use_ivecs):
     model.eval()
 
     total_loss = 0.0
@@ -126,8 +122,7 @@ class BatchFilter:
 
 # TODO time X batch or vice-versa?
 
-def train(lm, data, optim, logger, clip, use_ivecs):
-    model = lm.model
+def train(model, data, optim, logger, clip, use_ivecs):
     model.train()
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
@@ -166,8 +161,7 @@ def train(lm, data, optim, logger, clip, use_ivecs):
         logger.log(loss.data)
 
 
-def train_no_transpose(lm, data, optim, logger, clip, use_ivecs):
-    model = lm.model
+def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
     model.train()
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)

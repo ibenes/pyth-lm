@@ -100,13 +100,13 @@ if __name__ == '__main__':
         optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
 
         train_no_transpose(
-            lm, train_data_filtered, optim, logger, 
+            lm.model, train_data_filtered, optim, logger, 
             clip=args.clip,
             use_ivecs=False
         )
         train_data_filtered.report()
 
-        val_loss = evaluate_no_transpose(lm, valid_data, use_ivecs=False)
+        val_loss = evaluate_no_transpose(lm.model, valid_data, use_ivecs=False)
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                 'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
