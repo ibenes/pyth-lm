@@ -42,7 +42,7 @@ def evaluate(lm, data_source, use_ivecs):
             output, hidden = model(X, hidden, Variable(ivecs))
         else:
             output, hidden = model(X, hidden)
-        output_flat = output.view(-1, len(lm.vocab))
+        output_flat = output.view(-1, output.size(-1))
         curr_loss = len(X) * criterion(output_flat, variablilize_targets(targets)).data
         total_loss += curr_loss
         total_timesteps += len(X)
@@ -82,7 +82,7 @@ def evaluate_no_transpose(lm, data_source, use_ivecs):
             output, hidden = model(X, hidden, Variable(ivecs))
         else:
             output, hidden = model(X, hidden)
-        output_flat = output.view(-1, len(lm.vocab))
+        output_flat = output.view(-1, output.size(-1))
         curr_loss = len(X) * criterion(output_flat, variablilize_targets_no_transpose(targets)).data
         total_loss += curr_loss
         total_timesteps += len(X)
@@ -155,7 +155,8 @@ def train(lm, data, optim, logger, clip, use_ivecs):
             output, hidden = model(X, hidden, Variable(ivecs))
         else:
             output, hidden = model(X, hidden)
-        loss = criterion(output.view(-1, len(lm.vocab)), variablilize_targets(targets))
+        output_flat = output.view(-1, output.size(-1))
+        loss = criterion(output_flat, variablilize_targets(targets))
 
         optim.zero_grad()
         loss.backward()
@@ -192,7 +193,8 @@ def train_no_transpose(lm, data, optim, logger, clip, use_ivecs):
             output, hidden = model(X, hidden, Variable(ivecs))
         else:
             output, hidden = model(X, hidden)
-        loss = criterion(output.view(-1, len(lm.vocab)), variablilize_targets_no_transpose(targets))
+        output_flat = output.view(-1, output.size(-1))
+        loss = criterion(output_flat, variablilize_targets_no_transpose(targets))
 
         optim.zero_grad()
         loss.backward()
