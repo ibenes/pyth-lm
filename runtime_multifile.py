@@ -165,7 +165,7 @@ def train(lm, data, optim, logger, clip, use_ivecs):
         logger.log(loss.data)
 
 
-def train_no_transpose(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True):
+def train_no_transpose(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs):
     model = lm.model
     model.train()
     hs_reorganizer = TensorReorganizer(model.init_hidden)
