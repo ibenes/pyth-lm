@@ -165,15 +165,12 @@ def train(lm, data, optim, logger, clip, use_ivecs):
         logger.log(loss.data)
 
 
-def train_no_transpose(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs):
+def train_no_transpose(lm, data, optim, logger, batch_size, clip, use_ivecs):
     model = lm.model
     model.train()
+
     hs_reorganizer = TensorReorganizer(model.init_hidden)
     hidden = model.init_hidden(batch_size)
-
-    if cuda:
-        model.cuda()
-        hidden = tuple(h.cuda() for h in hidden)
 
     for batch, inputs in enumerate(data):
         X = inputs[0]
