@@ -10,7 +10,7 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
-def evaluate(model, data_source, use_ivecs):
+def evaluate_(model, data_source, use_ivecs, rnn_mode):
     model.eval()
 
     total_loss = 0.0
@@ -21,7 +21,9 @@ def evaluate(model, data_source, use_ivecs):
 
     for inputs in data_source:
         X = inputs[0] 
-        X = Variable(X.t())
+        if rnn_mode:
+            X = X.t()
+        X = Variable(X)
         inputs = (X,) + inputs[1:]
 
         X = inputs[0]
@@ -30,9 +32,14 @@ def evaluate(model, data_source, use_ivecs):
         mask = inputs[-1] # 3
 
         if hidden is None:
-            hidded = model.init_hidden(X.size(1))
+            if rnn_mode:
+                hidden = model.init_hidden(X.size(1))
+            else:
+                hidden = model.init_hidden(X.size(0))
 
-        hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
+        if rnn_mode:
+            hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
+
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
@@ -41,49 +48,23 @@ def evaluate(model, data_source, use_ivecs):
         else:
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
-        curr_loss = len(X) * criterion(output_flat, variablilize_targets(targets)).data
+        if rnn_mode:
+            targets_flat = variablilize_targets(targets)
+        else:
+            targets_flat = variablilize_targets_no_transpose(targets)
+        curr_loss = len(X) * criterion(output_flat, targets_flat).data
         total_loss += curr_loss
         total_timesteps += len(X)
 
     return total_loss[0] / total_timesteps
+    
+
+def evaluate(model, data_source, use_ivecs):
+    return evaluate_(model, data_source, use_ivecs, rnn_mode=True)
 
 
 def evaluate_no_transpose(model, data_source, use_ivecs):
-    model.eval()
-
-    total_loss = 0.0
-    total_timesteps = 0
-
-    hs_reorganizer = TensorReorganizer(model.init_hidden)
-    hidden = None
-
-    for inputs in data_source:
-        X = inputs[0]
-        X = Variable(X)
-        inputs = (X,) + inputs[1:]
-
-        X = inputs[0]
-        targets = inputs[1]
-        ivecs = inputs[2]
-        mask = inputs[-1]
-
-        if hidden is None:
-            hidden = model.init_hidden(X.size(0))
-
-        # hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
-        hidden = repackage_hidden(hidden)
-
-        criterion = nn.NLLLoss()
-        if use_ivecs:
-            output, hidden = model(X, hidden, Variable(ivecs))
-        else:
-            output, hidden = model(X, hidden)
-        output_flat = output.view(-1, output.size(-1))
-        curr_loss = len(X) * criterion(output_flat, variablilize_targets_no_transpose(targets)).data
-        total_loss += curr_loss
-        total_timesteps += len(X)
-
-    return total_loss[0] / total_timesteps
+    return evaluate_(model, data_source, use_ivecs, rnn_mode=False)
 
 
 class BatchFilter:
