@@ -103,7 +103,7 @@ class BatchFilter:
 
 # TODO time X batch or vice-versa?
 
-def train(model, data, optim, logger, clip, use_ivecs):
+def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
     model.train()
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
@@ -111,7 +111,9 @@ def train(model, data, optim, logger, clip, use_ivecs):
 
     for batch, inputs in enumerate(data):
         X = inputs[0]
-        X = Variable(X.t())
+        if rnn_mode:
+            X = X.t()
+        X = Variable(X)
         inputs = (X,) + inputs[1:]
 
         X = inputs[0]
@@ -122,7 +124,8 @@ def train(model, data, optim, logger, clip, use_ivecs):
         if hidden is None:
             hidden = model.init_hidden(X.size(1))
 
-        hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
+        if rnn_mode:
+            hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
@@ -132,7 +135,12 @@ def train(model, data, optim, logger, clip, use_ivecs):
         else:
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
-        loss = criterion(output_flat, variablilize_targets(targets))
+
+        if rnn_mode:
+            targets_flat = variablilize_targets(targets)
+        else:
+            targets_flat = variablilize_targets_no_transpose(targets)
+        loss = criterion(output_flat, targets_flat)
 
         optim.zero_grad()
         loss.backward()
@@ -141,43 +149,11 @@ def train(model, data, optim, logger, clip, use_ivecs):
         optim.step()
         logger.log(loss.data)
 
+def train(model, data, optim, logger, clip, use_ivecs):
+    train_(model, data, optim, logger, clip, use_ivecs, rnn_mode=True)
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
-    model.train()
-
-    hs_reorganizer = TensorReorganizer(model.init_hidden)
-    hidden = None
-
-    for batch, inputs in enumerate(data):
-        X = inputs[0]
-        X = Variable(X)
-        inputs = (X,) + inputs[1:]
-
-        X = inputs[0]
-        targets = inputs[1]
-        ivecs = inputs[2]
-        mask = inputs[-1]
-         
-        if hidden is None:
-            hidden = model.init_hidden(X.size(0))
-
-        hidden = repackage_hidden(hidden)
-
-        criterion = nn.NLLLoss()
-        if use_ivecs:
-            output, hidden = model(X, hidden, Variable(ivecs))
-        else:
-            output, hidden = model(X, hidden)
-        output_flat = output.view(-1, output.size(-1))
-        loss = criterion(output_flat, variablilize_targets_no_transpose(targets))
-
-        optim.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(), clip)
-
-        optim.step()
-        logger.log(loss.data)
-
+    train_(model, data, optim, logger, clip, use_ivecs, rnn_mode=False)
 
 def train_debug(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True, grad_logger=NoneLogger()):
     model = lm.model
