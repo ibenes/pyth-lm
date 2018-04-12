@@ -48,10 +48,11 @@ def evaluate_(model, data_source, use_ivecs, rnn_mode):
         else:
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
+
         if rnn_mode:
-            targets_flat = variablilize_targets(targets)
-        else:
-            targets_flat = variablilize_targets_no_transpose(targets)
+            targets = targets.t().contiguous()
+        targets_flat = Variable(targets.view(-1))
+
         curr_loss = len(X) * criterion(output_flat, targets_flat).data
         total_loss += curr_loss
         total_timesteps += len(X)
@@ -137,9 +138,9 @@ def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
         output_flat = output.view(-1, output.size(-1))
 
         if rnn_mode:
-            targets_flat = variablilize_targets(targets)
-        else:
-            targets_flat = variablilize_targets_no_transpose(targets)
+            targets = targets.t().contiguous()
+        targets_flat = Variable(targets.view(-1))
+
         loss = criterion(output_flat, targets_flat)
 
         optim.zero_grad()
@@ -186,10 +187,3 @@ def train_debug(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True,
 
         optim.step()
         logger.log(loss.data)
-
-
-def variablilize_targets_no_transpose(targets):
-    return Variable(targets.contiguous().view(-1))
-
-def variablilize_targets(targets):
-    return Variable(targets.t().contiguous().view(-1))
