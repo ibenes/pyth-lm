@@ -10,10 +10,13 @@ class LanguageModel():
 
     def save(self, f):
         tmp_f = tempfile.TemporaryFile()
+        was_on_cuda = next(self.model.parameters()).is_cuda
         self.model.cpu()
         torch.save(self.model, tmp_f)
         tmp_f.seek(0)
         model_bytes = io.BytesIO(tmp_f.read())
+        if was_on_cuda:
+            self.model.cuda()
 
         vocab_bytes = io.BytesIO()
         pickle.dump(self.vocab, vocab_bytes)
