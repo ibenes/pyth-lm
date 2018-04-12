@@ -21,6 +21,7 @@ def evaluate_(model, data_source, use_ivecs, rnn_mode):
 
     for inputs in data_source:
         X = inputs[0] 
+        batch_size = X.size(0)
         if rnn_mode:
             X = X.t()
         X = Variable(X)
@@ -32,13 +33,10 @@ def evaluate_(model, data_source, use_ivecs, rnn_mode):
         mask = inputs[-1] # 3
 
         if hidden is None:
-            if rnn_mode:
-                hidden = model.init_hidden(X.size(1))
-            else:
-                hidden = model.init_hidden(X.size(0))
+            hidden = model.init_hidden(batch_size)
 
         if rnn_mode:
-            hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
+            hidden = hs_reorganizer(hidden, Variable(mask), batch_size)
 
         hidden = repackage_hidden(hidden)
 
@@ -112,6 +110,7 @@ def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
 
     for batch, inputs in enumerate(data):
         X = inputs[0]
+        batch_size = X.size(0)
         if rnn_mode:
             X = X.t()
         X = Variable(X)
@@ -123,10 +122,10 @@ def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
         mask = inputs[-1] # 3
 
         if hidden is None:
-            hidden = model.init_hidden(X.size(1))
+            hidden = model.init_hidden(batch_size)
 
         if rnn_mode:
-            hidden = hs_reorganizer(hidden, Variable(mask), X.size(1))
+            hidden = hs_reorganizer(hidden, Variable(mask), batch_size)
         hidden = repackage_hidden(hidden)
 
         criterion = nn.NLLLoss()
