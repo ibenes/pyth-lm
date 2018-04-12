@@ -11,8 +11,8 @@ import split_corpus_dataset
 import ivec_appenders
 import smm_ivec_extractor
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
-from runtime_multifile import train, evaluate, BatchFilter
+from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
+from runtime_multifile import train, evaluate
 
 from loggers import InfinityLogger
 import numpy as np

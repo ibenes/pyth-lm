@@ -42,3 +42,38 @@ def init_seeds(seed, cuda):
     torch.manual_seed(seed)
     if cuda and torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
+
+
+class BatchFilter:
+    def __init__(self, data, batch_size, bptt, min_batch_size): 
+        self._data = data
+        self._batch_size = batch_size
+        self._bptt = bptt
+        self._min_batch_size = min_batch_size
+
+        self._nb_skipped_updates = 0
+        self._nb_skipped_words = 0
+        self._nb_skipped_seqs = 0 # accumulates size of skipped batches
+
+    def __iter__(self):
+        for batch in self._data:
+            X = batch[0]
+            if X.size(0) >= self._min_batch_size:
+                yield batch
+            else:
+                self._nb_skipped_updates += 1
+                self._nb_skipped_words += X.size(0) * X.size(1)
+                self._nb_skipped_seqs += X.size(0)
+
+    def report(self):
+        if self._nb_skipped_updates > 0:
+            sys.stderr.write(
+                "WARNING: due to skipping, a total of {} updates was skipped,"
+                " containing {} words. Avg batch size {}. Equal to {} full batches"
+                "\n".format(
+                    self._nb_skipped_updates,
+                    self._nb_skipped_words,
+                    self._nb_skipped_seqs/self._nb_skipped_updates,
+                    self._nb_skipped_words/(self._batch_size*self._bptt)
+                )
+            )

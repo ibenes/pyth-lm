@@ -9,8 +9,8 @@ import vocab
 import language_model
 import split_corpus_dataset
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
-from runtime_multifile import evaluate_no_transpose, train_no_transpose, BatchFilter
+from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
+from runtime_multifile import evaluate_no_transpose, train_no_transpose
 
 from loggers import InfinityLogger
 
