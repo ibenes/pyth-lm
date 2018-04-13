@@ -6,8 +6,7 @@ import data
 import lstm_model
 import language_model
 
-from runtime_singlefile import evaluate
-
+from runtime_multifile import evaluate_uniform_stream
  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
@@ -46,5 +45,5 @@ if __name__ == '__main__':
     generator = data.DataIteratorBuilder(batched, args.bptt)
 
     # Run on test data.
-    loss = evaluate(lm, generator.iterable_data(), args.batch_size)
+    loss = evaluate_uniform_stream(lm, generator.iterable_data(), args.batch_size)
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))
