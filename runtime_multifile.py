@@ -65,40 +65,26 @@ def evaluate(model, data_source, use_ivecs):
 def evaluate_no_transpose(model, data_source, use_ivecs):
     return evaluate_(model, data_source, use_ivecs, rnn_mode=False)
 
+def evaluate_uniform_stream(lm, data_source, eval_batch_size=10):
+    model = lm.model
+    vocab = lm.vocab
 
-class BatchFilter:
-    def __init__(self, data, batch_size, bptt, min_batch_size): 
-        self._data = data
-        self._batch_size = batch_size
-        self._bptt = bptt
-        self._min_batch_size = min_batch_size
+    # Turn on evaluation mode which disables dropout.
+    model.eval()
+    criterion = nn.NLLLoss()
 
-        self._nb_skipped_updates = 0
-        self._nb_skipped_words = 0
-        self._nb_skipped_seqs = 0 # accumulates size of skipped batches
+    total_loss = 0
+    total_timesteps = 0
+    hidden = model.init_hidden(eval_batch_size)
+    for X, targets in data_source:
+        output, hidden = model(X, hidden)
+        output_flat = output.view(-1, len(vocab))
+        total_loss += len(X) * criterion(output_flat, targets).data
+        total_timesteps += len(X)
+        hidden = repackage_hidden(hidden)
+    return total_loss[0] / total_timesteps
 
-    def __iter__(self):
-        for batch in self._data:
-            X = batch[0]
-            if X.size(0) >= self._min_batch_size:
-                yield batch
-            else:
-                self._nb_skipped_updates += 1
-                self._nb_skipped_words += X.size(0) * X.size(1)
-                self._nb_skipped_seqs += X.size(0)
 
-    def report(self):
-        if self._nb_skipped_updates > 0:
-            sys.stderr.write(
-                "WARNING: due to skipping, a total of {} updates was skipped,"
-                " containing {} words. Avg batch size {}. Equal to {} full batches"
-                "\n".format(
-                    self._nb_skipped_updates,
-                    self._nb_skipped_words,
-                    self._nb_skipped_seqs/self._nb_skipped_updates,
-                    self._nb_skipped_words/(self._batch_size*self._bptt)
-                )
-            )
 
 # TODO time X batch or vice-versa?
 
@@ -154,6 +140,29 @@ def train(model, data, optim, logger, clip, use_ivecs):
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
     train_(model, data, optim, logger, clip, use_ivecs, rnn_mode=False)
+
+def train_uniform_stream(lm, data, batch_size, logger, optim, clip):
+    model = lm.model
+    vocab = lm.vocab
+
+    model.train()
+    hidden = model.init_hidden(batch_size)
+
+    criterion = nn.NLLLoss()
+    for batch, (X, targets) in enumerate(data):
+        hidden = repackage_hidden(hidden)
+
+        output, hidden = model(X, hidden)
+        loss = criterion(output.view(-1, len(vocab)), targets)
+
+        optim.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm(model.parameters(), clip)
+
+        optim.step()
+
+        logger.log(loss.data)
+
 
 def train_debug(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True, grad_logger=NoneLogger()):
     model = lm.model

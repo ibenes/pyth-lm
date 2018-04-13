@@ -3,8 +3,6 @@ from torch import nn
 
 from runtime_utils import repackage_hidden
 
-import data
-
 def train(lm, data, batch_size, logger, optim, clip):
     model = lm.model
     vocab = lm.vocab

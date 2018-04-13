@@ -7,7 +7,7 @@ import lstm_model
 import vocab
 import language_model
 
-from runtime_singlefile import evaluate, train
+from runtime_multifile import evaluate_uniform_stream, train_uniform_stream
 
 from loggers import ProgressLogger
 
@@ -73,11 +73,12 @@ if __name__ == '__main__':
     for epoch in range(1, args.epochs+1):
         logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.bptt)
         optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
-        train(
+
+        train_uniform_stream(
             lm, train_gen.iterable_data(), args.batch_size, logger, 
             optim, args.clip
         )
-        val_loss = evaluate(lm, valid_gen.iterable_data())
+        val_loss = evaluate_uniform_stream(lm, valid_gen.iterable_data())
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                 'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
