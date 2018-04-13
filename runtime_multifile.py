@@ -31,7 +31,8 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, rnn_mode):
         targets = inputs[1]
         if use_ivecs:
             ivecs = inputs[2]
-        mask = inputs[-1] # 3
+        if rnn_mode:
+            mask = inputs[-1] # 3
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
@@ -103,7 +104,8 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, rnn_mode):
         targets = inputs[1]
         if use_ivecs:
             ivecs = inputs[2]
-        mask = inputs[-1] # 3
+        if rnn_mode:
+            mask = inputs[-1] # 3
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
