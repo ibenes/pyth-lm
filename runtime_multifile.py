@@ -78,12 +78,11 @@ def evaluate_uniform_stream(lm, data_source, eval_batch_size=10):
     hidden = model.init_hidden(eval_batch_size)
     for X, targets in data_source:
         output, hidden = model(X, hidden)
-        output_flat = output.view(-1, len(vocab))
+        output_flat = output.view(-1, output.size(-1))
         total_loss += len(X) * criterion(output_flat, targets).data
         total_timesteps += len(X)
         hidden = repackage_hidden(hidden)
     return total_loss[0] / total_timesteps
-
 
 
 # TODO time X batch or vice-versa?
@@ -153,7 +152,8 @@ def train_uniform_stream(lm, data, batch_size, logger, optim, clip):
         hidden = repackage_hidden(hidden)
 
         output, hidden = model(X, hidden)
-        loss = criterion(output.view(-1, len(vocab)), targets)
+        output_flat = output.view(-1, output.size(-1))
+        loss = criterion(output_flat, targets)
 
         optim.zero_grad()
         loss.backward()
