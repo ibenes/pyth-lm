@@ -65,10 +65,7 @@ def evaluate(model, data_source, use_ivecs):
 def evaluate_no_transpose(model, data_source, use_ivecs):
     return evaluate_(model, data_source, use_ivecs, do_transpose=False, rnn_mode=False)
 
-def evaluate_uniform_stream(lm, data_source, eval_batch_size=10):
-    model = lm.model
-    vocab = lm.vocab
-
+def evaluate_uniform_stream(model, data_source, eval_batch_size=10):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     criterion = nn.NLLLoss()
@@ -140,10 +137,7 @@ def train(model, data, optim, logger, clip, use_ivecs):
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
     train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, rnn_mode=False)
 
-def train_uniform_stream(lm, data, batch_size, logger, optim, clip):
-    model = lm.model
-    vocab = lm.vocab
-
+def train_uniform_stream(model, data, batch_size, logger, optim, clip):
     model.train()
     hidden = model.init_hidden(batch_size)
 

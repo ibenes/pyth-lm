@@ -75,10 +75,10 @@ if __name__ == '__main__':
         optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
 
         train_uniform_stream(
-            lm, train_gen.iterable_data(), args.batch_size, logger, 
+            lm.model, train_gen.iterable_data(), args.batch_size, logger, 
             optim, args.clip
         )
-        val_loss = evaluate_uniform_stream(lm, valid_gen.iterable_data())
+        val_loss = evaluate_uniform_stream(lm.model, valid_gen.iterable_data())
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                 'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
