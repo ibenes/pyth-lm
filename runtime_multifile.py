@@ -29,7 +29,8 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, rnn_mode):
 
         X = inputs[0]
         targets = inputs[1]
-        ivecs = inputs[2]
+        if use_ivecs:
+            ivecs = inputs[2]
         mask = inputs[-1] # 3
 
         if hidden is None:
@@ -100,7 +101,8 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, rnn_mode):
 
         X = inputs[0]
         targets = inputs[1]
-        ivecs = inputs[2]
+        if use_ivecs:
+            ivecs = inputs[2]
         mask = inputs[-1] # 3
 
         if hidden is None:
