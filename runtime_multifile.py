@@ -10,7 +10,7 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
-def evaluate_(model, data_source, use_ivecs, rnn_mode):
+def evaluate_(model, data_source, use_ivecs, do_transpose, rnn_mode):
     model.eval()
 
     total_loss = 0.0
@@ -22,7 +22,7 @@ def evaluate_(model, data_source, use_ivecs, rnn_mode):
     for inputs in data_source:
         X = inputs[0] 
         batch_size = X.size(0)
-        if rnn_mode:
+        if do_transpose:
             X = X.t()
         X = Variable(X)
         inputs = (X,) + inputs[1:]
@@ -47,7 +47,7 @@ def evaluate_(model, data_source, use_ivecs, rnn_mode):
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
 
-        if rnn_mode:
+        if do_transpose:
             targets = targets.t().contiguous()
         targets_flat = Variable(targets.view(-1))
 
@@ -59,11 +59,11 @@ def evaluate_(model, data_source, use_ivecs, rnn_mode):
     
 
 def evaluate(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, rnn_mode=True)
+    return evaluate_(model, data_source, use_ivecs, do_transpose=True, rnn_mode=True)
 
 
 def evaluate_no_transpose(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, rnn_mode=False)
+    return evaluate_(model, data_source, use_ivecs, do_transpose=False, rnn_mode=False)
 
 def evaluate_uniform_stream(lm, data_source, eval_batch_size=10):
     model = lm.model
@@ -88,7 +88,7 @@ def evaluate_uniform_stream(lm, data_source, eval_batch_size=10):
 
 # TODO time X batch or vice-versa?
 
-def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
+def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, rnn_mode):
     model.train()
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
@@ -97,7 +97,7 @@ def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
     for batch, inputs in enumerate(data):
         X = inputs[0]
         batch_size = X.size(0)
-        if rnn_mode:
+        if do_transpose:
             X = X.t()
         X = Variable(X)
         inputs = (X,) + inputs[1:]
@@ -122,7 +122,7 @@ def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
 
-        if rnn_mode:
+        if do_transpose:
             targets = targets.t().contiguous()
         targets_flat = Variable(targets.view(-1))
 
@@ -136,10 +136,10 @@ def train_(model, data, optim, logger, clip, use_ivecs, rnn_mode):
         logger.log(loss.data)
 
 def train(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, rnn_mode=True)
+    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=True, rnn_mode=True)
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, rnn_mode=False)
+    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, rnn_mode=False)
 
 def train_uniform_stream(lm, data, batch_size, logger, optim, clip):
     model = lm.model
