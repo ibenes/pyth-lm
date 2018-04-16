@@ -34,8 +34,8 @@ class DataIteratorBuilder():
 
     def _get_batch(self, source, i, evaluation=False):
         act_seq_len = min(self._seq_len, len(source) - 1 - i)
-        data = Variable(source[i:i+act_seq_len], volatile=evaluation)
-        target = Variable(source[i+1:i+1+act_seq_len].view(-1))
+        data = source[i:i+act_seq_len]
+        target = source[i+1:i+1+act_seq_len].view(-1)
         return data, target
 
 
