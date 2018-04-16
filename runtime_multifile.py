@@ -1,5 +1,3 @@
-import sys
-
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
@@ -35,28 +33,28 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch
 
         X = inputs[0]
         targets = inputs[1]
+        if do_transpose:
+            targets = targets.t().contiguous()
+        targets_flat = Variable(targets.view(-1))
         if use_ivecs:
-            ivecs = inputs[2]
+            ivecs = Variable(inputs[2])
         if custom_batches:
-            mask = inputs[-1] # 3
+            mask = Variable(inputs[-1]) # 3
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
 
         if custom_batches:
-            hidden = hs_reorganizer(hidden, Variable(mask), batch_size)
+            hidden = hs_reorganizer(hidden, mask, batch_size)
 
         hidden = repackage_hidden(hidden)
 
         if use_ivecs:
-            output, hidden = model(X, hidden, Variable(ivecs))
+            output, hidden = model(X, hidden, ivecs)
         else:
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
 
-        if do_transpose:
-            targets = targets.t().contiguous()
-        targets_flat = Variable(targets.view(-1))
 
         curr_loss = len(X) * criterion(output_flat, targets_flat).data
         total_loss += curr_loss
@@ -100,27 +98,26 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
 
         X = inputs[0]
         targets = inputs[1]
+        if do_transpose:
+            targets = targets.t().contiguous()
+        targets_flat = Variable(targets.view(-1))
         if use_ivecs:
-            ivecs = inputs[2]
+            ivecs = Variable(inputs[2])
         if custom_batches:
-            mask = inputs[-1] # 3
+            mask = Variable(inputs[-1]) # 3
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
 
         if custom_batches:
-            hidden = hs_reorganizer(hidden, Variable(mask), batch_size)
+            hidden = hs_reorganizer(hidden, mask, batch_size)
         hidden = repackage_hidden(hidden)
 
         if use_ivecs:
-            output, hidden = model(X, hidden, Variable(ivecs))
+            output, hidden = model(X, hidden, ivecs)
         else:
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
-
-        if do_transpose:
-            targets = targets.t().contiguous()
-        targets_flat = Variable(targets.view(-1))
 
         loss = criterion(output_flat, targets_flat)
 
