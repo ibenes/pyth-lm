@@ -12,6 +12,7 @@ from loggers import NoneLogger
 
 def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch_first):
     model.eval()
+    criterion = nn.NLLLoss()
 
     total_loss = 0.0
     total_timesteps = 0
@@ -47,7 +48,6 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch
 
         hidden = repackage_hidden(hidden)
 
-        criterion = nn.NLLLoss()
         if use_ivecs:
             output, hidden = model(X, hidden, Variable(ivecs))
         else:
@@ -79,6 +79,7 @@ def evaluate_uniform_stream(model, data_source):
 
 def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches, batch_first):
     model.train()
+    criterion = nn.NLLLoss()
 
     if custom_batches:
         hs_reorganizer = TensorReorganizer(model.init_hidden)
@@ -111,8 +112,6 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
             hidden = hs_reorganizer(hidden, Variable(mask), batch_size)
         hidden = repackage_hidden(hidden)
 
-        criterion = nn.NLLLoss()
-        # print("[debug]", X, hidden, ivecs)
         if use_ivecs:
             output, hidden = model(X, hidden, Variable(ivecs))
         else:
