@@ -7,13 +7,13 @@ IVEC_EXTRACTOR=/mnt/matylda5/ibenes/projects/santosh-lm/smm-models/wt2-model/ext
 # note that only validation part of WT-2 is used for training to speed the test up
 
 # 1) build a standard LSTM
-./test-lstm-runs.sh $EXP_DIR lsmt $WT_ROOT
+./test-lstm-runs.sh $EXP_DIR lsmt $WT_ROOT || exit 1
 
 # 2) build a SMM-LSTM
-./test-smm-lstm-runs.sh $EXP_DIR smm-lstm $WT_ROOT $IVEC_EXTRACTOR
+./test-smm-lstm-runs.sh $EXP_DIR smm-lstm $WT_ROOT $IVEC_EXTRACTOR || exit 1
 
 # 3) build iFN-LM
-./test-fn-runs.sh $EXP_DIR ifn $WT_ROOT 
+./test-fn-runs.sh $EXP_DIR ifn $WT_ROOT  || exit 1
 
 # 4) build iFN-LM
-./test-ifn-runs.sh $EXP_DIR ifn $WT_ROOT $IVEC_EXTRACTOR
+./test-ifn-runs.sh $EXP_DIR ifn $WT_ROOT $IVEC_EXTRACTOR || exit 1
