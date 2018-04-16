@@ -16,7 +16,9 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
     total_loss = 0.0
     total_timesteps = 0
 
-    hs_reorganizer = TensorReorganizer(model.init_hidden)
+    if custom_batches:
+        hs_reorganizer = TensorReorganizer(model.init_hidden)
+
     hidden = None
 
     for inputs in data_source:
@@ -67,15 +69,19 @@ def evaluate(model, data_source, use_ivecs):
 def evaluate_no_transpose(model, data_source, use_ivecs):
     return evaluate_(model, data_source, use_ivecs, do_transpose=False, custom_batches=False)
 
-def evaluate_uniform_stream(model, data_source, eval_batch_size=10):
+def evaluate_uniform_stream(model, data_source):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     criterion = nn.NLLLoss()
 
     total_loss = 0
     total_timesteps = 0
-    hidden = model.init_hidden(eval_batch_size)
+    hidden = None
+
     for X, targets in data_source:
+        if hidden is None:
+            hidden = model.init_hidden(X.size(1)) 
+
         output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
         total_loss += len(X) * criterion(output_flat, targets).data
@@ -89,7 +95,9 @@ def evaluate_uniform_stream(model, data_source, eval_batch_size=10):
 def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches):
     model.train()
 
-    hs_reorganizer = TensorReorganizer(model.init_hidden)
+    if custom_batches:
+        hs_reorganizer = TensorReorganizer(model.init_hidden)
+
     hidden = None
 
     for batch, inputs in enumerate(data):
@@ -141,12 +149,15 @@ def train(model, data, optim, logger, clip, use_ivecs):
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
     train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, custom_batches=False)
 
-def train_uniform_stream(model, data, batch_size, logger, optim, clip):
+def train_uniform_stream(model, data, logger, optim, clip):
     model.train()
-    hidden = model.init_hidden(batch_size)
+    hidden = None
 
     criterion = nn.NLLLoss()
     for batch, (X, targets) in enumerate(data):
+        if hidden is None:
+            hidden = model.init_hidden(X.size(1))
+
         hidden = repackage_hidden(hidden)
 
         output, hidden = model(X, hidden)

@@ -75,7 +75,7 @@ if __name__ == '__main__':
         optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
 
         train_uniform_stream(
-            lm.model, train_gen.iterable_data(), args.batch_size, logger, 
+            lm.model, train_gen.iterable_data(), logger, 
             optim, args.clip
         )
         val_loss = evaluate_uniform_stream(lm.model, valid_gen.iterable_data())

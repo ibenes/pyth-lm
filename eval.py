@@ -45,5 +45,5 @@ if __name__ == '__main__':
     generator = data.DataIteratorBuilder(batched, args.bptt)
 
     # Run on test data.
-    loss = evaluate_uniform_stream(lm.model, generator.iterable_data(), args.batch_size)
+    loss = evaluate_uniform_stream(lm.model, generator.iterable_data())
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))
