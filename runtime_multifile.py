@@ -8,6 +8,34 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
+def prepare_inputs(inputs, batch_first, do_transpose, use_ivecs, custom_batches):
+    X = inputs[0] 
+    if batch_first:
+        batch_size = X.size(0)
+    else:
+        batch_size = X.size(1) 
+    if do_transpose:
+        X = X.t()
+    X = Variable(X)
+
+    targets = inputs[1]
+    if do_transpose:
+        targets = targets.t().contiguous()
+    targets_flat = Variable(targets.view(-1))
+
+    if use_ivecs:
+        ivecs = Variable(inputs[2])
+    else:
+        ivecs = None
+
+    if custom_batches:
+        mask = Variable(inputs[-1]) # 3
+    else:
+        mask = None
+
+    return X, targets_flat, ivecs, mask, batch_size
+    
+
 def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch_first):
     model.eval()
     criterion = nn.NLLLoss()
@@ -21,25 +49,10 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch
     hidden = None
 
     for inputs in data_source:
-        X = inputs[0] 
-        if batch_first:
-            batch_size = X.size(0)
-        else:
-            batch_size = X.size(1) 
-        if do_transpose:
-            X = X.t()
-        X = Variable(X)
-        inputs = (X,) + inputs[1:]
-
-        X = inputs[0]
-        targets = inputs[1]
-        if do_transpose:
-            targets = targets.t().contiguous()
-        targets_flat = Variable(targets.view(-1))
-        if use_ivecs:
-            ivecs = Variable(inputs[2])
-        if custom_batches:
-            mask = Variable(inputs[-1]) # 3
+        X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
+            inputs, 
+            batch_first, do_transpose, use_ivecs, custom_batches
+        )
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
@@ -64,13 +77,22 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch
     
 
 def evaluate(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, do_transpose=True, custom_batches=True, batch_first=True)
+    return evaluate_(
+        model, data_source, 
+        use_ivecs, do_transpose=True, custom_batches=True, batch_first=True
+    )
 
 def evaluate_no_transpose(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, do_transpose=False, custom_batches=False, batch_first=True)
+    return evaluate_(
+        model, data_source, 
+        use_ivecs, do_transpose=False, custom_batches=False, batch_first=True
+    )
 
 def evaluate_uniform_stream(model, data_source):
-    return evaluate_(model, data_source, use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False)
+    return evaluate_(
+        model, data_source, 
+        use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False
+    )
 
 
 # TODO time X batch or vice-versa?
@@ -84,27 +106,11 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
 
     hidden = None
 
-    for batch, inputs in enumerate(data):
-        X = inputs[0]
-        if batch_first:
-            batch_size = X.size(0)
-        else:
-            batch_size = X.size(1)
-            
-        if do_transpose:
-            X = X.t()
-        X = Variable(X)
-        inputs = (X,) + inputs[1:]
-
-        X = inputs[0]
-        targets = inputs[1]
-        if do_transpose:
-            targets = targets.t().contiguous()
-        targets_flat = Variable(targets.view(-1))
-        if use_ivecs:
-            ivecs = Variable(inputs[2])
-        if custom_batches:
-            mask = Variable(inputs[-1]) # 3
+    for inputs in data:
+        X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
+            inputs, 
+            batch_first, do_transpose, use_ivecs, custom_batches
+        )
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
@@ -129,13 +135,22 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
         logger.log(loss.data)
 
 def train(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=True, custom_batches=True, batch_first=True)
+    train_(
+        model, data, optim, logger, clip, 
+        use_ivecs, do_transpose=True, custom_batches=True, batch_first=True
+    )
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, custom_batches=False, batch_first=True)
+    train_(
+        model, data, optim, logger, clip, 
+        use_ivecs, do_transpose=False, custom_batches=False, batch_first=True
+    )
 
 def train_uniform_stream(model, data, logger, optim, clip):
-    train_(model, data, optim, logger, clip, use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False)
+    train_(
+        model, data, optim, logger, clip, 
+        use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False
+    )
 
 
 def train_debug(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True, grad_logger=NoneLogger()):
