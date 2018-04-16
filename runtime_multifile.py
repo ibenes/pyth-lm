@@ -10,7 +10,7 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
-def evaluate_(model, data_source, use_ivecs, do_transpose, rnn_mode):
+def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
     model.eval()
 
     total_loss = 0.0
@@ -31,13 +31,13 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, rnn_mode):
         targets = inputs[1]
         if use_ivecs:
             ivecs = inputs[2]
-        if rnn_mode:
+        if custom_batches:
             mask = inputs[-1] # 3
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
 
-        if rnn_mode:
+        if custom_batches:
             hidden = hs_reorganizer(hidden, Variable(mask), batch_size)
 
         hidden = repackage_hidden(hidden)
@@ -61,11 +61,11 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, rnn_mode):
     
 
 def evaluate(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, do_transpose=True, rnn_mode=True)
+    return evaluate_(model, data_source, use_ivecs, do_transpose=True, custom_batches=True)
 
 
 def evaluate_no_transpose(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, do_transpose=False, rnn_mode=False)
+    return evaluate_(model, data_source, use_ivecs, do_transpose=False, custom_batches=False)
 
 def evaluate_uniform_stream(model, data_source, eval_batch_size=10):
     # Turn on evaluation mode which disables dropout.
@@ -86,7 +86,7 @@ def evaluate_uniform_stream(model, data_source, eval_batch_size=10):
 
 # TODO time X batch or vice-versa?
 
-def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, rnn_mode):
+def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches):
     model.train()
 
     hs_reorganizer = TensorReorganizer(model.init_hidden)
@@ -104,13 +104,13 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, rnn_mode):
         targets = inputs[1]
         if use_ivecs:
             ivecs = inputs[2]
-        if rnn_mode:
+        if custom_batches:
             mask = inputs[-1] # 3
 
         if hidden is None:
             hidden = model.init_hidden(batch_size)
 
-        if rnn_mode:
+        if custom_batches:
             hidden = hs_reorganizer(hidden, Variable(mask), batch_size)
         hidden = repackage_hidden(hidden)
 
@@ -136,10 +136,10 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, rnn_mode):
         logger.log(loss.data)
 
 def train(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=True, rnn_mode=True)
+    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=True, custom_batches=True)
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, rnn_mode=False)
+    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, custom_batches=False)
 
 def train_uniform_stream(model, data, batch_size, logger, optim, clip):
     model.train()
