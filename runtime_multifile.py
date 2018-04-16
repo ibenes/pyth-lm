@@ -10,7 +10,7 @@ from tensor_reorganization import TensorReorganizer
 
 from loggers import NoneLogger
 
-def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
+def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch_first):
     model.eval()
 
     total_loss = 0.0
@@ -23,7 +23,10 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
 
     for inputs in data_source:
         X = inputs[0] 
-        batch_size = X.size(0)
+        if batch_first:
+            batch_size = X.size(0)
+        else:
+            batch_size = X.size(1) 
         if do_transpose:
             X = X.t()
         X = Variable(X)
@@ -63,36 +66,18 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
     
 
 def evaluate(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, do_transpose=True, custom_batches=True)
-
+    return evaluate_(model, data_source, use_ivecs, do_transpose=True, custom_batches=True, batch_first=True)
 
 def evaluate_no_transpose(model, data_source, use_ivecs):
-    return evaluate_(model, data_source, use_ivecs, do_transpose=False, custom_batches=False)
+    return evaluate_(model, data_source, use_ivecs, do_transpose=False, custom_batches=False, batch_first=True)
 
 def evaluate_uniform_stream(model, data_source):
-    # Turn on evaluation mode which disables dropout.
-    model.eval()
-    criterion = nn.NLLLoss()
-
-    total_loss = 0
-    total_timesteps = 0
-    hidden = None
-
-    for X, targets in data_source:
-        if hidden is None:
-            hidden = model.init_hidden(X.size(1)) 
-
-        output, hidden = model(X, hidden)
-        output_flat = output.view(-1, output.size(-1))
-        total_loss += len(X) * criterion(output_flat, targets).data
-        total_timesteps += len(X)
-        hidden = repackage_hidden(hidden)
-    return total_loss[0] / total_timesteps
+    return evaluate_(model, data_source, use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False)
 
 
 # TODO time X batch or vice-versa?
 
-def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches):
+def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches, batch_first):
     model.train()
 
     if custom_batches:
@@ -102,7 +87,11 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
 
     for batch, inputs in enumerate(data):
         X = inputs[0]
-        batch_size = X.size(0)
+        if batch_first:
+            batch_size = X.size(0)
+        else:
+            batch_size = X.size(1)
+            
         if do_transpose:
             X = X.t()
         X = Variable(X)
@@ -144,33 +133,13 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
         logger.log(loss.data)
 
 def train(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=True, custom_batches=True)
+    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=True, custom_batches=True, batch_first=True)
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
-    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, custom_batches=False)
+    train_(model, data, optim, logger, clip, use_ivecs, do_transpose=False, custom_batches=False, batch_first=True)
 
 def train_uniform_stream(model, data, logger, optim, clip):
-    model.train()
-    hidden = None
-
-    criterion = nn.NLLLoss()
-    for batch, (X, targets) in enumerate(data):
-        if hidden is None:
-            hidden = model.init_hidden(X.size(1))
-
-        hidden = repackage_hidden(hidden)
-
-        output, hidden = model(X, hidden)
-        output_flat = output.view(-1, output.size(-1))
-        loss = criterion(output_flat, targets)
-
-        optim.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(), clip)
-
-        optim.step()
-
-        logger.log(loss.data)
+    train_(model, data, optim, logger, clip, use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False)
 
 
 def train_debug(lm, data, optim, logger, batch_size, clip, cuda, use_ivecs=True, grad_logger=NoneLogger()):
