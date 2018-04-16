@@ -38,7 +38,7 @@ def prepare_inputs(inputs, batch_first, do_transpose, use_ivecs, custom_batches)
 
 def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch_first):
     model.eval()
-    criterion = nn.NLLLoss()
+    criterion = nn.NLLLoss(size_average=False)
 
     total_loss = 0.0
     total_timesteps = 0
@@ -68,10 +68,8 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
 
-
-        curr_loss = len(X) * criterion(output_flat, targets_flat).data
-        total_loss += curr_loss
-        total_timesteps += len(X)
+        total_loss += criterion(output_flat, targets_flat).data
+        total_timesteps += len(targets_flat)
 
     return total_loss[0] / total_timesteps
     
