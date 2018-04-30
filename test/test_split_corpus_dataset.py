@@ -673,7 +673,6 @@ class DomainAdaptationSplitFFMultiTargetTests(common.TestCase):
         data_source = getStream(self.test_words_long)
         ts = split_corpus_dataset.DomainAdaptationSplitFFMultiTarget(data_source, self.vocab, 2, 2, end_portion=0.25)
         tokens_strings = list(iter(ts))
-        print(tokens_strings)
         expectation = [
             (torch.LongTensor([0, 1, 2]), torch.LongTensor([2, 0])),
         ]
