@@ -98,56 +98,15 @@ class TokenizedSplit():
             yield lend, rend
 
 
-class TokenizedSplitSingleTarget():
-    def __init__(self, f, vocab, unroll_length):
-        """
-            Args:
-                f (file): File with a document.
-                vocab (Vocabulary): Vocabulary for translation word -> index
-        """
-        pass
-        sentence = f.read()
-        self._words = sentence.split()
-        self._tokens = [vocab[w] for w in self._words]
-        self._unroll_length = unroll_length
 
 
-    def __iter__(self):
-        for lend, rend in self._ranges():
-            yield (
-                torch.LongTensor(self._tokens[lend:rend]),
-                torch.LongTensor(self._tokens[rend:rend+1])
-            )
-
-    def __len__(self):
-        return max(len(self._tokens) - self._unroll_length, 0)
-
-
-    def input_words(self):
-        for lend, rend in self._ranges():
-            yield " ".join(self._words[lend:rend])
-
-
-    def _ranges(self):
-        for i in range(0, len(self), 1):
-            lend = i
-            rend = i + self._unroll_length
-            yield lend, rend
-
-
-class TokenizedSplitFFMultiTarget():
+class TokenizedSplitFFBase():
     def __init__(self, f, vocab, hist_len, nb_targets_parallel):
         """
             Args:
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        sentence = f.read()
-        self._words = sentence.split()
-        self._tokens = [vocab[w] for w in self._words]
-        self._hist_len = hist_len
-        self._nb_target_parallel = nb_targets_parallel
-
 
     def __iter__(self):
         for lend, rend in self._ranges():
@@ -170,7 +129,35 @@ class TokenizedSplitFFMultiTarget():
             lend = i
             rend = i + self._hist_len + self._nb_target_parallel - 1
             yield lend, rend
-            
+
+
+class TokenizedSplitSingleTarget(TokenizedSplitFFBase):
+    def __init__(self, f, vocab, unroll_length):
+        """
+            Args:
+                f (file): File with a document.
+                vocab (Vocabulary): Vocabulary for translation word -> index
+        """
+        sentence = f.read()
+        self._words = sentence.split()
+        self._tokens = [vocab[w] for w in self._words]
+        self._hist_len = unroll_length
+        self._nb_target_parallel = 1
+
+
+class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
+    def __init__(self, f, vocab, hist_len, nb_targets_parallel):
+        """
+            Args:
+                f (file): File with a document.
+                vocab (Vocabulary): Vocabulary for translation word -> index
+        """
+        sentence = f.read()
+        self._words = sentence.split()
+        self._tokens = [vocab[w] for w in self._words]
+        self._hist_len = hist_len
+        self._nb_target_parallel = nb_targets_parallel
+
 
 class DomainAdaptationSplit(TokenizedSplit):
     def __init__(self, f, vocab, unroll_length, end_portion):
