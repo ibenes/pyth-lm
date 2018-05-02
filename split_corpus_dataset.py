@@ -152,26 +152,19 @@ class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
         super().__init__()
 
 
-
 class DomainAdaptationSplitFFBase:
+    def __init__(self):
+        self._temp_splitter = TemporalSplitter(self._tokens, self._hist_len, self._nb_target_parallel)
+
     def __iter__(self):
-        for lend, rend in self._ranges():
-            yield (
-                torch.LongTensor(self._tokens[lend:rend]),
-                torch.LongTensor(self._tokens[lend+self._hist_len:rend+1])
-            )
+        for x,t in self._temp_splitter:
+            yield x,t
 
     def __len__(self):
-        return max(len(self._tokens) - self._hist_len - self._nb_target_parallel + 1, 0)
+        return len(self._temp_splitter)
 
     def input_words(self):
         return [self._domain_string]
-
-    def _ranges(self):
-        for i in range(0, len(self), self._nb_target_parallel):
-            lend = i
-            rend = i + self._hist_len + self._nb_target_parallel - 1
-            yield lend, rend
 
 
 class DomainAdaptationSplitFFMultiTarget(DomainAdaptationSplitFFBase):
@@ -181,18 +174,18 @@ class DomainAdaptationSplitFFMultiTarget(DomainAdaptationSplitFFBase):
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        pass
         sentence = f.read()
         words = sentence.split()
 
         nb_domain_words = int(len(words)*end_portion-0.01)
 
-        self._tokens = [vocab[w] for w in words[:len(words)-nb_domain_words]]
+        self._tokens = torch.LongTensor([vocab[w] for w in words[:len(words)-nb_domain_words]])
         self._domain_string = " ".join(words[len(words)-nb_domain_words:])
 
         self._hist_len = hist_len
         self._nb_target_parallel = nb_targets_parallel
         self._end_portion = end_portion
+        super().__init__()
 
 
 class DomainAdaptationSplit(DomainAdaptationSplitFFBase):
@@ -207,9 +200,10 @@ class DomainAdaptationSplit(DomainAdaptationSplitFFBase):
 
         nb_domain_words = int(len(words)*end_portion-0.01)
 
-        self._tokens = [vocab[w] for w in words[:-nb_domain_words]]
+        self._tokens = torch.LongTensor([vocab[w] for w in words[:-nb_domain_words]])
         self._domain_string = " ".join(words[-nb_domain_words:])
 
         self._hist_len = unroll_length
         self._nb_target_parallel = 1
         self._end_portion = end_portion
+        super().__init__()
