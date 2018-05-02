@@ -60,7 +60,7 @@ class BatchBuilder():
             yield tuple(parts) + (torch.LongTensor(hs_passed_on), )
 
 
-class TemporalSplitter():
+class TemporalSplits():
     def __init__(self, seq, nb_inputs_necessary, nb_targets_parallel):
         self._seq = seq
         self._nb_inputs_necessary = nb_inputs_necessary
@@ -92,7 +92,7 @@ class TokenizedSplitFFBase():
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        self._temp_splitter = TemporalSplitter(self._tokens, self._hist_len, self._nb_target_parallel)
+        self._temp_splitter = TemporalSplits(self._tokens, self._hist_len, self._nb_target_parallel)
 
     def __iter__(self):
         for x,t in self._temp_splitter:
@@ -154,7 +154,7 @@ class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
 
 class DomainAdaptationSplitFFBase:
     def __init__(self):
-        self._temp_splitter = TemporalSplitter(self._tokens, self._hist_len, self._nb_target_parallel)
+        self._temp_splitter = TemporalSplits(self._tokens, self._hist_len, self._nb_target_parallel)
 
     def __iter__(self):
         for x,t in self._temp_splitter:
