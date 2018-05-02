@@ -60,23 +60,50 @@ class BatchBuilder():
             yield tuple(parts) + (torch.LongTensor(hs_passed_on), )
 
 
+class TemporalSplitter():
+    def __init__(self, seq, nb_inputs_necessary, nb_targets_parallel):
+        self._seq = seq
+        self._nb_inputs_necessary = nb_inputs_necessary
+        self._nb_target_parallel = nb_targets_parallel
+
+
+    def __iter__(self):
+        for lend, rend in self.ranges():
+            yield (
+                self._seq[lend:rend],
+                self._seq[lend+self._nb_inputs_necessary:rend+1]
+            )
+
+    def __len__(self):
+        return max(len(self._seq) - self._nb_inputs_necessary - self._nb_target_parallel + 1, 0)
+        
+
+    def ranges(self):
+        for i in range(0, len(self), self._nb_target_parallel):
+            lend = i
+            rend = i + self._nb_inputs_necessary + self._nb_target_parallel - 1
+            yield lend, rend
+        
+
+
 class TokenizedSplitFFBase():
-    def __init__(self, f, vocab, hist_len, nb_targets_parallel):
+    def __init__(self):
         """
             Args:
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
+        self._temp_splitter = TemporalSplitter(self._tokens, self._hist_len, self._nb_target_parallel)
 
     def __iter__(self):
-        for lend, rend in self._ranges():
+        for x,t in self._temp_splitter:
             yield (
-                torch.LongTensor(self._tokens[lend:rend]),
-                torch.LongTensor(self._tokens[lend+self._hist_len:rend+1])
+                torch.LongTensor(x),
+                torch.LongTensor(t),
             )
 
     def __len__(self):
-        return max(len(self._tokens) - self._hist_len - self._nb_target_parallel + 1, 0)
+        return len(self._temp_splitter)
 
 
     def input_words(self):
@@ -103,6 +130,7 @@ class TokenizedSplit(TokenizedSplitFFBase):
         self._tokens = [vocab[w] for w in self._words]
         self._nb_target_parallel = unroll_length
         self._hist_len = 1
+        super().__init__()
 
 
 class TokenizedSplitSingleTarget(TokenizedSplitFFBase):
@@ -117,6 +145,7 @@ class TokenizedSplitSingleTarget(TokenizedSplitFFBase):
         self._tokens = [vocab[w] for w in self._words]
         self._hist_len = unroll_length
         self._nb_target_parallel = 1
+        super().__init__()
 
 
 class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
@@ -131,7 +160,7 @@ class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
         self._tokens = [vocab[w] for w in self._words]
         self._hist_len = hist_len
         self._nb_target_parallel = nb_targets_parallel
-
+        super().__init__()
 
 
 
