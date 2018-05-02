@@ -60,46 +60,6 @@ class BatchBuilder():
             yield tuple(parts) + (torch.LongTensor(hs_passed_on), )
 
 
-class TokenizedSplit():
-    def __init__(self, f, vocab, unroll_length):
-        """
-            Args:
-                f (file): File with a document.
-                vocab (Vocabulary): Vocabulary for translation word -> index
-        """
-        pass
-        sentence = f.read()
-        self._words = sentence.split()
-        self._tokens = [vocab[w] for w in self._words]
-        self._unroll_length = unroll_length
-
-
-    def __iter__(self):
-        for lend, rend in self._ranges():
-            yield (
-                torch.LongTensor(self._tokens[lend:rend]),
-                torch.LongTensor(self._tokens[lend+1:rend+1])
-            )
-
-
-    def __len__(self):
-        return max(len(self._tokens) - self._unroll_length, 0)
-
-
-    def input_words(self):
-        for lend, rend in self._ranges():
-            yield " ".join(self._words[lend:rend])
-
-
-    def _ranges(self):
-        for i in range(0, len(self), self._unroll_length):
-            lend = i
-            rend = i + self._unroll_length
-            yield lend, rend
-
-
-
-
 class TokenizedSplitFFBase():
     def __init__(self, f, vocab, hist_len, nb_targets_parallel):
         """
@@ -129,6 +89,20 @@ class TokenizedSplitFFBase():
             lend = i
             rend = i + self._hist_len + self._nb_target_parallel - 1
             yield lend, rend
+
+
+class TokenizedSplit(TokenizedSplitFFBase):
+    def __init__(self, f, vocab, unroll_length):
+        """
+            Args:
+                f (file): File with a document.
+                vocab (Vocabulary): Vocabulary for translation word -> index
+        """
+        sentence = f.read()
+        self._words = sentence.split()
+        self._tokens = [vocab[w] for w in self._words]
+        self._nb_target_parallel = unroll_length
+        self._hist_len = 1
 
 
 class TokenizedSplitSingleTarget(TokenizedSplitFFBase):
