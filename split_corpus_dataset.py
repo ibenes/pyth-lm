@@ -159,47 +159,30 @@ class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
         self._nb_target_parallel = nb_targets_parallel
 
 
-class DomainAdaptationSplit(TokenizedSplit):
-    def __init__(self, f, vocab, unroll_length, end_portion):
-        """
-            Args:
-                f (file): File with a document.
-                vocab (Vocabulary): Vocabulary for translation word -> index
-        """
-        pass
-        sentence = f.read()
-        words = sentence.split()
-
-        nb_domain_words = int(len(words)*end_portion-0.01)
-
-        self._tokens = [vocab[w] for w in words[:-nb_domain_words]]
-        self._domain_string = " ".join(words[-nb_domain_words:])
-
-        self._unroll_length = unroll_length
-        self._end_portion = end_portion
 
 
+class DomainAdaptationSplitFFBase:
     def __iter__(self):
         for lend, rend in self._ranges():
             yield (
                 torch.LongTensor(self._tokens[lend:rend]),
-                torch.LongTensor(self._tokens[lend+1:rend+1])
+                torch.LongTensor(self._tokens[lend+self._hist_len:rend+1])
             )
 
     def __len__(self):
-        return max(len(self._tokens) - self._unroll_length, 0)
+        return max(len(self._tokens) - self._hist_len - self._nb_target_parallel + 1, 0)
 
     def input_words(self):
         return [self._domain_string]
 
     def _ranges(self):
-        for i in range(0, len(self), self._unroll_length):
+        for i in range(0, len(self), self._nb_target_parallel):
             lend = i
-            rend = i + self._unroll_length
+            rend = i + self._hist_len + self._nb_target_parallel - 1
             yield lend, rend
 
 
-class DomainAdaptationSplitFFMultiTarget(TokenizedSplit):
+class DomainAdaptationSplitFFMultiTarget(DomainAdaptationSplitFFBase):
     def __init__(self, f, vocab, hist_len, nb_targets_parallel, end_portion):
         """
             Args:
@@ -220,21 +203,21 @@ class DomainAdaptationSplitFFMultiTarget(TokenizedSplit):
         self._end_portion = end_portion
 
 
-    def __iter__(self):
-        for lend, rend in self._ranges():
-            yield (
-                torch.LongTensor(self._tokens[lend:rend]),
-                torch.LongTensor(self._tokens[lend+self._hist_len:rend+1])
-            )
+class DomainAdaptationSplit(DomainAdaptationSplitFFBase):
+    def __init__(self, f, vocab, unroll_length, end_portion):
+        """
+            Args:
+                f (file): File with a document.
+                vocab (Vocabulary): Vocabulary for translation word -> index
+        """
+        sentence = f.read()
+        words = sentence.split()
 
-    def __len__(self):
-        return max(len(self._tokens) - self._hist_len - self._nb_target_parallel + 1, 0)
+        nb_domain_words = int(len(words)*end_portion-0.01)
 
-    def input_words(self):
-        return [self._domain_string]
+        self._tokens = [vocab[w] for w in words[:-nb_domain_words]]
+        self._domain_string = " ".join(words[-nb_domain_words:])
 
-    def _ranges(self):
-        for i in range(0, len(self), self._nb_target_parallel):
-            lend = i
-            rend = i + self._hist_len + self._nb_target_parallel - 1
-            yield lend, rend
+        self._hist_len = unroll_length
+        self._nb_target_parallel = 1
+        self._end_portion = end_portion

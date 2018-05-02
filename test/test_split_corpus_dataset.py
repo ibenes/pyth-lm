@@ -599,14 +599,17 @@ class DomainAdaptationSplitTests(common.TestCase):
         data_source = getStream(self.test_words_long)
         ts = split_corpus_dataset.DomainAdaptationSplit(data_source, self.vocab, 2, 0.5)
         tokens_strings = list(iter(ts))
-        expectation = [(torch.LongTensor([0, 1]), torch.LongTensor([1, 2]))]
+        expectation = [(torch.LongTensor([0, 1]), torch.LongTensor([2]))]
         self.assertEqual(tokens_strings, expectation)
 
     def test_two_word_seq_long(self):
         data_source = getStream(self.test_words_long)
-        ts = split_corpus_dataset.DomainAdaptationSplit(data_source, self.vocab, 2, 0.5)
+        ts = split_corpus_dataset.DomainAdaptationSplit(data_source, self.vocab, 2, 0.25)
         tokens_strings = list(iter(ts))
-        expectation = [(torch.LongTensor([0, 1]), torch.LongTensor([1, 2]))]
+        expectation = [
+            (torch.LongTensor([0, 1]), torch.LongTensor([2])),
+            (torch.LongTensor([1, 2]), torch.LongTensor([0])),
+        ]
         self.assertEqual(tokens_strings, expectation)
 
     def test_single_word_retrieval(self):
