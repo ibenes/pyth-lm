@@ -96,10 +96,7 @@ class TokenizedSplitFFBase():
 
     def __iter__(self):
         for x,t in self._temp_splitter:
-            yield (
-                torch.LongTensor(x),
-                torch.LongTensor(t),
-            )
+            yield x,t
 
     def __len__(self):
         return len(self._temp_splitter)
@@ -119,7 +116,7 @@ class TokenizedSplit(TokenizedSplitFFBase):
         """
         sentence = f.read()
         self._words = sentence.split()
-        self._tokens = [vocab[w] for w in self._words]
+        self._tokens = torch.LongTensor([vocab[w] for w in self._words])
         self._nb_target_parallel = unroll_length
         self._hist_len = 1
         super().__init__()
@@ -134,7 +131,7 @@ class TokenizedSplitSingleTarget(TokenizedSplitFFBase):
         """
         sentence = f.read()
         self._words = sentence.split()
-        self._tokens = [vocab[w] for w in self._words]
+        self._tokens = torch.LongTensor([vocab[w] for w in self._words])
         self._hist_len = unroll_length
         self._nb_target_parallel = 1
         super().__init__()
@@ -149,7 +146,7 @@ class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
         """
         sentence = f.read()
         self._words = sentence.split()
-        self._tokens = [vocab[w] for w in self._words]
+        self._tokens = torch.LongTensor([vocab[w] for w in self._words])
         self._hist_len = hist_len
         self._nb_target_parallel = nb_targets_parallel
         super().__init__()
