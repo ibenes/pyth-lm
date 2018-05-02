@@ -83,7 +83,6 @@ class TemporalSplitter():
             lend = i
             rend = i + self._nb_inputs_necessary + self._nb_target_parallel - 1
             yield lend, rend
-        
 
 
 class TokenizedSplitFFBase():
@@ -107,15 +106,8 @@ class TokenizedSplitFFBase():
 
 
     def input_words(self):
-        for lend, rend in self._ranges():
+        for lend, rend in self._temp_splitter.ranges():
             yield " ".join(self._words[lend:rend])
-
-
-    def _ranges(self):
-        for i in range(0, len(self), self._nb_target_parallel):
-            lend = i
-            rend = i + self._hist_len + self._nb_target_parallel - 1
-            yield lend, rend
 
 
 class TokenizedSplit(TokenizedSplitFFBase):
