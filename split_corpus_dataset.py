@@ -86,24 +86,28 @@ class TemporalSplits():
 
 
 class TokenizedSplitFFBase():
-    def __init__(self):
+    def __init__(self, f, vocab, temporal_split_builder):
         """
             Args:
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        self._temp_splitter = TemporalSplits(self._tokens, self._hist_len, self._nb_target_parallel)
+        sentence = f.read()
+        self._words = sentence.split()
+        self._tokens = torch.LongTensor([vocab[w] for w in self._words])
+
+        self._temp_splits = temporal_split_builder(self._tokens)
 
     def __iter__(self):
-        for x,t in self._temp_splitter:
+        for x,t in self._temp_splits:
             yield x,t
 
     def __len__(self):
-        return len(self._temp_splitter)
+        return len(self._temp_splits)
 
 
     def input_words(self):
-        for lend, rend in self._temp_splitter.ranges():
+        for lend, rend in self._temp_splits.ranges():
             yield " ".join(self._words[lend:rend])
 
 
@@ -114,12 +118,8 @@ class TokenizedSplit(TokenizedSplitFFBase):
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        sentence = f.read()
-        self._words = sentence.split()
-        self._tokens = torch.LongTensor([vocab[w] for w in self._words])
-        self._nb_target_parallel = unroll_length
-        self._hist_len = 1
-        super().__init__()
+        ts_builder = lambda seq: TemporalSplits(seq, nb_inputs_necessary=1, nb_targets_parallel=unroll_length)
+        super().__init__(f, vocab, ts_builder)
 
 
 class TokenizedSplitSingleTarget(TokenizedSplitFFBase):
@@ -129,12 +129,8 @@ class TokenizedSplitSingleTarget(TokenizedSplitFFBase):
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        sentence = f.read()
-        self._words = sentence.split()
-        self._tokens = torch.LongTensor([vocab[w] for w in self._words])
-        self._hist_len = unroll_length
-        self._nb_target_parallel = 1
-        super().__init__()
+        ts_builder = lambda seq: TemporalSplits(seq, nb_inputs_necessary=unroll_length, nb_targets_parallel=1)
+        super().__init__(f, vocab, ts_builder)
 
 
 class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
@@ -144,12 +140,8 @@ class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        sentence = f.read()
-        self._words = sentence.split()
-        self._tokens = torch.LongTensor([vocab[w] for w in self._words])
-        self._hist_len = hist_len
-        self._nb_target_parallel = nb_targets_parallel
-        super().__init__()
+        ts_builder = lambda seq: TemporalSplits(seq, nb_inputs_necessary=hist_len, nb_targets_parallel=nb_targets_parallel)
+        super().__init__(f, vocab, ts_builder)
 
 
 class DomainAdaptationSplitFFBase:
