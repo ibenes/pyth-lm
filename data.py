@@ -1,28 +1,5 @@
 import os
 import torch
-from torch.autograd import Variable
-import torch.utils.data
-
-class DataIteratorBuilder():
-    def __init__(self, data, seq_len):
-        self._data = data
-        self._seq_len = seq_len
-
-    def iterable_data(self):
-        """
-            The data is expected to be arranged as [time][batch], 
-            slices along the time dimension will be provided
-        """
-
-        for i in range(0, self._data.size(0) -1, self._seq_len):
-            yield self._get_batch(self._data, i)
-
-    def _get_batch(self, source, i, evaluation=False):
-        act_seq_len = min(self._seq_len, len(source) - 1 - i)
-        data = source[i:i+act_seq_len]
-        target = source[i+1:i+1+act_seq_len].view(-1)
-        return data, target
-
 
 def batchify(data, bsz, cuda):
     # Work out how cleanly we can divide the dataset into bsz parts.

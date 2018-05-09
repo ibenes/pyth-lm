@@ -3,6 +3,7 @@ import math
 import torch
 
 import data
+import split_corpus_dataset
 import lstm_model
 import language_model
 
@@ -42,8 +43,8 @@ if __name__ == '__main__':
     print("preparing data...")
     ids = data.tokens_from_fn(args.data, lm.vocab, randomize=False)
     batched = data.batchify(ids, args.batch_size, args.cuda)
-    generator = data.DataIteratorBuilder(batched, args.bptt)
+    data = split_corpus_dataset.TemporalSplits(batched, 1, args.bptt)
 
     # Run on test data.
-    loss = evaluate_uniform_stream(lm.model, generator.iterable_data())
+    loss = evaluate_uniform_stream(lm.model, data)
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))

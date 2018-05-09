@@ -3,6 +3,7 @@ import math
 import torch
 
 import data
+import split_corpus_dataset
 import lstm_model
 import vocab
 import language_model
@@ -60,11 +61,11 @@ if __name__ == '__main__':
     print("preparing data...")
     train_ids = data.tokens_from_fn(args.train, lm.vocab, randomize=False)
     train_batched = data.batchify(train_ids, args.batch_size, args.cuda)
-    train_gen = data.DataIteratorBuilder(train_batched, args.bptt)
+    train_data = split_corpus_dataset.TemporalSplits(train_batched, nb_inputs_necessary=1, nb_targets_parallel=args.bptt)
 
     valid_ids = data.tokens_from_fn(args.valid, lm.vocab, randomize=False)
     valid_batched = data.batchify(valid_ids, 10, args.cuda)
-    valid_gen = data.DataIteratorBuilder(valid_batched, args.bptt)
+    valid_data = split_corpus_dataset.TemporalSplits(valid_batched, nb_inputs_necessary=1, nb_targets_parallel=args.bptt)
 
     print("training...")
     lr = args.lr
@@ -75,10 +76,10 @@ if __name__ == '__main__':
         optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
 
         train_uniform_stream(
-            lm.model, train_gen.iterable_data(), logger, 
+            lm.model, train_data, logger, 
             optim, args.clip
         )
-        val_loss = evaluate_uniform_stream(lm.model, valid_gen.iterable_data())
+        val_loss = evaluate_uniform_stream(lm.model, valid_data)
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
                 'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
