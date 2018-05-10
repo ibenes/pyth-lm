@@ -7,6 +7,7 @@ import torch
 import lstm_model
 import vocab
 import language_model
+import multistream
 import split_corpus_dataset
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
@@ -66,14 +67,14 @@ if __name__ == '__main__':
 
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.bptt)
-    train_data = split_corpus_dataset.BatchBuilder(train_tss, args.batch_size,
+    train_data = multistream.BatchBuilder(train_tss, args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
-    valid_data = split_corpus_dataset.BatchBuilder(valid_tss, args.batch_size,
+    valid_data = multistream.BatchBuilder(valid_tss, args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
@@ -85,7 +86,7 @@ if __name__ == '__main__':
     for epoch in range(1, args.epochs+1):
         if args.keep_shuffling:
             random.shuffle(train_tss)
-            train_data = split_corpus_dataset.BatchBuilder(train_tss, args.batch_size,
+            train_data = multistream.BatchBuilder(train_tss, args.batch_size,
                                                            discard_h=not args.concat_articles)
             if args.cuda:
                 train_data = CudaStream(train_data)

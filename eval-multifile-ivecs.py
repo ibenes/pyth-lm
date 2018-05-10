@@ -9,6 +9,7 @@ import language_model
 import ivec_appenders
 import split_corpus_dataset
 import smm_ivec_extractor
+import multistream
 
 from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
 from runtime_multifile import evaluate
@@ -55,7 +56,7 @@ if __name__ == '__main__':
 
     print("preparing data...")
     tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
-    data = split_corpus_dataset.BatchBuilder(tss, args.batch_size,
+    data = multistream.BatchBuilder(tss, args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)

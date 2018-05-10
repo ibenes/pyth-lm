@@ -1,10 +1,23 @@
 import torch
 
+
+def batchify(data, bsz, cuda):
+    """ For simple rearranging of 'single sentence' data.
+    """
+    # Work out how cleanly we can divide the dataset into bsz parts.
+    nbatch = data.size(0) // bsz
+    # Trim off any extra elements that wouldn't cleanly fit (remainders).
+    data = data.narrow(0, 0, nbatch * bsz)
+    # Evenly divide the data across the bsz batches.
+    data = data.view(bsz, -1).t().contiguous()
+    if cuda:
+        data = data.cuda()
+    return data
+
+
 class BatchBuilder():
     def __init__(self, streams, max_batch_size, discard_h=True):
-        """
-            Args:
-                fs ([file]): List of opened files to construct batches from
+        """ For complex combination of different lenghts sources.
         """
         self._streams = streams
 

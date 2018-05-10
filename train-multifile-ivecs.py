@@ -8,6 +8,7 @@ import smm_lstm_models
 import vocab
 import language_model
 import split_corpus_dataset
+import multistream
 import ivec_appenders
 import smm_ivec_extractor
 
@@ -82,7 +83,7 @@ if __name__ == '__main__':
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
-    valid_data = split_corpus_dataset.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
+    valid_data = multistream.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
                                                    discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
@@ -94,7 +95,7 @@ if __name__ == '__main__':
 
     for epoch in range(1, args.epochs+1):
         random.shuffle(train_tss)
-        train_data = split_corpus_dataset.BatchBuilder(
+        train_data = multistream.BatchBuilder(
             train_tss, args.batch_size, discard_h=not args.concat_articles
         )
         if args.cuda:

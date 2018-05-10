@@ -7,6 +7,7 @@ import lstm_model
 import vocab
 import language_model
 import split_corpus_dataset
+import multistream
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
 from runtime_multifile import evaluate_no_transpose
@@ -43,7 +44,7 @@ if __name__ == '__main__':
     print("preparing data...")
     ts_constructor = lambda *x: split_corpus_dataset.TokenizedSplitFFMultiTarget(*x, args.target_seq_len)
     tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, lm.model.in_len, ts_constructor)
-    data = split_corpus_dataset.BatchBuilder(tss, args.batch_size,
+    data = multistream.BatchBuilder(tss, args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)

@@ -4,6 +4,7 @@ import torch
 
 import data
 import split_corpus_dataset
+import multistream
 import lstm_model
 import language_model
 
@@ -42,7 +43,7 @@ if __name__ == '__main__':
 
     print("preparing data...")
     ids = data.tokens_from_fn(args.data, lm.vocab, randomize=False)
-    batched = data.batchify(ids, args.batch_size, args.cuda)
+    batched = multistream.batchify(ids, args.batch_size, args.cuda)
     data = split_corpus_dataset.TemporalSplits(batched, 1, args.bptt)
 
     # Run on test data.

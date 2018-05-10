@@ -10,6 +10,7 @@ import language_model
 import ivec_appenders
 import split_corpus_dataset
 import smm_ivec_extractor
+import multistream
 
 from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
 from runtime_multifile import evaluate_no_transpose
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     ivec_eetor = lambda x: torch.from_numpy(np.asarray([hash(x)]))
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_eetor)
     tss_ivecs = [ivec_app_creator(ts) for ts in tss]
-    data = split_corpus_dataset.BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
+    data = multistream.BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
 
     if args.cuda:
         data = CudaStream(data)
