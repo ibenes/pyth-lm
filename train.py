@@ -38,6 +38,8 @@ if __name__ == '__main__':
                         help='shuffle lines before every epoch')
     parser.add_argument('--cuda', action='store_true',
                         help='use CUDA')
+    parser.add_argument('--characters', action='store_true',
+                        help='work on character level, whitespace is significant')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='report interval')
     parser.add_argument('--load', type=str, required=True,
@@ -60,11 +62,13 @@ if __name__ == '__main__':
     print(lm.model)
 
     print("preparing data...")
-    train_ids = data.tokens_from_fn(args.train, lm.vocab, randomize=False)
+    tokenize_regime = 'words'
+
+    train_ids = data.tokens_from_fn(args.train, lm.vocab, randomize=False, regime=tokenize_regime)
     train_batched = multistream.batchify(train_ids, args.batch_size, args.cuda)
     train_data = split_corpus_dataset.TemporalSplits(train_batched, nb_inputs_necessary=1, nb_targets_parallel=args.bptt)
 
-    valid_ids = data.tokens_from_fn(args.valid, lm.vocab, randomize=False)
+    valid_ids = data.tokens_from_fn(args.valid, lm.vocab, randomize=False, regime=tokenize_regime)
     valid_batched = multistream.batchify(valid_ids, 10, args.cuda)
     valid_data = split_corpus_dataset.TemporalSplits(valid_batched, nb_inputs_necessary=1, nb_targets_parallel=args.bptt)
 

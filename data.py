@@ -2,8 +2,8 @@ import os
 import torch
 
 
-def tokens_from_fn(fn, vocab, randomize):
-    word_ids = []
+def tokens_from_fn(fn, vocab, randomize, regime='words'):
+    ids = []
     with open(fn, 'r') as f:
         lines = f.read().split('\n')
 
@@ -12,7 +12,13 @@ def tokens_from_fn(fn, vocab, randomize):
             random.shuffle(lines)
 
         for line in lines:
-            words = line.split()
-            word_ids.extend([vocab[w] for w in words])
+            if regime == 'words':
+                elements = line.split()
+            elif regime == 'chars':
+                elements = line
+            else:
+                raise ValueError("unsupported regime {}".format(regime))
 
-    return torch.LongTensor(word_ids)
+            ids.extend([vocab[e] for e in elements])
+
+    return torch.LongTensor(ids)
