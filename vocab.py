@@ -1,4 +1,7 @@
 from collections import Mapping
+import re
+
+
 class IndexGenerator():
     def __init__(self, assigned):
         self.next_ = 0
@@ -51,15 +54,18 @@ class Vocabulary(Mapping):
     def __iter__(self):
         return iter(self.w2i_)
 
+
 def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     d = {}
+    line_re = re.compile('\s*(?P<word>\S+)\s+(?P<ind>[0-9]+)\s*\n?')
     for i, line in enumerate(f):
-        fields = line.split()
-        if len(fields) != 2:
+        m = line_re.fullmatch(line)
+
+        if m is None:
             raise ValueError("Weird line {}: '{}'".format(i, line))
              
-        w = fields[0]
-        i = int(fields[1])
+        w = m.group('word')
+        i = int(m.group('ind'))
         assert i >= 0
         d[w] = i
 
