@@ -55,9 +55,9 @@ class Vocabulary(Mapping):
         return iter(self.w2i_)
 
 
-def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
+def vocab_from_kaldi_wordlist_base(f, unk_word, word_re, remove_quotes):
     d = {}
-    line_re = re.compile('\s*(?P<word>\S+)\s+(?P<ind>[0-9]+)\s*\n?')
+    line_re = re.compile('\s*(?P<word>' + word_re + ')\s+(?P<ind>[0-9]+)\s*\n?')
     for i, line in enumerate(f):
         m = line_re.fullmatch(line)
 
@@ -65,6 +65,9 @@ def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
             raise ValueError("Weird line {}: '{}'".format(i, line))
              
         w = m.group('word')
+        if remove_quotes:
+            assert w[0] == w[-1] == "'" 
+            w = w[1:-1]
         i = int(m.group('ind'))
         assert i >= 0
         d[w] = i
@@ -81,3 +84,12 @@ def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     vocab.size_ = max(d.values()) + 1
 
     return vocab
+
+
+def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
+    return vocab_from_kaldi_wordlist_base(f, unk_word, word_re='\S+', remove_quotes=False)
+
+
+def quoted_vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
+    return vocab_from_kaldi_wordlist_base(f, unk_word, word_re="'.+'", remove_quotes=True)
+

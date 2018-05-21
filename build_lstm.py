@@ -10,6 +10,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch LSTM Language Model')
     parser.add_argument('--wordlist', type=str, required=True,
                         help='word -> int map; Kaldi style "words.txt"')
+    parser.add_argument('--quoted-wordlist', action='store_true',
+                        help='assume the words are quoted (with a single quote)')
     parser.add_argument('--unk', type=str, default="<unk>",
                         help='expected form of "unk" word. Most likely a <UNK> or <unk>')
     parser.add_argument('--emsize', type=int, default=200,
@@ -33,7 +35,10 @@ if __name__ == '__main__':
 
     print("loading vocabulary...")
     with open(args.wordlist, 'r') as f:
-        vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
+        if args.quoted_wordlist:
+            vocab = vocab.quoted_vocab_from_kaldi_wordlist(f, args.unk)
+        else:
+            vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     print("building model...")
 
