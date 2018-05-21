@@ -29,8 +29,6 @@ if __name__ == '__main__':
                         help='batch size')
     parser.add_argument('--bptt', type=int, default=35,
                         help='sequence length')
-    parser.add_argument('--nb-inputs-necessary', type=int, default=1,
-                        help='number of input tokens required to obtain a single output. For most RNNs 1, for $n$-gram FF NN LM $n-1$')
 
     parser.add_argument('--lr', type=float, default=20,
                         help='initial learning rate')
@@ -75,7 +73,7 @@ if __name__ == '__main__':
     train_batched = multistream.batchify(train_ids, args.batch_size, args.cuda)
     train_data = split_corpus_dataset.TemporalSplits(
         train_batched,
-        nb_inputs_necessary=args.nb_inputs_necessary,
+        nb_inputs_necessary=1,
         nb_targets_parallel=args.bptt
     )
 
@@ -83,7 +81,7 @@ if __name__ == '__main__':
     valid_batched = multistream.batchify(valid_ids, 10, args.cuda)
     valid_data = split_corpus_dataset.TemporalSplits(
         valid_batched, 
-        nb_inputs_necessary=args.nb_inputs_necessary, 
+        nb_inputs_necessary=1, 
         nb_targets_parallel=args.bptt
     )
 
