@@ -1,4 +1,3 @@
-import vocab
 import torch
 
 
@@ -7,7 +6,6 @@ class TemporalSplits():
         self._seq = seq
         self._nb_inputs_necessary = nb_inputs_necessary
         self._nb_target_parallel = nb_targets_parallel
-
 
     def __iter__(self):
         for lend, rend in self.ranges():
@@ -19,7 +17,6 @@ class TemporalSplits():
     def __len__(self):
         return max(len(self._seq) - self._nb_inputs_necessary - self._nb_target_parallel + 1, 0)
         
-
     def ranges(self):
         for i in range(0, len(self), self._nb_target_parallel):
             lend = i
@@ -41,12 +38,11 @@ class TokenizedSplitFFBase():
         self._temp_splits = temporal_split_builder(self._tokens)
 
     def __iter__(self):
-        for x,t in self._temp_splits:
-            yield x,t
+        for x, t in self._temp_splits:
+            yield x, t
 
     def __len__(self):
         return len(self._temp_splits)
-
 
     def input_words(self):
         for lend, rend in self._temp_splits.ranges():
@@ -91,8 +87,8 @@ class DomainAdaptationSplitFFBase:
         self._temp_splitter = TemporalSplits(self._tokens, self._hist_len, self._nb_target_parallel)
 
     def __iter__(self):
-        for x,t in self._temp_splitter:
-            yield x,t
+        for x, t in self._temp_splitter:
+            yield x, t
 
     def __len__(self):
         return len(self._temp_splitter)
