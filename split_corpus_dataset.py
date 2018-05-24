@@ -16,12 +16,24 @@ class TemporalSplits():
 
     def __len__(self):
         return max(len(self._seq) - self._nb_inputs_necessary - self._nb_target_parallel + 1, 0)
-        
+
     def ranges(self):
         for i in range(0, len(self), self._nb_target_parallel):
             lend = i
             rend = i + self._nb_inputs_necessary + self._nb_target_parallel - 1
             yield lend, rend
+
+
+class TransposeWrapper:
+    def __init__(self, stream):
+        self._stream = stream
+
+    def __iter__(self):
+        for a_tuple in self._stream:
+            yield tuple(x.t().contiguous() for x in a_tuple)
+
+    def __len__(self):
+        return len(self._stream)
 
 
 class TokenizedSplitFFBase():
