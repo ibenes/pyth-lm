@@ -4,10 +4,7 @@ import random
 
 import torch
 
-import smm_lstm_models
-import vocab
 import language_model
-import split_corpus_dataset
 import multistream
 import ivec_appenders
 import smm_ivec_extractor
@@ -49,11 +46,11 @@ if __name__ == '__main__':
                         help='report interval')
     parser.add_argument('--ivec-extractor', type=str, required=True,
                         help='where to load a ivector extractor from')
-    parser.add_argument('--ivec-nb-iters', type=int, 
+    parser.add_argument('--ivec-nb-iters', type=int,
                         help='override the number of iterations when extracting ivectors')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
-    parser.add_argument('--save', type=str,  required=True,
+    parser.add_argument('--save', type=str, required=True,
                         help='path to save the final model')
     args = parser.parse_args()
     print(args)
@@ -83,11 +80,14 @@ if __name__ == '__main__':
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
-    valid_data = multistream.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
-                                                   discard_h=not args.concat_articles)
+    valid_data = multistream.BatchBuilder(
+        [ivec_app_creator(ts) for ts in valid_tss],
+        args.batch_size,
+        discard_h=not args.concat_articles
+    )
+
     if args.cuda:
         valid_data = CudaStream(valid_data)
-
 
     print("training...")
     lr = args.lr
@@ -109,9 +109,9 @@ if __name__ == '__main__':
 
         logger = InfinityLogger(epoch, args.log_interval, lr)
         optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
-        
+
         train(
-            lm.model, train_data_ivecs, optim, logger, 
+            lm.model, train_data_ivecs, optim, logger,
             clip=args.clip,
             use_ivecs=True
         )
@@ -119,9 +119,12 @@ if __name__ == '__main__':
 
         val_loss = evaluate(lm.model, valid_data, use_ivecs=True)
         print('-' * 89)
-        print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
-                'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
-                                           val_loss, math.exp(val_loss)))
+        print(
+            '| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
+            'valid ppl {:8.2f}'.format(
+                epoch, logger.time_since_creation(), logger.nb_updates(),
+                val_loss, math.exp(val_loss))
+        )
         print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
