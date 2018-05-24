@@ -7,12 +7,9 @@ from runtime_utils import repackage_hidden
 from tensor_reorganization import TensorReorganizer
 
 
-def prepare_inputs(inputs, batch_first, do_transpose, use_ivecs, custom_batches):
+def prepare_inputs(inputs, do_transpose, use_ivecs, custom_batches):
     X = inputs[0]
-    if batch_first:
-        batch_size = X.size(0)
-    else:
-        batch_size = X.size(1)
+    batch_size = X.size(0)
     if do_transpose:
         X = X.t()
     X = Variable(X)
@@ -35,7 +32,7 @@ def prepare_inputs(inputs, batch_first, do_transpose, use_ivecs, custom_batches)
     return X, targets_flat, ivecs, mask, batch_size
 
 
-def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch_first):
+def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
     model.eval()
     criterion = nn.NLLLoss(size_average=False)
 
@@ -50,7 +47,7 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch
     for inputs in data_source:
         X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
             inputs,
-            batch_first, do_transpose, use_ivecs, custom_batches
+            do_transpose, use_ivecs, custom_batches
         )
 
         if hidden is None:
@@ -76,20 +73,20 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches, batch
 def evaluate(model, data_source, use_ivecs):
     return evaluate_(
         model, data_source,
-        use_ivecs, do_transpose=True, custom_batches=True, batch_first=True
+        use_ivecs, do_transpose=True, custom_batches=True
     )
 
 
 def evaluate_no_transpose(model, data_source, use_ivecs):
     return evaluate_(
         model, data_source,
-        use_ivecs, do_transpose=False, custom_batches=False, batch_first=True
+        use_ivecs, do_transpose=False, custom_batches=False
     )
 
 
 # TODO time X batch or vice-versa?
 
-def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches, batch_first):
+def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches):
     model.train()
     criterion = nn.NLLLoss()
 
@@ -101,7 +98,7 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
     for inputs in data:
         X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
             inputs,
-            batch_first, do_transpose, use_ivecs, custom_batches
+            do_transpose, use_ivecs, custom_batches
         )
 
         if hidden is None:
@@ -130,12 +127,12 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
 def train(model, data, optim, logger, clip, use_ivecs):
     train_(
         model, data, optim, logger, clip,
-        use_ivecs, do_transpose=True, custom_batches=True, batch_first=True
+        use_ivecs, do_transpose=True, custom_batches=True
     )
 
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
     train_(
         model, data, optim, logger, clip,
-        use_ivecs, do_transpose=False, custom_batches=False, batch_first=True
+        use_ivecs, do_transpose=False, custom_batches=False
     )

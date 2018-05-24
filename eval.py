@@ -56,6 +56,5 @@ if __name__ == '__main__':
         use_ivecs=False,
         do_transpose=True,
         custom_batches=False,
-        batch_first=True
     )
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))

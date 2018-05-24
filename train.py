@@ -99,7 +99,6 @@ if __name__ == '__main__':
             use_ivecs=False,
             do_transpose=True,
             custom_batches=False,
-            batch_first=True
         )
 
         val_loss = evaluate_(
@@ -107,7 +106,6 @@ if __name__ == '__main__':
             use_ivecs=False,
             do_transpose=True,
             custom_batches=False,
-            batch_first=True
         )
         print('-' * 89)
         print(
