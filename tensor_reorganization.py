@@ -1,8 +1,10 @@
 import torch
 
+from typing import Dict, Any
+
 
 class Singleton(type):
-    _instances = {}
+    _instances: Dict[Any, Any] = {}  # TODO what is the actual type?
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
