@@ -60,12 +60,12 @@ if __name__ == '__main__':
     print("preparing data...")
     train_ids = data.tokens_from_fn(args.train, lm.vocab, randomize=False)
     train_batched = multistream.batchify(train_ids, args.batch_size, args.cuda)
-    train_data_tb = split_corpus_dataset.TemporalSplits(
+    train_data = split_corpus_dataset.TemporalSplits(
         train_batched,
         nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.nb_targets_parallel
     )
-    train_data = split_corpus_dataset.TransposeWrapper(train_data_tb)
+    train_data = split_corpus_dataset.TransposeWrapper(train_data)
 
     valid_ids = data.tokens_from_fn(args.valid, lm.vocab, randomize=False)
     valid_batched = multistream.batchify(valid_ids, 10, args.cuda)
