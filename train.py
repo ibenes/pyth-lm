@@ -5,11 +5,9 @@ import torch
 import data
 import multistream
 import split_corpus_dataset
-import lstm_model
-import vocab
 import language_model
 
-from runtime_multifile import evaluate_uniform_stream, train_uniform_stream
+from runtime_multifile import evaluate_, train_
 
 from loggers import ProgressLogger
 
@@ -47,7 +45,7 @@ if __name__ == '__main__':
                         help='report interval')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
-    parser.add_argument('--save', type=str,  required=True,
+    parser.add_argument('--save', type=str, required=True,
                         help='path to save the final model')
     args = parser.parse_args()
     print(args)
@@ -76,14 +74,16 @@ if __name__ == '__main__':
         nb_inputs_necessary=1,
         nb_targets_parallel=args.bptt
     )
+    train_data = split_corpus_dataset.TransposeWrapper(train_data)
 
     valid_ids = data.tokens_from_fn(args.valid, lm.vocab, randomize=False, regime=tokenize_regime)
     valid_batched = multistream.batchify(valid_ids, 10, args.cuda)
     valid_data = split_corpus_dataset.TemporalSplits(
-        valid_batched, 
-        nb_inputs_necessary=1, 
+        valid_batched,
+        nb_inputs_necessary=1,
         nb_targets_parallel=args.bptt
     )
+    valid_data = split_corpus_dataset.TransposeWrapper(valid_data)
 
     print("training...")
     lr = args.lr
@@ -93,15 +93,30 @@ if __name__ == '__main__':
         logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.bptt)
         optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
 
-        train_uniform_stream(
-            lm.model, train_data, logger, 
-            optim, args.clip
+        train_(
+            lm.model, train_data, optim,
+            logger, args.clip,
+            use_ivecs=False,
+            do_transpose=True,
+            custom_batches=False,
+            batch_first=True
         )
-        val_loss = evaluate_uniform_stream(lm.model, valid_data)
+
+        val_loss = evaluate_(
+            lm.model, valid_data,
+            use_ivecs=False,
+            do_transpose=True,
+            custom_batches=False,
+            batch_first=True
+        )
         print('-' * 89)
-        print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
-                'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
-                                           val_loss, math.exp(val_loss)))
+        print(
+            '| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
+            'valid ppl {:8.2f}'.format(
+                epoch, logger.time_since_creation(), logger.nb_updates(),
+                val_loss, math.exp(val_loss)
+            )
+        )
         print('-' * 89)
 
         # Save the model if the validation loss is the best we've seen so far.

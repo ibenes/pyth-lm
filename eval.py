@@ -5,11 +5,11 @@ import torch
 import data
 import split_corpus_dataset
 import multistream
-import lstm_model
 import language_model
 
-from runtime_multifile import evaluate_uniform_stream
- 
+from runtime_multifile import evaluate_
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--data', type=str, required=True,
@@ -51,5 +51,11 @@ if __name__ == '__main__':
     data = split_corpus_dataset.TemporalSplits(batched, 1, args.bptt)
 
     # Run on test data.
-    loss = evaluate_uniform_stream(lm.model, data)
+    loss = evaluate_(
+        lm.model, data,
+        use_ivecs=False,
+        do_transpose=True,
+        custom_batches=False,
+        batch_first=True
+    )
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))

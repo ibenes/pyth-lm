@@ -87,13 +87,6 @@ def evaluate_no_transpose(model, data_source, use_ivecs):
     )
 
 
-def evaluate_uniform_stream(model, data_source):
-    return evaluate_(
-        model, data_source,
-        use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False
-    )
-
-
 # TODO time X batch or vice-versa?
 
 def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches, batch_first):
@@ -145,11 +138,4 @@ def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
     train_(
         model, data, optim, logger, clip,
         use_ivecs, do_transpose=False, custom_batches=False, batch_first=True
-    )
-
-
-def train_uniform_stream(model, data, logger, optim, clip):
-    train_(
-        model, data, optim, logger, clip,
-        use_ivecs=False, do_transpose=False, custom_batches=False, batch_first=False
     )
