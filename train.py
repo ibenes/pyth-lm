@@ -97,14 +97,12 @@ if __name__ == '__main__':
             lm.model, train_data, optim,
             logger, args.clip,
             use_ivecs=False,
-            do_transpose=True,
             custom_batches=False,
         )
 
         val_loss = evaluate_(
             lm.model, valid_data,
             use_ivecs=False,
-            do_transpose=True,
             custom_batches=False,
         )
         print('-' * 89)

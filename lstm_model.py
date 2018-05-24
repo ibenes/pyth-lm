@@ -22,6 +22,8 @@ class LSTMLanguageModel(nn.Module):
         self.nhid = nhid
         self.nlayers = nlayers
 
+        self.batch_first = False
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)

@@ -53,8 +53,6 @@ if __name__ == '__main__':
     loss = evaluate_(
         lm.model, data,
         use_ivecs=False,
-        do_transpose=False,
         custom_batches=False,
-        batch_first=True
     )
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))

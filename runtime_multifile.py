@@ -32,7 +32,7 @@ def prepare_inputs(inputs, do_transpose, use_ivecs, custom_batches):
     return X, targets_flat, ivecs, mask, batch_size
 
 
-def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
+def evaluate_(model, data_source, use_ivecs, custom_batches):
     model.eval()
     criterion = nn.NLLLoss(size_average=False)
 
@@ -43,6 +43,7 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
         hs_reorganizer = TensorReorganizer(model.init_hidden)
 
     hidden = None
+    do_transpose = not model.batch_first
 
     for inputs in data_source:
         X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
@@ -73,20 +74,20 @@ def evaluate_(model, data_source, use_ivecs, do_transpose, custom_batches):
 def evaluate(model, data_source, use_ivecs):
     return evaluate_(
         model, data_source,
-        use_ivecs, do_transpose=True, custom_batches=True
+        use_ivecs, custom_batches=True
     )
 
 
 def evaluate_no_transpose(model, data_source, use_ivecs):
     return evaluate_(
         model, data_source,
-        use_ivecs, do_transpose=False, custom_batches=False
+        use_ivecs, custom_batches=False
     )
 
 
 # TODO time X batch or vice-versa?
 
-def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_batches):
+def train_(model, data, optim, logger, clip, use_ivecs, custom_batches):
     model.train()
     criterion = nn.NLLLoss()
 
@@ -94,6 +95,7 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
         hs_reorganizer = TensorReorganizer(model.init_hidden)
 
     hidden = None
+    do_transpose = not model.batch_first
 
     for inputs in data:
         X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
@@ -127,12 +129,12 @@ def train_(model, data, optim, logger, clip, use_ivecs, do_transpose, custom_bat
 def train(model, data, optim, logger, clip, use_ivecs):
     train_(
         model, data, optim, logger, clip,
-        use_ivecs, do_transpose=True, custom_batches=True
+        use_ivecs, custom_batches=True
     )
 
 
 def train_no_transpose(model, data, optim, logger, clip, use_ivecs):
     train_(
         model, data, optim, logger, clip,
-        use_ivecs, do_transpose=False, custom_batches=False
+        use_ivecs, custom_batches=False
     )

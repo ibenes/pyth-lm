@@ -27,6 +27,8 @@ class OutputEnhancedLM(nn.Module):
         self.nlayers = nlayers
         self._ivec_amplification = ivec_amplification
 
+        self.batch_first = False
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
@@ -51,6 +53,7 @@ class OutputEnhancedLM(nn.Module):
         weight = next(self.parameters()).data
         return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
                 Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+
 
 class OutputLinearBottleneckLM(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
@@ -103,6 +106,7 @@ class OutputLinearBottleneckLM(nn.Module):
         weight = next(self.parameters()).data
         return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
                 Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+
 
 class OutputBottleneckLM(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
@@ -157,13 +161,13 @@ class OutputBottleneckLM(nn.Module):
                 Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
 
 
-class GatedLinearUnit(nn.Module):   
+class GatedLinearUnit(nn.Module):
     def __init__(self, in_size, out_size):
         self.transfer = nn.Linear(in_size, out_size)
         self.gate = nn.Linear(in_size, out_size)
 
     def forward(self, input):
-        t = self.transfer(input) 
+        t = self.transfer(input)
         g = F.sigmoid(self.gate(input))
         return t * g
 
@@ -311,6 +315,8 @@ class IvecOnlyLM(nn.Module):
 
         self.init_weights()
 
+        self.batch_first = False
+
     def init_weights(self):
         initrange = 0.1
         self.decoder.bias.data.fill_(0)
@@ -327,4 +333,4 @@ class IvecOnlyLM(nn.Module):
     def init_hidden(self, bsz):
         # not used, but to fit into the framework of other ivec-LMs
         weight = next(self.parameters()).data
-        return (Variable(weight.new(1, bsz, self.ivec_dim).zero_())) 
+        return (Variable(weight.new(1, bsz, self.ivec_dim).zero_()))

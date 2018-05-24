@@ -20,6 +20,8 @@ class BengioModel(nn.Module):
         self.in_len = in_len
         self.emb_size = emb_size
 
+        self.batch_first = True
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
@@ -30,7 +32,7 @@ class BengioModel(nn.Module):
 
     def forward(self, input, hidden):
         emb = self.drop(self.encoder(input))
-        projections = [proj(emb[:, i:emb.size(1)-(self.in_len-i)+1]) for i, proj in enumerate(self.emb2h)] 
+        projections = [proj(emb[:, i:emb.size(1)-(self.in_len-i)+1]) for i, proj in enumerate(self.emb2h)]
         projections = torch.stack(projections, dim=-1)
         output = F.tanh(torch.sum(projections, dim=-1))
         output = self.drop(output)
@@ -40,7 +42,7 @@ class BengioModel(nn.Module):
     def init_hidden(self, bsz):
         # not used, but to fit into the framework of other ivec-LMs
         weight = next(self.parameters()).data
-        return (Variable(weight.new(1, bsz, self.nb_hidden).zero_())) 
+        return (Variable(weight.new(1, bsz, self.nb_hidden).zero_()))
 
 
 class BengioModelIvecInput(nn.Module):
@@ -60,6 +62,8 @@ class BengioModelIvecInput(nn.Module):
         self.in_len = in_len
         self.emb_size = emb_size
 
+        self.batch_first = True
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
@@ -72,7 +76,7 @@ class BengioModelIvecInput(nn.Module):
         if len(ivec.size()) == 1:
             ivec = ivec.unsqueeze(0)
         emb = self.drop(self.encoder(input))
-        projections = [proj(emb[:, i:emb.size(1)-(self.in_len-i)+1]) for i, proj in enumerate(self.emb2h)] 
+        projections = [proj(emb[:, i:emb.size(1)-(self.in_len-i)+1]) for i, proj in enumerate(self.emb2h)]
         nb_timesteps = projections[0].size(1)
         projected_ivec = self.ivec2h(ivec).unsqueeze(dim=-2).expand(-1, nb_timesteps, -1)
         projections = torch.stack(projections + [projected_ivec], dim=-1)
@@ -84,4 +88,4 @@ class BengioModelIvecInput(nn.Module):
     def init_hidden(self, bsz):
         # not used, but to fit into the framework of other ivec-LMs
         weight = next(self.parameters()).data
-        return (Variable(weight.new(1, bsz, self.nb_hidden).zero_())) 
+        return (Variable(weight.new(1, bsz, self.nb_hidden).zero_()))
