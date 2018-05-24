@@ -1,8 +1,9 @@
 import torch
-import IPython
+
 
 class Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
@@ -17,7 +18,9 @@ class InfiniNoneType(metaclass=Singleton):
         while True:
             yield InfiniNoneType()
 
+
 InfiniNone = InfiniNoneType()
+
 
 def reorg_single(orig, mask, new=None):
     reorg = torch.index_select(orig, dim=-2, index=mask)
@@ -46,7 +49,8 @@ class TensorReorganizer():
             raise TypeError(
                 "orig has unsupported type {}, "
                 "only tuples, Tensors, and Variables are accepted".format(
-                        orig.__class__)
+                    orig.__class__
+                )
             )
 
         adding = mask.size(0) < batch_size
