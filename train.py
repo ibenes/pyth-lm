@@ -71,7 +71,7 @@ if __name__ == '__main__':
     train_batched = multistream.batchify(train_ids, args.batch_size, args.cuda)
     train_data = split_corpus_dataset.TemporalSplits(
         train_batched,
-        nb_inputs_necessary=1,
+        nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
     train_data = split_corpus_dataset.TransposeWrapper(train_data)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     valid_batched = multistream.batchify(valid_ids, 10, args.cuda)
     valid_data = split_corpus_dataset.TemporalSplits(
         valid_batched,
-        nb_inputs_necessary=1,
+        nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
     valid_data = split_corpus_dataset.TransposeWrapper(valid_data)
