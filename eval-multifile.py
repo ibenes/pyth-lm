@@ -1,12 +1,7 @@
 import argparse
 import math
-import torch
 
-import model
-import lstm_model
-import vocab
 import language_model
-import split_corpus_dataset
 import multistream
 
 from split_corpus_dataset import TokenizedSplitFFBase, TemporalSplits
@@ -48,9 +43,9 @@ if __name__ == '__main__':
 
     tss = filelist_to_objects(args.file_list, ts_builder)
     data = multistream.BatchBuilder(tss, args.batch_size,
-                                               discard_h=not args.concat_articles)
+                                    discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
 
     loss = evaluate(lm.model, data, use_ivecs=False)
-    print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
+    print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))
