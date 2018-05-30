@@ -47,8 +47,13 @@ if __name__ == '__main__':
 
     print("preparing data...")
     ids = data.tokens_from_fn(args.data, lm.vocab, randomize=False)
-    batched = multistream.batchify(ids, args.batch_size, args.cuda)
-    data = split_corpus_dataset.TemporalSplits(batched, 1, args.bptt)
+    batched = multistream.batchify(ids, 10, args.cuda)
+    data = split_corpus_dataset.TemporalSplits(
+        batched,
+        nb_inputs_necessary=lm.model.in_len,
+        nb_targets_parallel=args.bptt
+    )
+    data = split_corpus_dataset.TransposeWrapper(data)
 
     # Run on test data.
     loss = evaluate_(
