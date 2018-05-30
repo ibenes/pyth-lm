@@ -11,8 +11,8 @@ python build_bengio.py \
     --nhid=20 \
     --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
-# 1) train the FN-LM with oracle ivectors and evaluate using partial ones
-python train-ff-multifile.py \
+# 1) train the FN-LM 
+python train-multifile.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
     --concat-articles \

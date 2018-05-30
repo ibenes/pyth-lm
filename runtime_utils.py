@@ -32,6 +32,16 @@ def filelist_to_tokenized_splits(filelist_filename, vocab, bptt, wrapper=split_c
     return tss
 
 
+def filelist_to_objects(filelist_filename, action):
+    filenames = filenames_file_to_filenames(filelist_filename)
+    objects = []
+    for filename in filenames:
+        with open(filename, 'r') as f:
+            objects.append(action(f))
+
+    return objects
+
+
 def filenames_file_to_filenames(filelist_filename):
     with open(filelist_filename) as filelist:
         filenames = filelist.read().split()

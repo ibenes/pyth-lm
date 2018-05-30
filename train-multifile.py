@@ -7,7 +7,9 @@ import torch
 import language_model
 import multistream
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
+from split_corpus_dataset import TemporalSplits, TokenizedSplitFFBase
+
+from runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter
 from runtime_multifile import evaluate, train
 
 from loggers import InfinityLogger
@@ -63,14 +65,17 @@ if __name__ == '__main__':
     print("preparing data...")
 
     print("\ttraining...")
-    train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.bptt)
+    temp_split_builder = lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
+    ts_builder = lambda f: TokenizedSplitFFBase(f, lm.vocab, temp_split_builder)
+
+    train_tss = filelist_to_objects(args.train_list, ts_builder)
     train_data = multistream.BatchBuilder(train_tss, args.batch_size,
                                           discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
-    valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
+    valid_tss = filelist_to_objects(args.valid_list, ts_builder)
     valid_data = multistream.BatchBuilder(valid_tss, args.batch_size,
                                           discard_h=not args.concat_articles)
     if args.cuda:
