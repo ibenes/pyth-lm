@@ -1,10 +1,6 @@
 import argparse
 import math
-import torch
 
-import model
-import lstm_model
-import vocab
 import language_model
 import ivec_appenders
 import split_corpus_dataset
@@ -33,7 +29,7 @@ if __name__ == '__main__':
                         help='where to load a model from')
     parser.add_argument('--ivec-extractor', type=str, required=True,
                         help='where to load a ivector extractor from')
-    parser.add_argument('--ivec-nb-iters', type=int, 
+    parser.add_argument('--ivec-nb-iters', type=int,
                         help='override the number of iterations when extracting ivectors')
     args = parser.parse_args()
     print(args)
@@ -67,4 +63,4 @@ if __name__ == '__main__':
 
     print("evaluating...")
     loss = evaluate_no_transpose(lm.model, data, use_ivecs=True)
-    print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
+    print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))
