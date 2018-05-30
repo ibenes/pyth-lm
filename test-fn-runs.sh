@@ -21,7 +21,7 @@ python train-multifile.py \
     --save=$EXP_DIR/$EXP_NAME.lm \
     --epochs=1 || exit 1
 
-python eval-ff-multifile.py \
+python eval-multifile.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --concat-articles \
     --cuda \

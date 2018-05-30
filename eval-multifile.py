@@ -9,7 +9,8 @@ import language_model
 import split_corpus_dataset
 import multistream
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits
+from split_corpus_dataset import TokenizedSplitFFBase, TemporalSplits
+from runtime_utils import CudaStream, init_seeds, filelist_to_objects
 from runtime_multifile import evaluate
 
 
@@ -42,7 +43,10 @@ if __name__ == '__main__':
     print(lm.model)
 
     print("preparing data...")
-    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
+    temp_split_builder = lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
+    ts_builder = lambda f: TokenizedSplitFFBase(f, lm.vocab, temp_split_builder)
+
+    tss = filelist_to_objects(args.file_list, ts_builder)
     data = multistream.BatchBuilder(tss, args.batch_size,
                                                discard_h=not args.concat_articles)
     if args.cuda:
