@@ -4,11 +4,8 @@ import random
 
 import torch
 
-import lstm_model
-import vocab
 import language_model
 import multistream
-import split_corpus_dataset
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
 from runtime_multifile import evaluate, train
@@ -49,7 +46,7 @@ if __name__ == '__main__':
                         help='report interval')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
-    parser.add_argument('--save', type=str,  required=True,
+    parser.add_argument('--save', type=str, required=True,
                         help='path to save the final model')
     args = parser.parse_args()
     print(args)
@@ -68,14 +65,14 @@ if __name__ == '__main__':
     print("\ttraining...")
     train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.bptt)
     train_data = multistream.BatchBuilder(train_tss, args.batch_size,
-                                                   discard_h=not args.concat_articles)
+                                          discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
     valid_data = multistream.BatchBuilder(valid_tss, args.batch_size,
-                                                   discard_h=not args.concat_articles)
+                                          discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
@@ -87,7 +84,7 @@ if __name__ == '__main__':
         if args.keep_shuffling:
             random.shuffle(train_tss)
             train_data = multistream.BatchBuilder(train_tss, args.batch_size,
-                                                           discard_h=not args.concat_articles)
+                                                  discard_h=not args.concat_articles)
             if args.cuda:
                 train_data = CudaStream(train_data)
 
@@ -98,7 +95,7 @@ if __name__ == '__main__':
         optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
 
         train(
-            lm.model, train_data_filtered, optim, logger, 
+            lm.model, train_data_filtered, optim, logger,
             clip=args.clip,
             use_ivecs=False
         )
@@ -106,9 +103,13 @@ if __name__ == '__main__':
 
         val_loss = evaluate(lm.model, valid_data, use_ivecs=False)
         print('-' * 89)
-        print('| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
-                'valid ppl {:8.2f}'.format(epoch, logger.time_since_creation(), logger.nb_updates(),
-                                           val_loss, math.exp(val_loss)))
+        print(
+            '| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
+            'valid ppl {:8.2f}'.format(
+                epoch, logger.time_since_creation(), logger.nb_updates(),
+                val_loss, math.exp(val_loss)
+            )
+        )
         print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
