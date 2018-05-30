@@ -27,15 +27,17 @@ def filelist_to_tokenized_splits(filelist_filename, vocab, bptt, wrapper=split_c
     tss = []
     for filename in filenames:
         with open(filename, 'r') as f:
-            tss.append(wrapper(f, vocab, bptt)) 
+            tss.append(wrapper(f, vocab, bptt))
 
     return tss
 
+
 def filenames_file_to_filenames(filelist_filename):
-    with open(filelist_filename) as filelist: 
+    with open(filelist_filename) as filelist:
         filenames = filelist.read().split()
-        
+
     return filenames
+
 
 def init_seeds(seed, cuda):
     random.seed(seed)
@@ -45,7 +47,7 @@ def init_seeds(seed, cuda):
 
 
 class BatchFilter:
-    def __init__(self, data, batch_size, bptt, min_batch_size): 
+    def __init__(self, data, batch_size, bptt, min_batch_size):
         self._data = data
         self._batch_size = batch_size
         self._bptt = bptt
@@ -53,7 +55,7 @@ class BatchFilter:
 
         self._nb_skipped_updates = 0
         self._nb_skipped_words = 0
-        self._nb_skipped_seqs = 0 # accumulates size of skipped batches
+        self._nb_skipped_seqs = 0  # accumulates size of skipped batches
 
     def __iter__(self):
         for batch in self._data:
