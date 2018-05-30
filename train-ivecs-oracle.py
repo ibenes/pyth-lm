@@ -4,7 +4,7 @@ import random
 
 import torch
 
-import language_model
+from language_models import language_model
 import multistream
 import ivec_appenders
 import smm_ivec_extractor
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     valid_data = multistream.BatchBuilder(
         [ivec_app_creator(ts) for ts in valid_tss],
         args.batch_size,
-        discard_h=not args.concat_article
+        discard_h=not args.concat_articles
     )
     if args.cuda:
         valid_data = CudaStream(valid_data)

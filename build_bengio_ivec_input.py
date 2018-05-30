@@ -2,9 +2,7 @@
 import argparse
 import torch
 
-import ffnn_models
-import vocab
-import language_model
+from language_models import language_model, vocab, ffnn_models
 
 
 if __name__ == '__main__':

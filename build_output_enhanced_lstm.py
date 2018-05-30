@@ -1,9 +1,7 @@
 import argparse
 import torch
 
-import smm_lstm_models
-import vocab
-import language_model
+from language_models import smm_lstm_models, vocab, language_model
 
 
 if __name__ == '__main__':

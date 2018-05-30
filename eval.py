@@ -5,7 +5,7 @@ import torch
 import data
 import split_corpus_dataset
 import multistream
-import language_model
+from language_models import language_model
 
 from runtime_multifile import evaluate_
 

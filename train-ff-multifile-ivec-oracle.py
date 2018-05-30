@@ -4,7 +4,7 @@ import random
 
 import torch
 
-import language_model
+from language_models import language_model
 import split_corpus_dataset
 import ivec_appenders
 import smm_ivec_extractor

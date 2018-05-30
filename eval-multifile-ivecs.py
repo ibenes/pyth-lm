@@ -1,7 +1,7 @@
 import argparse
 import math
 
-import language_model
+from language_models import language_model
 import ivec_appenders
 import smm_ivec_extractor
 import multistream

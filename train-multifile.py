@@ -4,7 +4,7 @@ import random
 
 import torch
 
-import language_model
+from language_models import language_model
 import multistream
 
 from split_corpus_dataset import TemporalSplits, TokenizedSplitFFBase

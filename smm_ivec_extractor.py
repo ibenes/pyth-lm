@@ -6,8 +6,6 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-import vocab
-
 import sys
 sys.path.append('/mnt/matylda5/ibenes/projects/santosh-lm/smm-pytorch/')
 from smm import SMM, update_ws 

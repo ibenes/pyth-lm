@@ -1,7 +1,7 @@
 import argparse
 import math
 
-import language_model
+from language_models import language_model
 import multistream
 
 from split_corpus_dataset import TokenizedSplitFFBase, TemporalSplits
