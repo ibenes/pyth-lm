@@ -53,7 +53,7 @@ if __name__ == '__main__':
                         help='override the number of iterations when extracting ivectors')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
-    parser.add_argument('--save', type=str,  required=True,
+    parser.add_argument('--save', type=str, required=True,
                         help='path to save the final model')
     args = parser.parse_args()
     print(args)
