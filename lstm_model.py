@@ -23,6 +23,7 @@ class LSTMLanguageModel(nn.Module):
         self.nlayers = nlayers
 
         self.batch_first = False
+        self.in_len = 1
 
     def init_weights(self):
         initrange = 0.1
