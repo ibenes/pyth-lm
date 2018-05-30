@@ -27,7 +27,7 @@ if __name__ == '__main__':
                         help='tie the word embedding and softmax weights')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
-    parser.add_argument('--save', type=str,  required=True,
+    parser.add_argument('--save', type=str, required=True,
                         help='path to save the final model')
     args = parser.parse_args()
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     print("building model...")
 
     model = ffnn_models.BengioModelIvecInput(
-        len(vocab), args.emsize, args.hist_len, 
+        len(vocab), args.emsize, args.hist_len,
         args.nhid, args.dropout, args.ivec_dim
     )
 
