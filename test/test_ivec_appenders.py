@@ -1,27 +1,21 @@
-import unittest
-
 import split_corpus_dataset
 import ivec_appenders
 import numpy as np
-import common
+from test.common import TestCase
 
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
 from sklearn.feature_extraction.text import CountVectorizer
 import smm_ivec_extractor
 
+from language_models.vocab import Vocabulary
+from test.utils import getStream
 
 import sys
 sys.path.append('/mnt/matylda5/ibenes/projects/santosh-lm/smm-pytorch/')
 from smm import SMM, estimate_ubm
 
 
-from vocab import Vocabulary
-
-from utils import getStream
-
-class CheatingIvecAppenderTests(common.TestCase):
+class CheatingIvecAppenderTests(TestCase):
     def setUp(self):
         self.ivec_eetor = lambda x: np.asarray([hash(x) % 1337])
         self.test_words_short = "a b c a".split()
@@ -37,7 +31,7 @@ class CheatingIvecAppenderTests(common.TestCase):
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         appender = ivec_appenders.CheatingIvecAppender(ts, self.ivec_eetor)
 
-         # cannot acces ts._tokens, it's an implementation 
+        # cannot acces ts._tokens, it's an implementation
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = self.ivec_eetor(" ".join(self.test_words_short[:-1]))
@@ -51,7 +45,7 @@ class CheatingIvecAppenderTests(common.TestCase):
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         appender = ivec_appenders.CheatingIvecAppender(ts, self.ivec_eetor)
 
-         # cannot acces ts._tokens, it's an implementation 
+        # cannot acces ts._tokens, it's an implementation
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = [
@@ -69,7 +63,7 @@ class CheatingIvecAppenderTests(common.TestCase):
         appender = ivec_appenders.CheatingIvecAppender(ts, self.ivec_eetor)
         appender = iter(appender)
 
-         # cannot acces ts._tokens, it's an implementation 
+        # cannot acces ts._tokens, it's an implementation
         tokens = [self.vocab[w] for w in self.test_words_short]
         expectation = [
             self.ivec_eetor(" ".join(self.test_words_short[:-1])),
@@ -99,7 +93,7 @@ class CheatingIvecAppenderTests(common.TestCase):
         self.assertRaises(StopIteration, next, appender)
 
 
-class HistoryIvecAppenderTests(common.TestCase):
+class HistoryIvecAppenderTests(TestCase):
     def setUp(self):
         self.ivec_eetor = lambda x: np.asarray([hash(x) % 1337])
         self.test_words_short = "a b c a".split()
@@ -118,7 +112,7 @@ class HistoryIvecAppenderTests(common.TestCase):
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         appender = ivec_appenders.HistoryIvecAppender(ts, self.ivec_eetor)
 
-         # cannot acces ts._tokens, it's an implementation 
+        # cannot acces ts._tokens, it's an implementation
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = self.ivec_eetor(" ".join([]))
@@ -132,7 +126,7 @@ class HistoryIvecAppenderTests(common.TestCase):
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         appender = ivec_appenders.HistoryIvecAppender(ts, self.ivec_eetor)
 
-         # cannot acces ts._tokens, it's an implementation 
+        # cannot acces ts._tokens, it's an implementation
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = [
@@ -149,7 +143,7 @@ class HistoryIvecAppenderTests(common.TestCase):
         ts = split_corpus_dataset.TokenizedSplit(data_source, self.vocab, 1)
         appender = ivec_appenders.HistoryIvecAppender(ts, self.ivec_eetor)
 
-         # cannot acces ts._tokens, it's an implementation 
+        # cannot acces ts._tokens, it's an implementation
         tokens = [self.vocab[w] for w in self.test_words_short]
 
         expectation = [
@@ -163,8 +157,7 @@ class HistoryIvecAppenderTests(common.TestCase):
         self.assertEqual(seqs, expectation)
 
 
-
-class ParalelIvecAppenderTests(common.TestCase):
+class ParalelIvecAppenderTests(TestCase):
     def setUp(self):
         documents = ["a set of documents containing eigth different", "words of documents"]
         cvect = CountVectorizer(documents, strip_accents='ascii', analyzer='word')
@@ -190,7 +183,6 @@ class ParalelIvecAppenderTests(common.TestCase):
         self.vocab.add_from_text(" ".join(documents))
 
         self.translator = self.extractor.build_translator(self.vocab)
-
 
     def test_single_data(self):
         ws = [self.vocab[w] for w in self.vocab]
@@ -223,11 +215,11 @@ class ParalelIvecAppenderTests(common.TestCase):
             self.extractor(self.extractor.zero_bows(2)),
             self.extractor(self.translator(xs[0])),
             self.extractor(torch.stack([
-                self.translator(torch.cat([xs[0][0], xs[1][0]])), 
+                self.translator(torch.cat([xs[0][0], xs[1][0]])),
                 self.extractor.zero_bows(1).squeeze()
             ])),
             self.extractor(torch.stack([
-                self.translator(xs[2][1]), 
+                self.translator(xs[2][1]),
                 self.extractor.zero_bows(1).squeeze(),
             ])),
         ]

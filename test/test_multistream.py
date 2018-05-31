@@ -1,16 +1,16 @@
-import multistream
+from data_pipeline.multistream import BatchBuilder
 import split_corpus_dataset
 import ivec_appenders
-import unittest
 
 import numpy as np
 import torch
-import common
+from test.common import TestCase
 
-from utils import getStream
+from test.utils import getStream
+
 
 # TODO remove the dependency on TokenizedSplit, ivectors etc.
-class BatchBuilderTest(common.TestCase):
+class BatchBuilderTest(TestCase):
     def setUp(self):
         self.vocab = {
             "a": 0,
@@ -24,9 +24,9 @@ class BatchBuilderTest(common.TestCase):
         return [[self.vocab[w] for w in seq] for seq in word_seqs]
 
     def get_tokenized_splits(self, word_seqs, unroll):
-        files = [getStream(seq) for seq in word_seqs] 
+        files = [getStream(seq) for seq in word_seqs]
         tss = [split_corpus_dataset.TokenizedSplit(f, self.vocab, unroll) for f in files]
-        
+
         return tss
 
     def test_even_batch_single_sample1(self):
@@ -37,7 +37,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
         batches = iter(batches)
 
         batch = next(batches)
@@ -58,7 +58,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder(tss, len(tss))
+        batches = BatchBuilder(tss, len(tss))
         batches = iter(batches)
 
         batch = next(batches)
@@ -78,7 +78,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
         batches = iter(batches)
 
         batch = next(batches)
@@ -99,7 +99,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=2)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
         batches = iter(batches)
 
         batch = next(batches)
@@ -120,7 +120,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
         batches = iter(batches)
 
         batch = next(batches)
@@ -151,20 +151,20 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
         batches = iter(batches)
 
         self.assertEqual(len(list(batches)), 2)
 
     def test_uneven_batch(self):
         test_seqs = [
-            "a b".split(), 
+            "a b".split(),
             "b b b".split(),
         ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], len(tss))
         batches = iter(batches)
 
         batch = next(batches)
@@ -189,23 +189,23 @@ class BatchBuilderTest(common.TestCase):
 
     def test_batcher_requires_nonzero_bsz(self):
         test_seqs = [
-            "b b".split(), 
+            "b b".split(),
             "b c".split(),
         ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        self.assertRaises(ValueError, multistream.BatchBuilder, [self.ivec_app_ctor(ts) for ts in tss], 0)
+        self.assertRaises(ValueError, BatchBuilder, [self.ivec_app_ctor(ts) for ts in tss], 0)
 
     def test_even_lenght_small_batch(self):
         test_seqs = [
-            "b b".split(), 
+            "b b".split(),
             "b c".split(),
         ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 1)
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 1)
         batches = iter(batches)
 
         batch = next(batches)
@@ -230,15 +230,15 @@ class BatchBuilderTest(common.TestCase):
 
     def test_even_lenght_small_batch_2(self):
         test_seqs = [
-            "a b".split(), 
-            "b b".split(), 
+            "a b".split(),
+            "b b".split(),
             "b c".split(),
             "c a".split(),
         ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
         batches = iter(batches)
 
         batch = next(batches)
@@ -270,7 +270,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
         batches = iter(batches)
 
         batch = next(batches)
@@ -312,7 +312,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
         batches = iter(batches)
 
         batch = next(batches)
@@ -344,7 +344,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2)
         epoch1 = list(iter(batches))
         epoch2 = list(iter(batches))
 
@@ -352,13 +352,13 @@ class BatchBuilderTest(common.TestCase):
 
     def test_no_discard_even_lenght_small_batch(self):
         test_seqs = [
-            "b b".split(), 
+            "b b".split(),
             "b c".split(),
         ]
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 1, discard_h=False)
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 1, discard_h=False)
         batches = iter(batches)
 
         batch = next(batches)
@@ -390,7 +390,7 @@ class BatchBuilderTest(common.TestCase):
         tss = self.get_tokenized_splits(test_seqs, unroll=1)
         tokens = self.get_tokens(test_seqs)
 
-        batches = multistream.BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2, discard_h=False)
+        batches = BatchBuilder([self.ivec_app_ctor(ts) for ts in tss], 2, discard_h=False)
         batches = iter(batches)
 
         batch = next(batches)

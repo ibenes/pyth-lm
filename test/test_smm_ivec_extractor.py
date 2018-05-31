@@ -1,15 +1,14 @@
-import common
+from test.common import TestCase
 import smm_ivec_extractor
-from vocab import Vocabulary
+from language_models.vocab import Vocabulary
 
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
 
-import io
-
 from sklearn.feature_extraction.text import CountVectorizer
+
 
 class DummySMM(nn.Module):
     def __init__(self, ivec_dim):
@@ -17,7 +16,7 @@ class DummySMM(nn.Module):
         self.T = Variable(torch.zeros(ivec_dim, 20), requires_grad=True)
 
 
-class IvecExtractorTests(common.TestCase):
+class IvecExtractorTests(TestCase):
     def setUp(self):
         self.documents_six = ["text consisting of SIX different words", "text"]
 
@@ -34,11 +33,10 @@ class IvecExtractorTests(common.TestCase):
         self.extractor = smm_ivec_extractor.IvecExtractor(smm, nb_iters=10, lr=0.1, tokenizer=self.cvect)
         self.vocab = Vocabulary(unk_word="<unk>", unk_index=0)
         self.vocab.add_from_text(" ".join(documents))
-        
 
     def test_one_empty_bow(self):
         self.build_neededs(self.documents_six)
-        
+
         ivecs = self.extractor.zero_bows(1)
         expectation = torch.zeros(1, 6)
         self.assertEqual(ivecs, expectation)
