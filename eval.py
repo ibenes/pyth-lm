@@ -2,9 +2,9 @@ import argparse
 import math
 import torch
 
-import data
+from data_pipeline.data import tokens_from_fn
+from data_pipeline.multistream import batchify
 import split_corpus_dataset
-import multistream
 from language_models import language_model
 
 from runtime_multifile import evaluate_
@@ -46,8 +46,8 @@ if __name__ == '__main__':
     print(lm.model)
 
     print("preparing data...")
-    ids = data.tokens_from_fn(args.data, lm.vocab, randomize=False)
-    batched = multistream.batchify(ids, 10, args.cuda)
+    ids = tokens_from_fn(args.data, lm.vocab, randomize=False)
+    batched = batchify(ids, 10, args.cuda)
     data = split_corpus_dataset.TemporalSplits(
         batched,
         nb_inputs_necessary=lm.model.in_len,

@@ -1,6 +1,9 @@
 import argparse
 import torch
 
+import sys
+sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
+
 from language_models import smm_lstm_models, vocab, language_model
 
 

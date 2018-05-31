@@ -5,7 +5,7 @@ import random
 import torch
 
 from language_models import language_model
-import multistream
+from data_pipeline.multistream import BatchBuilder
 
 from split_corpus_dataset import TemporalSplits, TokenizedSplitFFBase
 
@@ -69,15 +69,15 @@ if __name__ == '__main__':
     ts_builder = lambda f: TokenizedSplitFFBase(f, lm.vocab, temp_split_builder)
 
     train_tss = filelist_to_objects(args.train_list, ts_builder)
-    train_data = multistream.BatchBuilder(train_tss, args.batch_size,
-                                          discard_h=not args.concat_articles)
+    train_data = BatchBuilder(train_tss, args.batch_size,
+                              discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_objects(args.valid_list, ts_builder)
-    valid_data = multistream.BatchBuilder(valid_tss, args.batch_size,
-                                          discard_h=not args.concat_articles)
+    valid_data = BatchBuilder(valid_tss, args.batch_size,
+                              discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
@@ -88,8 +88,8 @@ if __name__ == '__main__':
     for epoch in range(1, args.epochs+1):
         if args.keep_shuffling:
             random.shuffle(train_tss)
-            train_data = multistream.BatchBuilder(train_tss, args.batch_size,
-                                                  discard_h=not args.concat_articles)
+            train_data = BatchBuilder(train_tss, args.batch_size,
+                                      discard_h=not args.concat_articles)
             if args.cuda:
                 train_data = CudaStream(train_data)
 

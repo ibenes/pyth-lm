@@ -5,7 +5,7 @@ import random
 import torch
 
 from language_models import language_model
-import multistream
+from data_pipeline.multistream import BatchBuilder
 import ivec_appenders
 import smm_ivec_extractor
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
-    valid_data = multistream.BatchBuilder(
+    valid_data = BatchBuilder(
         [ivec_app_creator(ts) for ts in valid_tss],
         args.batch_size,
         discard_h=not args.concat_articles
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     for epoch in range(1, args.epochs+1):
         random.shuffle(train_data_ivecs)
-        train_data = multistream.BatchBuilder(
+        train_data = BatchBuilder(
             train_data_ivecs,
             args.batch_size, discard_h=not args.concat_articles
         )

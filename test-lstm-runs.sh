@@ -3,7 +3,7 @@ EXP_DIR=$1
 EXP_NAME=$2
 DATA_ROOT=$3
 
-python build_lstm.py \
+python model_building/build_lstm.py \
     --wordlist=$DATA_ROOT/wordlist.txt \
     --unk="<unk>" \
     --emsize=20 \

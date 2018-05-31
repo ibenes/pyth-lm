@@ -4,7 +4,7 @@ EXP_NAME=$2
 DATA_ROOT=$3
 IVEC_EXTRACTOR=$4
 
-python build_output_enhanced_lstm.py \
+python model_building/build_output_enhanced_lstm.py \
     --wordlist=$DATA_ROOT/wordlist.txt \
     --ivec-size=50 \
     --unk="<unk>" \

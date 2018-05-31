@@ -1,23 +1,25 @@
+#!/usr/bin/env python
 import argparse
 import torch
 
-from language_models import lstm_model, vocab, language_model
+import sys
+sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
+
+from language_models import ffnn_models, vocab, language_model
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PyTorch LSTM Language Model')
+    parser = argparse.ArgumentParser(description='PyTorch FFNN Language Model')
     parser.add_argument('--wordlist', type=str, required=True,
                         help='word -> int map; Kaldi style "words.txt"')
-    parser.add_argument('--quoted-wordlist', action='store_true',
-                        help='assume the words are quoted (with a single quote)')
     parser.add_argument('--unk', type=str, default="<unk>",
                         help='expected form of "unk" word. Most likely a <UNK> or <unk>')
     parser.add_argument('--emsize', type=int, default=200,
                         help='size of word embeddings')
     parser.add_argument('--nhid', type=int, default=200,
                         help='number of hidden units per layer')
-    parser.add_argument('--nlayers', type=int, default=2,
-                        help='number of layers')
+    parser.add_argument('--hist-len', type=int, default=2,
+                        help='number of input words. If n-grams are being modelled, then (n-1)')
     parser.add_argument('--dropout', type=float, default=0.2,
                         help='dropout applied to layers (0 = no dropout)')
     parser.add_argument('--tied', action='store_true',
@@ -33,16 +35,13 @@ if __name__ == '__main__':
 
     print("loading vocabulary...")
     with open(args.wordlist, 'r') as f:
-        if args.quoted_wordlist:
-            vocab = vocab.quoted_vocab_from_kaldi_wordlist(f, args.unk)
-        else:
-            vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
+        vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     print("building model...")
 
-    model = lstm_model.LSTMLanguageModel(
-        len(vocab), args.emsize, args.nhid, 
-        args.nlayers, args.dropout, args.tied
+    model = ffnn_models.BengioModel(
+        len(vocab), args.emsize, args.hist_len,
+        args.nhid, args.dropout
     )
 
     lm = language_model.LanguageModel(model, vocab)

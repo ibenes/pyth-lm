@@ -8,7 +8,7 @@ from language_models import language_model
 import split_corpus_dataset
 import ivec_appenders
 import smm_ivec_extractor
-import multistream
+from data_pipeline.multistream import BatchBuilder
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
 from runtime_multifile import evaluate_no_transpose, train_no_transpose
@@ -81,15 +81,15 @@ if __name__ == '__main__':
     ts_constructor = lambda *x: split_corpus_dataset.TokenizedSplitFFMultiTarget(*x, args.target_seq_len)
 
     train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, lm.model.in_len, ts_constructor)
-    train_data = multistream.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
-                                          discard_h=not args.concat_articles)
+    train_data = BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
+                              discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
     valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, lm.model.in_len, ts_constructor)
-    valid_data = multistream.BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
-                                          discard_h=not args.concat_articles)
+    valid_data = BatchBuilder([ivec_app_creator(ts) for ts in valid_tss], args.batch_size,
+                              discard_h=not args.concat_articles)
     if args.cuda:
         valid_data = CudaStream(valid_data)
 
@@ -100,8 +100,8 @@ if __name__ == '__main__':
     for epoch in range(1, args.epochs+1):
         if args.keep_shuffling:
             random.shuffle(train_tss)
-            train_data = multistream.BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
-                                                  discard_h=not args.concat_articles)
+            train_data = BatchBuilder([ivec_app_creator(ts) for ts in train_tss], args.batch_size,
+                                      discard_h=not args.concat_articles)
             if args.cuda:
                 train_data = CudaStream(train_data)
 

@@ -5,7 +5,7 @@ from language_models import language_model
 import ivec_appenders
 import split_corpus_dataset
 import smm_ivec_extractor
-import multistream
+from data_pipeline.multistream import BatchBuilder
 
 from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
 from runtime_multifile import evaluate_no_transpose
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
     tss_ivecs = [ivec_app_creator(ts) for ts in tss]
-    data = multistream.BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
+    data = BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
 
     if args.cuda:
         data = CudaStream(data)

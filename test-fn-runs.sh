@@ -4,7 +4,7 @@ EXP_NAME=$2
 DATA_ROOT=$3
 IVEC_EXTRACTOR=$4
 
-python build_bengio.py \
+python model_building/build_bengio.py \
     --wordlist=$DATA_ROOT/wordlist.txt \
     --unk="<unk>" \
     --emsize=20 \

@@ -2,6 +2,9 @@
 import argparse
 import torch
 
+import sys
+sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
+
 from language_models import language_model, vocab, ffnn_models
 
 

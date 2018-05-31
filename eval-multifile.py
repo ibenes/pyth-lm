@@ -2,7 +2,7 @@ import argparse
 import math
 
 from language_models import language_model
-import multistream
+from data_pipeline.multistream import BatchBuilder
 
 from split_corpus_dataset import TokenizedSplitFFBase, TemporalSplits
 from runtime_utils import CudaStream, init_seeds, filelist_to_objects
@@ -42,8 +42,8 @@ if __name__ == '__main__':
     ts_builder = lambda f: TokenizedSplitFFBase(f, lm.vocab, temp_split_builder)
 
     tss = filelist_to_objects(args.file_list, ts_builder)
-    data = multistream.BatchBuilder(tss, args.batch_size,
-                                    discard_h=not args.concat_articles)
+    data = BatchBuilder(tss, args.batch_size,
+                        discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
 

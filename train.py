@@ -2,8 +2,8 @@ import argparse
 import math
 import torch
 
-import data
-import multistream
+from data_pipeline.data import tokens_from_fn
+from data_pipeline.multistream import batchify
 import split_corpus_dataset
 from language_models import language_model
 
@@ -67,8 +67,8 @@ if __name__ == '__main__':
     if args.characters:
         tokenize_regime = 'chars'
 
-    train_ids = data.tokens_from_fn(args.train, lm.vocab, randomize=False, regime=tokenize_regime)
-    train_batched = multistream.batchify(train_ids, args.batch_size, args.cuda)
+    train_ids = tokens_from_fn(args.train, lm.vocab, randomize=False, regime=tokenize_regime)
+    train_batched = batchify(train_ids, args.batch_size, args.cuda)
     train_data = split_corpus_dataset.TemporalSplits(
         train_batched,
         nb_inputs_necessary=lm.model.in_len,
@@ -76,8 +76,8 @@ if __name__ == '__main__':
     )
     train_data = split_corpus_dataset.TransposeWrapper(train_data)
 
-    valid_ids = data.tokens_from_fn(args.valid, lm.vocab, randomize=False, regime=tokenize_regime)
-    valid_batched = multistream.batchify(valid_ids, 10, args.cuda)
+    valid_ids = tokens_from_fn(args.valid, lm.vocab, randomize=False, regime=tokenize_regime)
+    valid_batched = batchify(valid_ids, 10, args.cuda)
     valid_data = split_corpus_dataset.TemporalSplits(
         valid_batched,
         nb_inputs_necessary=lm.model.in_len,
