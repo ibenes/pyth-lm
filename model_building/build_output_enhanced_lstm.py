@@ -31,7 +31,7 @@ if __name__ == '__main__':
                         help='tie the word embedding and softmax weights')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
-    parser.add_argument('--save', type=str,  required=True,
+    parser.add_argument('--save', type=str, required=True,
                         help='path to save the final model')
     args = parser.parse_args()
 
@@ -45,8 +45,8 @@ if __name__ == '__main__':
     print("building model...")
 
     model = smm_lstm_models.OutputEnhancedLM(
-        len(vocab), args.emsize, args.nhid, 
-        args.nlayers, args.ivec_size, args.dropout, 
+        len(vocab), args.emsize, args.nhid,
+        args.nlayers, args.ivec_size, args.dropout,
         tie_weights=args.tied,
         dropout_ivec=args.dropout_ivec,
         ivec_amplification=args.ivec_ampl,
