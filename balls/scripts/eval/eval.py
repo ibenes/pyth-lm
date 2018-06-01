@@ -4,7 +4,7 @@ import torch
 
 from data_pipeline.data import tokens_from_fn
 from data_pipeline.multistream import batchify
-import split_corpus_dataset
+from data_pipeline.temporal_splitting import TemporalSplits
 from language_models import language_model
 
 from runtime_utils import TransposeWrapper
@@ -49,12 +49,12 @@ if __name__ == '__main__':
     print("preparing data...")
     ids = tokens_from_fn(args.data, lm.vocab, randomize=False)
     batched = batchify(ids, 10, args.cuda)
-    data = split_corpus_dataset.TemporalSplits(
+    data_tb = TemporalSplits(
         batched,
         nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
-    data = TransposeWrapper(data)
+    data = TransposeWrapper(data_tb)
 
     # Run on test data.
     loss = evaluate_(

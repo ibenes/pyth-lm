@@ -5,7 +5,6 @@ import torch
 from data_pipeline.data import tokens_from_fn
 from data_pipeline.multistream import batchify
 from data_pipeline.temporal_splitting import TemporalSplits
-import split_corpus_dataset
 from language_models import language_model
 
 from runtime_utils import TransposeWrapper
@@ -71,21 +70,21 @@ if __name__ == '__main__':
 
     train_ids = tokens_from_fn(args.train, lm.vocab, randomize=False, regime=tokenize_regime)
     train_batched = batchify(train_ids, args.batch_size, args.cuda)
-    train_data = TemporalSplits(
+    train_data_tb = TemporalSplits(
         train_batched,
         nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
-    train_data = TransposeWrapper(train_data)
+    train_data = TransposeWrapper(train_data_tb)
 
     valid_ids = tokens_from_fn(args.valid, lm.vocab, randomize=False, regime=tokenize_regime)
     valid_batched = batchify(valid_ids, 10, args.cuda)
-    valid_data = TemporalSplits(
+    valid_data_tb = TemporalSplits(
         valid_batched,
         nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
-    valid_data = TransposeWrapper(valid_data)
+    valid_data = TransposeWrapper(valid_data_tb)
 
     print("training...")
     lr = args.lr
