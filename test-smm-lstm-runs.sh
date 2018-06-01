@@ -4,7 +4,7 @@ EXP_NAME=$2
 DATA_ROOT=$3
 IVEC_EXTRACTOR=$4
 
-python balls/model_building/build_output_enhanced_lstm.py \
+python balls/scripts/model_building/build_output_enhanced_lstm.py \
     --wordlist=$DATA_ROOT/wordlist.txt \
     --ivec-size=50 \
     --unk="<unk>" \
@@ -13,7 +13,7 @@ python balls/model_building/build_output_enhanced_lstm.py \
     --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
 # 2b) train and test SMM-LSTM with partial i-vectors
-python balls/train-multifile-ivecs.py \
+python balls/scripts/train/train-multifile-ivecs.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
@@ -23,7 +23,7 @@ python balls/train-multifile-ivecs.py \
     --save=$EXP_DIR/$EXP_NAME-partial.lm \
     --epochs=1 || exit 1
 
-python balls/eval-multifile-ivecs.py \
+python balls/scripts/eval/eval-multifile-ivecs.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
@@ -31,7 +31,7 @@ python balls/eval-multifile-ivecs.py \
     --load=$EXP_DIR/$EXP_NAME-partial.lm  || exit 1
 
 # 2c) train and test SMM-LSTM with oracle i-vectors
-python balls/train-ivecs-oracle.py \
+python balls/scripts/train/train-ivecs-oracle.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
@@ -41,7 +41,7 @@ python balls/train-ivecs-oracle.py \
     --save=$EXP_DIR/$EXP_NAME-oracle.lm \
     --epochs=1 || exit 1
 
-python balls/eval-ivecs-oracle.py \
+python balls/scripts/eval/eval-ivecs-oracle.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \

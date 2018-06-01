@@ -4,7 +4,7 @@ EXP_NAME=$2
 DATA_ROOT=$3
 IVEC_EXTRACTOR=$4
 
-python balls/model_building/build_bengio.py \
+python balls/scripts/model_building/build_bengio.py \
     --wordlist=$DATA_ROOT/wordlist.txt \
     --unk="<unk>" \
     --emsize=20 \
@@ -12,7 +12,7 @@ python balls/model_building/build_bengio.py \
     --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
 # 1) train the FN-LM 
-python balls/train-multifile.py \
+python balls/scripts/train/train-multifile.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
     --concat-articles \
@@ -21,7 +21,7 @@ python balls/train-multifile.py \
     --save=$EXP_DIR/$EXP_NAME.lm \
     --epochs=1 || exit 1
 
-python balls/eval-multifile.py \
+python balls/scripts/eval/eval-multifile.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --concat-articles \
     --cuda \

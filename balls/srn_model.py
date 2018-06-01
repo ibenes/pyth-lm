@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
@@ -37,14 +36,13 @@ class SRNLanguageModel(nn.Module):
         return decoded.view(output.size(0), output.size(1), decoded.size(1)), hidden
 
     def output_expected_embs(self, input):
-        assert (len(input.size()) == 2) # time X batch index
+        assert (len(input.size()) == 2)  # time X batch index
         assert (input.size()[1] == 1)
 
         hidden = self.init_hidden(1)
         emb = self.drop(self.encoder(input))
         outputs, _ = self.rnn(emb, hidden)
         return outputs
-        
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
