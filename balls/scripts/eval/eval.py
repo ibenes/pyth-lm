@@ -7,6 +7,7 @@ from data_pipeline.multistream import batchify
 import split_corpus_dataset
 from language_models import language_model
 
+from runtime_utils import TransposeWrapper
 from runtime_multifile import evaluate_
 
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
         nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
-    data = split_corpus_dataset.TransposeWrapper(data)
+    data = TransposeWrapper(data)
 
     # Run on test data.
     loss = evaluate_(

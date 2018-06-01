@@ -3,18 +3,6 @@ import torch
 from data_pipeline.temporal_splitting import TemporalSplits
 
 
-class TransposeWrapper:
-    def __init__(self, stream):
-        self._stream = stream
-
-    def __iter__(self):
-        for a_tuple in self._stream:
-            yield tuple(x.t().contiguous() for x in a_tuple)
-
-    def __len__(self):
-        return len(self._stream)
-
-
 class TokenizedSplitFFBase():
     def __init__(self, f, vocab, temporal_split_builder):
         """

@@ -8,6 +8,7 @@ from data_pipeline.temporal_splitting import TemporalSplits
 import split_corpus_dataset
 from language_models import language_model
 
+from runtime_utils import TransposeWrapper
 from runtime_multifile import evaluate_, train_
 
 from loggers import ProgressLogger
@@ -75,7 +76,7 @@ if __name__ == '__main__':
         nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
-    train_data = split_corpus_dataset.TransposeWrapper(train_data)
+    train_data = TransposeWrapper(train_data)
 
     valid_ids = tokens_from_fn(args.valid, lm.vocab, randomize=False, regime=tokenize_regime)
     valid_batched = batchify(valid_ids, 10, args.cuda)
@@ -84,7 +85,7 @@ if __name__ == '__main__':
         nb_inputs_necessary=lm.model.in_len,
         nb_targets_parallel=args.bptt
     )
-    valid_data = split_corpus_dataset.TransposeWrapper(valid_data)
+    valid_data = TransposeWrapper(valid_data)
 
     print("training...")
     lr = args.lr

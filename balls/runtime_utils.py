@@ -14,6 +14,18 @@ class CudaStream():
             yield tuple(x.cuda() for x in batch)
 
 
+class TransposeWrapper:
+    def __init__(self, stream):
+        self._stream = stream
+
+    def __iter__(self):
+        for a_tuple in self._stream:
+            yield tuple(x.t().contiguous() for x in a_tuple)
+
+    def __len__(self):
+        return len(self._stream)
+
+
 def repackage_hidden(h):
     """Wraps hidden states in new Variables, to detach them from their history."""
     if type(h) == Variable:
