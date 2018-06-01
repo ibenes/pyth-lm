@@ -4,7 +4,7 @@ EXP_NAME=$2
 DATA_ROOT=$3
 IVEC_EXTRACTOR=$4
 
-python model_building/build_bengio_ivec_input.py \
+python balls/model_building/build_bengio_ivec_input.py \
     --wordlist=$DATA_ROOT/wordlist.txt \
     --ivec-dim=50 \
     --unk="<unk>" \
@@ -13,7 +13,7 @@ python model_building/build_bengio_ivec_input.py \
     --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
 # 1) train the iFN-LM with oracle ivectors and evaluate using partial ones
-python train-ff-multifile-ivec-oracle.py \
+python balls/train-ff-multifile-ivec-oracle.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
@@ -23,7 +23,7 @@ python train-ff-multifile-ivec-oracle.py \
     --save=$EXP_DIR/$EXP_NAME.lm \
     --epochs=1 || exit 1
 
-python eval-ff-multifile-ivecs.py \
+python balls/eval-ff-multifile-ivecs.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
