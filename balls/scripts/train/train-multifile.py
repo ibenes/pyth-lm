@@ -7,7 +7,8 @@ import torch
 from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
 
-from split_corpus_dataset import TemporalSplits, TokenizedSplitFFBase
+from data_pipeline.temporal_splitting import TemporalSplits
+from split_corpus_dataset import TokenizedSplitFFBase
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter
 from runtime_multifile import evaluate, train

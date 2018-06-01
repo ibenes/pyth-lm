@@ -4,7 +4,8 @@ import math
 from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
 
-from split_corpus_dataset import TokenizedSplitFFBase, TemporalSplits
+from data_pipeline.temporal_splitting import TemporalSplits
+from split_corpus_dataset import TokenizedSplitFFBase
 from runtime_utils import CudaStream, init_seeds, filelist_to_objects
 from runtime_multifile import evaluate
 
