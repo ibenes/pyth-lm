@@ -7,7 +7,7 @@ from data_pipeline.multistream import batchify
 from data_pipeline.temporal_splitting import TemporalSplits
 from language_models import language_model
 
-from runtime_utils import TransposeWrapper
+from runtime_utils import TransposeWrapper, init_seeds
 from runtime_multifile import evaluate_, train_
 
 from loggers import ProgressLogger
@@ -51,10 +51,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
-    # Set the random seed manually for reproducibility.
-    torch.manual_seed(args.seed)
-    if args.cuda and torch.cuda.is_available():
-        torch.cuda.manual_seed(args.seed)
+    init_seeds(args.seed, args.cuda)
 
     print("loading model...")
     with open(args.load, 'rb') as f:
