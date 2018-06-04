@@ -1,16 +1,13 @@
 import argparse
 import math
-import torch
 
-import model
-import lstm_model
-import vocab
-import language_model
+from language_models import language_model
 import ivec_appenders
-import split_corpus_dataset
+from split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
+from data_pipeline.multistream import BatchBuilder
 import smm_ivec_extractor
 
-from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
+from runtime_utils import CudaStream, filelist_to_objects, init_seeds
 from runtime_multifile import evaluate_no_transpose
 
 
@@ -34,7 +31,7 @@ if __name__ == '__main__':
                         help='where to load a model from')
     parser.add_argument('--ivec-extractor', type=str, required=True,
                         help='where to load a ivector extractor from')
-    parser.add_argument('--ivec-nb-iters', type=int, 
+    parser.add_argument('--ivec-nb-iters', type=int,
                         help='override the number of iterations when extracting ivectors')
     args = parser.parse_args()
     print(args)
@@ -44,6 +41,8 @@ if __name__ == '__main__':
     print("loading LM...")
     with open(args.load, 'rb') as f:
         lm = language_model.load(f)
+    if args.cuda:
+        lm.model.cuda()
     print(lm.model)
 
     print("loading SMM iVector extractor ...")
@@ -54,15 +53,19 @@ if __name__ == '__main__':
     print(ivec_extractor)
 
     print("preparing data...")
-    ts_constructor = lambda *x: split_corpus_dataset.DomainAdaptationSplitFFMultiTarget(*x, args.target_seq_len, end_portion=args.domain_portion)
-    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, lm.model.in_len, ts_constructor)
 
-    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
-    tss_ivecs = [ivec_app_creator(ts) for ts in tss]
-    data = split_corpus_dataset.BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
+    def ivec_ts_from_file(f):
+        da_ts = DomainAdaptationSplitFFMultiTarget(
+            f, lm.vocab, lm.model.in_len,
+            args.target_seq_len, end_portion=args.domain_portion,
+        )
+        return ivec_appenders.CheatingIvecAppender(da_ts, ivec_extractor)
 
+    tss = filelist_to_objects(args.file_list, ivec_ts_from_file)
+    data = BatchBuilder(tss, args.batch_size,
+                        discard_h=not args.concat_articles)
     if args.cuda:
         data = CudaStream(data)
 
-    loss = evaluate_no_transpose(lm, data, args.batch_size, args.cuda)
-    print('loss {:5.2f} | ppl {:8.2f}'.format( loss, math.exp(loss)))
+    loss = evaluate_no_transpose(lm.model, data, use_ivecs=True)
+    print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))
