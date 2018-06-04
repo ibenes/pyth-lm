@@ -6,10 +6,12 @@ import torch
 
 from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
+from data_pipeline.temporal_splitting import TemporalSplits
+from split_corpus_dataset import TokenizedSplitFFBase
 import ivec_appenders
 import smm_ivec_extractor
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
+from runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter
 from runtime_multifile import train, evaluate
 
 from loggers import InfinityLogger
@@ -74,13 +76,20 @@ if __name__ == '__main__':
     ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
-    train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.bptt)
-    train_data_ivecs = [ivec_app_creator(ts) for ts in train_tss]
+
+    def ivec_ts_from_file(f):
+        ts = TokenizedSplitFFBase(
+            f, lm.vocab,
+            lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
+        )
+        return ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
+
+    train_data_ivecs = filelist_to_objects(args.train_list, ivec_ts_from_file)
 
     print("\tvalidation...")
-    valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
+    valid_data_ivecs = filelist_to_objects(args.train_list, ivec_ts_from_file)
     valid_data = BatchBuilder(
-        [ivec_app_creator(ts) for ts in valid_tss],
+        valid_data_ivecs,
         args.batch_size,
         discard_h=not args.concat_articles
     )

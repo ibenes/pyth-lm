@@ -1,12 +1,14 @@
 import argparse
 import math
 
+from split_corpus_dataset import TokenizedSplitFFBase
 from language_models import language_model
 import ivec_appenders
 import smm_ivec_extractor
 from data_pipeline.multistream import BatchBuilder
+from data_pipeline.temporal_splitting import TemporalSplits
 
-from runtime_utils import CudaStream, filelist_to_tokenized_splits, init_seeds
+from runtime_utils import CudaStream, filelist_to_objects, init_seeds
 from runtime_multifile import evaluate
 
 
@@ -50,11 +52,20 @@ if __name__ == '__main__':
     print(ivec_extractor)
 
     print("preparing data...")
-    ivec_app_creator = lambda ts: ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
-    tss = filelist_to_tokenized_splits(args.file_list, lm.vocab, args.bptt)
-    tss_ivecs = [ivec_app_creator(ts) for ts in tss]
-    data = BatchBuilder(tss_ivecs, args.batch_size, discard_h=not args.concat_articles)
+    def ivec_ts_from_file(f):
+        ts = TokenizedSplitFFBase(
+            f, lm.vocab,
+            lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
+        )
+        return ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
+
+    data_ivecs = filelist_to_objects(args.file_list, ivec_ts_from_file)
+    data = BatchBuilder(
+        data_ivecs,
+        args.batch_size,
+        discard_h=not args.concat_articles
+    )
 
     if args.cuda:
         data = CudaStream(data)

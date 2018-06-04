@@ -13,7 +13,7 @@ python balls/scripts/model_building/build_bengio_ivec_input.py \
     --save=$EXP_DIR/$EXP_NAME.init.lm || exit 1
 
 # 1) train the iFN-LM with oracle ivectors and evaluate using partial ones
-python balls/scripts/train/train-ff-multifile-ivec-oracle.py \
+python balls/scripts/train/train-ivecs-oracle.py \
     --train-list=$DATA_ROOT/valid-list.txt \
     --valid-list=$DATA_ROOT/test-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
@@ -23,7 +23,7 @@ python balls/scripts/train/train-ff-multifile-ivec-oracle.py \
     --save=$EXP_DIR/$EXP_NAME.lm \
     --epochs=1 || exit 1
 
-python balls/scripts/eval/eval-ff-multifile-ivecs.py \
+python balls/scripts/eval/eval-ivecs-oracle.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
