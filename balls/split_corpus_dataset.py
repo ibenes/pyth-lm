@@ -62,8 +62,16 @@ class TokenizedSplitFFMultiTarget(TokenizedSplitFFBase):
 
 
 class DomainAdaptationSplitFFBase:
-    def __init__(self):
-        self._temp_splitter = TemporalSplits(self._tokens, self._hist_len, self._nb_target_parallel)
+    def __init__(self, f, vocab, end_portion, ts_builder):
+        sentence = f.read()
+        words = sentence.split()
+
+        nb_domain_words = int(len(words)*end_portion-0.01)
+
+        self._tokens = torch.LongTensor([vocab[w] for w in words[:-nb_domain_words]])
+        self._domain_string = " ".join(words[len(words)-nb_domain_words:])
+
+        self._temp_splitter = ts_builder(self._tokens)
 
     def __iter__(self):
         for x, t in self._temp_splitter:
@@ -83,18 +91,8 @@ class DomainAdaptationSplitFFMultiTarget(DomainAdaptationSplitFFBase):
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        sentence = f.read()
-        words = sentence.split()
-
-        nb_domain_words = int(len(words)*end_portion-0.01)
-
-        self._tokens = torch.LongTensor([vocab[w] for w in words[:len(words)-nb_domain_words]])
-        self._domain_string = " ".join(words[len(words)-nb_domain_words:])
-
-        self._hist_len = hist_len
-        self._nb_target_parallel = nb_targets_parallel
-        self._end_portion = end_portion
-        super().__init__()
+        ts_builder = lambda seq: TemporalSplits(seq, nb_inputs_necessary=hist_len, nb_targets_parallel=nb_targets_parallel)
+        super().__init__(f, vocab, end_portion, ts_builder)
 
 
 class DomainAdaptationSplit(DomainAdaptationSplitFFBase):
@@ -104,15 +102,6 @@ class DomainAdaptationSplit(DomainAdaptationSplitFFBase):
                 f (file): File with a document.
                 vocab (Vocabulary): Vocabulary for translation word -> index
         """
-        sentence = f.read()
-        words = sentence.split()
 
-        nb_domain_words = int(len(words)*end_portion-0.01)
-
-        self._tokens = torch.LongTensor([vocab[w] for w in words[:-nb_domain_words]])
-        self._domain_string = " ".join(words[len(words)-nb_domain_words:])
-
-        self._hist_len = unroll_length
-        self._nb_target_parallel = 1
-        self._end_portion = end_portion
-        super().__init__()
+        ts_builder = lambda seq: TemporalSplits(seq, nb_inputs_necessary=unroll_length, nb_targets_parallel=1)
+        super().__init__(f, vocab, end_portion, ts_builder)
