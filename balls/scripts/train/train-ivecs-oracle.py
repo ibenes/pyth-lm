@@ -87,7 +87,7 @@ if __name__ == '__main__':
     train_data_ivecs = filelist_to_objects(args.train_list, ivec_ts_from_file)
 
     print("\tvalidation...")
-    valid_data_ivecs = filelist_to_objects(args.train_list, ivec_ts_from_file)
+    valid_data_ivecs = filelist_to_objects(args.valid_list, ivec_ts_from_file)
     valid_data = BatchBuilder(
         valid_data_ivecs,
         args.batch_size,
