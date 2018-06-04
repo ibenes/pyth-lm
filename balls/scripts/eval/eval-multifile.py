@@ -4,8 +4,8 @@ import math
 from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
 
+from data_pipeline.data import tokens_from_file
 from data_pipeline.temporal_splitting import TemporalSplits
-from split_corpus_dataset import TokenizedSplitFFBase
 from runtime_utils import CudaStream, init_seeds, filelist_to_objects
 from runtime_multifile import evaluate
 
@@ -39,10 +39,12 @@ if __name__ == '__main__':
     print(lm.model)
 
     print("preparing data...")
-    temp_split_builder = lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
-    ts_builder = lambda f: TokenizedSplitFFBase(f, lm.vocab, temp_split_builder)
 
-    tss = filelist_to_objects(args.file_list, ts_builder)
+    def temp_splits_from_fn(fn):
+        tokens = tokens_from_file(fn, lm.vocab, randomize=False)
+        return TemporalSplits(tokens, lm.model.in_len, args.bptt)
+
+    tss = filelist_to_objects(args.file_list, temp_splits_from_fn)
     data = BatchBuilder(tss, args.batch_size,
                         discard_h=not args.concat_articles)
     if args.cuda:

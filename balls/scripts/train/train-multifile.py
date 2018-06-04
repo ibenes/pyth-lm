@@ -7,13 +7,14 @@ import torch
 from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
 
+from data_pipeline.data import tokens_from_file
 from data_pipeline.temporal_splitting import TemporalSplits
-from split_corpus_dataset import TokenizedSplitFFBase
 
 from runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter
 from runtime_multifile import evaluate, train
 
 from loggers import InfinityLogger
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
@@ -65,18 +66,19 @@ if __name__ == '__main__':
 
     print("preparing data...")
 
-    print("\ttraining...")
-    temp_split_builder = lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
-    ts_builder = lambda f: TokenizedSplitFFBase(f, lm.vocab, temp_split_builder)
+    def temp_splits_from_fn(fn):
+        tokens = tokens_from_file(fn, lm.vocab, randomize=False)
+        return TemporalSplits(tokens, lm.model.in_len, args.bptt)
 
-    train_tss = filelist_to_objects(args.train_list, ts_builder)
+    print("\ttraining...")
+    train_tss = filelist_to_objects(args.train_list, temp_splits_from_fn)
     train_data = BatchBuilder(train_tss, args.batch_size,
                               discard_h=not args.concat_articles)
     if args.cuda:
         train_data = CudaStream(train_data)
 
     print("\tvalidation...")
-    valid_tss = filelist_to_objects(args.valid_list, ts_builder)
+    valid_tss = filelist_to_objects(args.valid_list, temp_splits_from_fn)
     valid_data = BatchBuilder(valid_tss, args.batch_size,
                               discard_h=not args.concat_articles)
     if args.cuda:
