@@ -4,6 +4,8 @@ import torch
 from torch.autograd import Variable
 import split_corpus_dataset
 
+import sys
+
 
 class CudaStream():
     def __init__(self, source):
