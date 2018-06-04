@@ -110,7 +110,7 @@ class DomainAdaptationSplit(DomainAdaptationSplitFFBase):
         nb_domain_words = int(len(words)*end_portion-0.01)
 
         self._tokens = torch.LongTensor([vocab[w] for w in words[:-nb_domain_words]])
-        self._domain_string = " ".join(words[-nb_domain_words:])
+        self._domain_string = " ".join(words[len(words)-nb_domain_words:])
 
         self._hist_len = unroll_length
         self._nb_target_parallel = 1
