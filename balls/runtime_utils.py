@@ -5,6 +5,7 @@ from torch.autograd import Variable
 import split_corpus_dataset
 
 import sys
+import math
 
 
 class CudaStream():
@@ -103,3 +104,18 @@ class BatchFilter:
                     self._nb_skipped_words/(self._batch_size*self._bptt)
                 )
             )
+
+
+def epoch_summary(epoch_no, nb_updates, elapsed_time, loss):
+    delim_line = '-' * 89 + '\n'
+
+    epoch_stmt = 'end of epoch {:3d}'.format(epoch_no)
+    updates_stmt = '# updates: {}'.format(nb_updates)
+    time_stmt = 'time: {:5.2f}s'.format(elapsed_time)
+    loss_stmt = 'valid loss {:5.2f}'.format(loss)
+    ppl_stmt = 'valid ppl {:8.2f}'.format(math.exp(loss))
+    values_line = '| {} | {} | {} | {} | {}\n'.format(
+        epoch_stmt, updates_stmt, time_stmt, loss_stmt, ppl_stmt
+    )
+
+    return delim_line + values_line + delim_line

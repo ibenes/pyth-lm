@@ -9,7 +9,7 @@ from data_pipeline.multistream import BatchBuilder
 import ivec_appenders
 import smm_ivec_extractor
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter
+from runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter, epoch_summary
 from runtime_multifile import train, evaluate
 
 from loggers import InfinityLogger
@@ -117,14 +117,8 @@ if __name__ == '__main__':
         train_data_filtered.report()
 
         val_loss = evaluate(lm.model, valid_data, use_ivecs=True)
-        print('-' * 89)
-        print(
-            '| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
-            'valid ppl {:8.2f}'.format(
-                epoch, logger.time_since_creation(), logger.nb_updates(),
-                val_loss, math.exp(val_loss))
-        )
-        print('-' * 89)
+        print(epoch_summary(epoch, logger.nb_updates(), logger.time_since_creation(), val_loss))
+
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
             with open(args.save, 'wb') as f:

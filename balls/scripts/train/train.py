@@ -1,5 +1,4 @@
 import argparse
-import math
 import torch
 
 from data_pipeline.data import tokens_from_fn
@@ -7,25 +6,10 @@ from data_pipeline.multistream import batchify
 from data_pipeline.temporal_splitting import TemporalSplits
 from language_models import language_model
 
-from runtime_utils import TransposeWrapper, init_seeds
+from runtime_utils import TransposeWrapper, init_seeds, epoch_summary
 from runtime_multifile import evaluate_, train_
 
 from loggers import ProgressLogger
-
-
-def epoch_summary(epoch_no, nb_updates, elapsed_time, loss):
-    delim_line = '-' * 89 + '\n'
-
-    epoch_stmt = 'end of epoch {:3d}'.format(epoch)
-    updates_stmt = '# updates: {}'.format(nb_updates)
-    time_stmt = 'time: {:5.2f}s'.format(elapsed_time)
-    loss_stmt = 'valid loss {:5.2f}'.format(loss)
-    ppl_stmt = 'valid ppl {:8.2f}'.format(math.exp(loss))
-    values_line = '| {} | {} | {} | {} | {}\n'.format(
-        epoch_stmt, updates_stmt, time_stmt, loss_stmt, ppl_stmt
-    )
-
-    return delim_line + values_line + delim_line
 
 
 if __name__ == '__main__':
