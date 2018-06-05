@@ -39,3 +39,9 @@ python balls/scripts/eval/eval-multifile.py \
     --file-list=$DATA_ROOT/test-list.txt \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME-mf.lm || exit 1
+
+python balls/scripts/eval/eval-noivecs-domain-adaptation.py \
+    --file-list=$DATA_ROOT/test-list.txt \
+    --cuda \
+    --domain-portion=0.25 \
+    --load=$EXP_DIR/$EXP_NAME-mf.lm || exit 1
