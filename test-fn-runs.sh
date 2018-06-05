@@ -26,3 +26,10 @@ python balls/scripts/eval/eval-multifile.py \
     --concat-articles \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME.lm  || exit 1
+
+python balls/scripts/eval/eval-noivecs-domain-adaptation.py \
+    --file-list=$DATA_ROOT/valid-list.txt \
+    --concat-articles \
+    --domain-portion=0.25 \
+    --cuda \
+    --load=$EXP_DIR/$EXP_NAME.lm  || exit 1
