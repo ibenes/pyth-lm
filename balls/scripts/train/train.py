@@ -13,6 +13,21 @@ from runtime_multifile import evaluate_, train_
 from loggers import ProgressLogger
 
 
+def epoch_summary(epoch_no, nb_updates, elapsed_time, loss):
+    delim_line = '-' * 89 + '\n'
+
+    epoch_stmt = 'end of epoch {:3d}'.format(epoch)
+    updates_stmt = '# updates: {}'.format(nb_updates)
+    time_stmt = 'time: {:5.2f}s'.format(elapsed_time)
+    loss_stmt = 'valid loss {:5.2f}'.format(loss)
+    ppl_stmt = 'valid ppl {:8.2f}'.format(math.exp(loss))
+    values_line = '| {} | {} | {} | {} | {}\n'.format(
+        epoch_stmt, updates_stmt, time_stmt, loss_stmt, ppl_stmt
+    )
+
+    return delim_line + values_line + delim_line
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--train', type=str, required=True,
@@ -103,15 +118,7 @@ if __name__ == '__main__':
             use_ivecs=False,
             custom_batches=False,
         )
-        print('-' * 89)
-        print(
-            '| end of epoch {:3d} | time: {:5.2f}s | # updates: {} | valid loss {:5.2f} | '
-            'valid ppl {:8.2f}'.format(
-                epoch, logger.time_since_creation(), logger.nb_updates(),
-                val_loss, math.exp(val_loss)
-            )
-        )
-        print('-' * 89)
+        print(epoch_summary(epoch, logger.nb_updates(), logger.time_since_creation(), val_loss))
 
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
