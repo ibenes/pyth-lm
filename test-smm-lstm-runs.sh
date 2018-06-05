@@ -54,4 +54,4 @@ python balls/scripts/eval/eval-ivecs-domain-adaptation.py \
     --concat-articles \
     --domain-portion=0.25 \
     --cuda \
-    --load=$EXP_DIR/$EXP_NAME.lm  || exit 1
+    --load=$EXP_DIR/$EXP_NAME-oracle.lm  || exit 1
