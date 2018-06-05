@@ -48,3 +48,10 @@ python balls/scripts/eval/eval-ivecs-oracle.py \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME-oracle.lm  || exit 1
 
+python balls/scripts/eval/eval-ivecs-domain-adaptation.py \
+    --file-list=$DATA_ROOT/valid-list.txt \
+    --ivec-extractor=$IVEC_EXTRACTOR \
+    --concat-articles \
+    --domain-portion=0.25 \
+    --cuda \
+    --load=$EXP_DIR/$EXP_NAME.lm  || exit 1
