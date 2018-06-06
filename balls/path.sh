@@ -1,2 +1,4 @@
-export PYTHONPATH=/homes/kazi/ibenes/PhD/pyth-lm/balls/:$PYTHONPATH
-export MYPYPATH=/homes/kazi/ibenes/PhD/pyth-lm/balls/:$MYPYPATH
+export HERE=/homes/kazi/ibenes/PhD/pyth-lm/balls
+
+export PYTHONPATH=$HERE:$PYTHONPATH
+export MYPYPATH=$HERE:$MYPYPATH
