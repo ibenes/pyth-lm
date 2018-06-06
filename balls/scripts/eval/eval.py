@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
+    parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
 
     parser.add_argument('--seed', type=int, default=1111,
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     data_tb = TemporalSplits(
         batched,
         nb_inputs_necessary=lm.model.in_len,
-        nb_targets_parallel=args.bptt
+        nb_targets_parallel=args.target_seq_len
     )
     data = TransposeWrapper(data_tb)
 

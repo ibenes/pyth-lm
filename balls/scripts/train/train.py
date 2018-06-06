@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
+    parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
 
     parser.add_argument('--lr', type=float, default=20,
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     train_data_tb = TemporalSplits(
         train_batched,
         nb_inputs_necessary=lm.model.in_len,
-        nb_targets_parallel=args.bptt
+        nb_targets_parallel=args.target_seq_len
     )
     train_data = TransposeWrapper(train_data_tb)
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     valid_data_tb = TemporalSplits(
         valid_batched,
         nb_inputs_necessary=lm.model.in_len,
-        nb_targets_parallel=args.bptt
+        nb_targets_parallel=args.target_seq_len
     )
     valid_data = TransposeWrapper(valid_data_tb)
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     best_val_loss = None
 
     for epoch in range(1, args.epochs+1):
-        logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.bptt)
+        logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.target_seq_len)
         optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
 
         train_(

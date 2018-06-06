@@ -33,7 +33,7 @@ if __name__ == '__main__':
                         help='upper epoch limit')
     parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
+    parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     def ivec_ts_from_file(f):
         ts = TokenizedSplitFFBase(
             f, lm.vocab,
-            lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
+            lambda seq: TemporalSplits(seq, lm.model.in_len, args.target_seq_len)
         )
         return ivec_appenders.CheatingIvecAppender(ts, ivec_extractor)
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
         logger = InfinityLogger(epoch, args.log_interval, lr)
         train_data_filtered = BatchFilter(
-            train_data, args.batch_size, args.bptt, args.min_batch_size
+            train_data, args.batch_size, args.target_seq_len, args.min_batch_size
         )
 
         optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)

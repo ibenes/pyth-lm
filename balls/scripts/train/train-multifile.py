@@ -31,7 +31,7 @@ if __name__ == '__main__':
                         help='upper epoch limit')
     parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
+    parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     def temp_splits_from_fn(fn):
         tokens = tokens_from_file(fn, lm.vocab, randomize=False)
-        return TemporalSplits(tokens, lm.model.in_len, args.bptt)
+        return TemporalSplits(tokens, lm.model.in_len, args.target_seq_len)
 
     print("\ttraining...")
     train_tss = filelist_to_objects(args.train_list, temp_splits_from_fn)
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
         logger = InfinityLogger(epoch, args.log_interval, lr)
         train_data_filtered = BatchFilter(
-            train_data, args.batch_size, args.bptt, args.min_batch_size
+            train_data, args.batch_size, args.target_seq_len, args.min_batch_size
         )
         optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
 

@@ -31,7 +31,7 @@ if __name__ == '__main__':
                         help='upper epoch limit')
     parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
+    parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
@@ -75,10 +75,10 @@ if __name__ == '__main__':
     ivec_app_creator = lambda ts: ivec_appenders.HistoryIvecAppender(ts, ivec_extractor)
 
     print("\ttraining...")
-    train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.bptt)
+    train_tss = filelist_to_tokenized_splits(args.train_list, lm.vocab, args.target_seq_len)
 
     print("\tvalidation...")
-    valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.bptt)
+    valid_tss = filelist_to_tokenized_splits(args.valid_list, lm.vocab, args.target_seq_len)
     valid_data = BatchBuilder(
         [ivec_app_creator(ts) for ts in valid_tss],
         args.batch_size,
@@ -100,7 +100,7 @@ if __name__ == '__main__':
         if args.cuda:
             train_data = CudaStream(train_data)
         train_data_filtered = BatchFilter(
-            train_data, args.batch_size, args.bptt, args.min_batch_size
+            train_data, args.batch_size, args.target_seq_len, args.min_batch_size
         )
         train_data_ivecs = ivec_appenders.ParalelIvecAppender(
             train_data_filtered, ivec_extractor, translator

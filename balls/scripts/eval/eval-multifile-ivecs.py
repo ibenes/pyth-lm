@@ -18,7 +18,7 @@ if __name__ == '__main__':
                         help='file with paths to training documents')
     parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
+    parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     def ts_from_file(f):
         return TokenizedSplitFFBase(
             f, lm.vocab,
-            lambda seq: TemporalSplits(seq, lm.model.in_len, args.bptt)
+            lambda seq: TemporalSplits(seq, lm.model.in_len, args.target_seq_len)
         )
 
     tss = filelist_to_objects(args.file_list, ts_from_file)
