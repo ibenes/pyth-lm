@@ -30,7 +30,7 @@ python balls/scripts/eval/eval-ivecs-oracle.py \
     --cuda \
     --load=$EXP_DIR/$EXP_NAME.lm  || exit 1
 
-python balls/scripts/eval/eval-multifile-ivecs.py \
+python balls/scripts/eval/eval-ivecs-partial.py \
     --file-list=$DATA_ROOT/valid-list.txt \
     --ivec-extractor=$IVEC_EXTRACTOR \
     --concat-articles \
