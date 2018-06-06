@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--shuffle-lines', action='store_true',
                         help='shuffle lines before every epoch')
 
-    parser.add_argument('--batch_size', type=int, default=20, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
     parser.add_argument('--bptt', type=int, default=35,
                         help='sequence length')

@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--file-list', type=str, required=True,
                         help='file with paths to training documents')
-    parser.add_argument('--batch_size', type=int, default=20, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=20, metavar='N',
                         help='batch size')
     parser.add_argument('--target-seq-len', type=int, default=35,
                         help='sequence length')
