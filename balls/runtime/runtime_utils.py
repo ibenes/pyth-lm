@@ -2,7 +2,7 @@ import random
 import torch
 
 from torch.autograd import Variable
-import split_corpus_dataset
+from data_pipeline import split_corpus_dataset
 
 import sys
 import math

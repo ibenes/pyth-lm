@@ -2,13 +2,13 @@ import argparse
 import math
 
 from language_models import language_model
-import ivec_appenders
-from split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
+from smm_itf import ivec_appenders
+from data_pipeline.split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
 from data_pipeline.multistream import BatchBuilder
-import smm_ivec_extractor
+from smm_itf import smm_ivec_extractor
 
-from runtime_utils import CudaStream, filelist_to_objects, init_seeds
-from runtime_multifile import evaluate_
+from runtime.runtime_utils import CudaStream, filelist_to_objects, init_seeds
+from runtime.runtime_multifile import evaluate_
 
 
 if __name__ == '__main__':

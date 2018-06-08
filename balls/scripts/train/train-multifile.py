@@ -9,10 +9,10 @@ from data_pipeline.multistream import BatchBuilder
 from data_pipeline.data import tokens_from_file
 from data_pipeline.temporal_splitting import TemporalSplits
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter, epoch_summary
-from runtime_multifile import evaluate, train
+from runtime.runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter, epoch_summary
+from runtime.runtime_multifile import evaluate, train
 
-from loggers import InfinityLogger
+from runtime.loggers import InfinityLogger
 
 
 if __name__ == '__main__':

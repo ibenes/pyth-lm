@@ -2,11 +2,11 @@ import argparse
 import math
 
 from language_models import language_model
-from split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
+from data_pipeline.split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
 from data_pipeline.multistream import BatchBuilder
 
-from runtime_utils import CudaStream, filelist_to_objects, init_seeds
-from runtime_multifile import evaluate_
+from runtime.runtime_utils import CudaStream, filelist_to_objects, init_seeds
+from runtime.runtime_multifile import evaluate_
 
 
 if __name__ == '__main__':

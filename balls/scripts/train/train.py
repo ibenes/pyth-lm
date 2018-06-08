@@ -6,10 +6,10 @@ from data_pipeline.multistream import batchify
 from data_pipeline.temporal_splitting import TemporalSplits
 from language_models import language_model
 
-from runtime_utils import TransposeWrapper, init_seeds, epoch_summary
-from runtime_multifile import evaluate_, train_
+from runtime.runtime_utils import TransposeWrapper, init_seeds, epoch_summary
+from runtime.runtime_multifile import evaluate_, train_
 
-from loggers import ProgressLogger
+from runtime.loggers import ProgressLogger
 
 
 if __name__ == '__main__':

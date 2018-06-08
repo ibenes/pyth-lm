@@ -7,14 +7,14 @@ import torch
 from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
 from data_pipeline.temporal_splitting import TemporalSplits
-from split_corpus_dataset import TokenizedSplitFFBase
-import ivec_appenders
-import smm_ivec_extractor
+from data_pipeline.split_corpus_dataset import TokenizedSplitFFBase
+from smm_itf import ivec_appenders
+from smm_itf import smm_ivec_extractor
 
-from runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter, epoch_summary
-from runtime_multifile import train, evaluate
+from runtime.runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter, epoch_summary
+from runtime.runtime_multifile import train, evaluate
 
-from loggers import InfinityLogger
+from runtime.loggers import InfinityLogger
 
 
 if __name__ == '__main__':

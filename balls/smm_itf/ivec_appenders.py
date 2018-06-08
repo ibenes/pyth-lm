@@ -1,4 +1,4 @@
-from tensor_reorganization import TensorReorganizer
+from runtime.tensor_reorganization import TensorReorganizer
 
 class CheatingIvecAppender():
     def __init__(self, tokens, ivec_eetor):

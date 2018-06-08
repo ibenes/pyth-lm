@@ -2,9 +2,8 @@ import torch
 from torch.autograd import Variable
 import torch.nn as nn
 
-from runtime_utils import repackage_hidden
-
-from tensor_reorganization import TensorReorganizer
+from .runtime_utils import repackage_hidden
+from .tensor_reorganization import TensorReorganizer
 
 
 def prepare_inputs(inputs, do_transpose, use_ivecs, custom_batches):

@@ -6,8 +6,8 @@ from data_pipeline.multistream import BatchBuilder
 
 from data_pipeline.data import tokens_from_file
 from data_pipeline.temporal_splitting import TemporalSplits
-from runtime_utils import CudaStream, init_seeds, filelist_to_objects
-from runtime_multifile import evaluate
+from runtime.runtime_utils import CudaStream, init_seeds, filelist_to_objects
+from runtime.runtime_multifile import evaluate
 
 
 if __name__ == '__main__':
