@@ -1,5 +1,5 @@
 from data_pipeline.multistream import BatchBuilder
-import split_corpus_dataset
+import data_pipeline.split_corpus_dataset as split_corpus_dataset
 import smm_itf.ivec_appenders as ivec_appenders
 
 import numpy as np
