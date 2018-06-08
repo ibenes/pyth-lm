@@ -1,6 +1,6 @@
 from data_pipeline.multistream import BatchBuilder
 import split_corpus_dataset
-import ivec_appenders
+import smm_itf.ivec_appenders as ivec_appenders
 
 import numpy as np
 import torch

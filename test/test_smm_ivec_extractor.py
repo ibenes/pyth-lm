@@ -1,5 +1,5 @@
 from test.common import TestCase
-import smm_ivec_extractor
+import smm_itf.smm_ivec_extractor as smm_ivec_extractor
 from language_models.vocab import Vocabulary
 
 import torch

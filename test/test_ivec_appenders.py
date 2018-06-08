@@ -1,11 +1,11 @@
 import split_corpus_dataset
-import ivec_appenders
+import smm_itf.ivec_appenders as ivec_appenders
 import numpy as np
 from test.common import TestCase
 
 import torch
 from sklearn.feature_extraction.text import CountVectorizer
-import smm_ivec_extractor
+import smm_itf.smm_ivec_extractor as smm_ivec_extractor
 
 from language_models.vocab import Vocabulary
 from test.utils import getStream
