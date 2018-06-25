@@ -15,10 +15,11 @@ class IndexGenerator():
         self.next_ += 1
         return retval
 
+
 class Vocabulary(Mapping):
     def __init__(self, unk_word, unk_index):
-        self.w2i_ = {unk_word:unk_index}
-        self.i2w_ = {unk_index:unk_word}
+        self.w2i_ = {unk_word: unk_index}
+        self.i2w_ = {unk_index: unk_word}
         self.unk_index_ = unk_index
         self.unk_word_ = unk_word
         self.ind_gen_ = IndexGenerator([unk_index])
@@ -36,8 +37,7 @@ class Vocabulary(Mapping):
             self.w2i_[word] = index
             self.i2w_[index] = word
         else:
-            pass # do not do anything for known words
-        
+            pass  # do not do anything for known words
 
     def w2i(self, word):
         return self.w2i_.get(word, self.unk_index_)
@@ -63,17 +63,17 @@ def vocab_from_kaldi_wordlist_base(f, unk_word, word_re, remove_quotes):
 
         if m is None:
             raise ValueError("Weird line {}: '{}'".format(i, line))
-             
+
         w = m.group('word')
         if remove_quotes:
-            assert w[0] == w[-1] == "'" 
+            assert w[0] == w[-1] == "'"
             w = w[1:-1]
         i = int(m.group('ind'))
         assert i >= 0
         d[w] = i
 
     try:
-        vocab = Vocabulary(unk_word, d[unk_word]) 
+        vocab = Vocabulary(unk_word, d[unk_word])
     except KeyError:
         raise ValueError("Unk word {} not present in the kaldi wordlist!".format(unk_word))
     vocab.ind_gen_ = None
@@ -92,4 +92,3 @@ def vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
 
 def quoted_vocab_from_kaldi_wordlist(f, unk_word='<unk>'):
     return vocab_from_kaldi_wordlist_base(f, unk_word, word_re="'.+'", remove_quotes=True)
-
