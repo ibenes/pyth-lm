@@ -10,17 +10,6 @@ import typing
 import kaldi_itf
 
 
-def pick_ys(y, seq_x):
-    seqs_ys = []
-    for seq_n, seq in enumerate(seq_x):
-        seq_ys = [1.0]  # hard 1.0 for the 'sure' <s>
-        for w_n, w in enumerate(seq[1:]):  # skipping the initial element ^^^
-            seq_ys.append(y[w_n, seq_n, w])
-        seqs_ys.append(seq_ys)
-
-    return seqs_ys
-
-
 def seqs_to_tensor(seqs):
     batch_size = len(seqs)
     maxlen = max([len(seq) for seq in seqs])
@@ -31,6 +20,36 @@ def seqs_to_tensor(seqs):
             ids[seq_n, word_n] = word
 
     return ids
+
+
+def tokens_to_pythlm(toks, vocab):
+    return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
+
+
+def dict_to_list(utts_map):
+    list_of_lists = []
+    rev_map = {}
+    for key in utts_map:
+        rev_map[len(list_of_lists)] = key
+        list_of_lists.append(utts_map[key])
+
+    return list_of_lists, rev_map
+
+
+def translate_latt_to_model(words, latt_vocab, model_vocab):
+    words = [latt_vocab.i2w(i) for i in word_ids]
+    return tokens_to_pythlm(words, model_vocab)
+
+
+def pick_ys(y, seq_x):
+    seqs_ys = []
+    for seq_n, seq in enumerate(seq_x):
+        seq_ys = [1.0]  # hard 1.0 for the 'sure' <s>
+        for w_n, w in enumerate(seq[1:]):  # skipping the initial element ^^^
+            seq_ys.append(y[w_n, seq_n, w])
+        seqs_ys.append(seq_ys)
+
+    return seqs_ys
 
 
 def seqs_logprob(seqs, model):
@@ -55,25 +74,6 @@ def seqs_logprob(seqs, model):
     seq_log_scores = [sum(seq) for seq in word_log_scores]
 
     return seq_log_scores
-
-
-def tokens_to_pythlm(toks, vocab):
-    return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
-
-
-def dict_to_list(utts_map):
-    list_of_lists = []
-    rev_map = {}
-    for key in utts_map:
-        rev_map[len(list_of_lists)] = key
-        list_of_lists.append(utts_map[key])
-
-    return list_of_lists, rev_map
-
-
-def translate_latt_to_model(words, latt_vocab, model_vocab):
-    words = [latt_vocab.i2w(i) for i in word_ids]
-    return tokens_to_pythlm(words, model_vocab)
 
 
 if __name__ == '__main__':
