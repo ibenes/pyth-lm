@@ -67,7 +67,7 @@ if __name__ == '__main__':
         data = CudaStream(data)
 
     loss = evaluate_(
-        lm.model, data,
+        lm, data,
         use_ivecs=True,
         custom_batches=True,
     )

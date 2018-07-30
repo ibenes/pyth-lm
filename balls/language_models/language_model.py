@@ -7,3 +7,7 @@ class LanguageModel(torch.nn.Module):
 
         self.model = model
         self.vocab = vocab
+
+        self.criterion = torch.nn.NLLLoss(size_average=False)
+
+        self.forward = model.forward

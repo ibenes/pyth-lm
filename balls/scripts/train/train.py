@@ -86,17 +86,17 @@ if __name__ == '__main__':
 
     for epoch in range(1, args.epochs+1):
         logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.target_seq_len)
-        optim = torch.optim.SGD(lm.model.parameters(), lr, weight_decay=args.beta)
+        optim = torch.optim.SGD(lm.parameters(), lr, weight_decay=args.beta)
 
         train_(
-            lm.model, train_data, optim,
+            lm, train_data, optim,
             logger, args.clip,
             use_ivecs=False,
             custom_batches=False,
         )
 
         val_loss = evaluate_(
-            lm.model, valid_data,
+            lm, valid_data,
             use_ivecs=False,
             custom_batches=False,
         )

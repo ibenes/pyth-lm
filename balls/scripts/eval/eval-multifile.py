@@ -49,5 +49,5 @@ if __name__ == '__main__':
     if args.cuda:
         data = CudaStream(data)
 
-    loss = evaluate(lm.model, data, use_ivecs=False)
+    loss = evaluate(lm, data, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))

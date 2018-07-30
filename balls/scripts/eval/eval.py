@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     # Run on test data.
     loss = evaluate_(
-        lm.model, data,
+        lm, data,
         use_ivecs=False,
         custom_batches=False,
     )

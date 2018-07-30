@@ -104,16 +104,16 @@ if __name__ == '__main__':
         )
 
         logger = InfinityLogger(epoch, args.log_interval, lr)
-        optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
+        optim = torch.optim.SGD(lm.parameters(), lr=lr, weight_decay=args.beta)
 
         train(
-            lm.model, train_data_ivecs, optim, logger,
+            lm, train_data_ivecs, optim, logger,
             clip=args.clip,
             use_ivecs=True
         )
         train_data_filtered.report()
 
-        val_loss = evaluate(lm.model, valid_data, use_ivecs=True)
+        val_loss = evaluate(lm, valid_data, use_ivecs=True)
         print(epoch_summary(epoch, logger.nb_updates(), logger.time_since_creation(), val_loss))
 
         # Save the model if the validation loss is the best we've seen so far.
