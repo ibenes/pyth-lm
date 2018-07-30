@@ -2,9 +2,6 @@
 import argparse
 import torch
 
-import sys
-sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
-
 from language_models import ffnn_models, vocab, language_model
 
 
@@ -26,7 +23,7 @@ if __name__ == '__main__':
                         help='tie the word embedding and softmax weights')
     parser.add_argument('--seed', type=int, default=1111,
                         help='random seed')
-    parser.add_argument('--save', type=str,  required=True,
+    parser.add_argument('--save', type=str, required=True,
                         help='path to save the final model')
     args = parser.parse_args()
 
@@ -35,15 +32,14 @@ if __name__ == '__main__':
 
     print("loading vocabulary...")
     with open(args.wordlist, 'r') as f:
-        vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     print("building model...")
 
     model = ffnn_models.BengioModel(
-        len(vocab), args.emsize, args.hist_len,
+        len(vocabulary), args.emsize, args.hist_len,
         args.nhid, args.dropout
     )
 
-    lm = language_model.LanguageModel(model, vocab)
-    with open(args.save, 'wb') as f:
-        lm.save(f)
+    lm = language_model.LanguageModel(model, vocabulary)
+    torch.save(lm, args.save)

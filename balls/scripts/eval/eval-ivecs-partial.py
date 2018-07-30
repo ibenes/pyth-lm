@@ -1,7 +1,7 @@
 import argparse
 import math
+import torch
 
-from language_models import language_model
 from smm_itf import ivec_appenders
 from smm_itf import smm_ivec_extractor
 from data_pipeline.multistream import BatchBuilder
@@ -38,10 +38,9 @@ if __name__ == '__main__':
     init_seeds(args.seed, args.cuda)
 
     print("loading LM...")
-    with open(args.load, 'rb') as f:
-        lm = language_model.load(f)
+    lm = torch.load(args.load)
     if args.cuda:
-        lm.model.cuda()
+        lm.cuda()
     print(lm.model)
 
     print("loading SMM iVector extractor ...")

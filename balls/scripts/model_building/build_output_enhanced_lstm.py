@@ -1,9 +1,6 @@
 import argparse
 import torch
 
-import sys
-sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
-
 from language_models import smm_lstm_models, vocab, language_model
 
 
@@ -40,18 +37,17 @@ if __name__ == '__main__':
 
     print("loading vocabulary...")
     with open(args.wordlist, 'r') as f:
-        vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     print("building model...")
 
     model = smm_lstm_models.OutputEnhancedLM(
-        len(vocab), args.emsize, args.nhid,
+        len(vocabulary), args.emsize, args.nhid,
         args.nlayers, args.ivec_size, args.dropout,
         tie_weights=args.tied,
         dropout_ivec=args.dropout_ivec,
         ivec_amplification=args.ivec_ampl,
     )
 
-    lm = language_model.LanguageModel(model, vocab)
-    with open(args.save, 'wb') as f:
-        lm.save(f)
+    lm = language_model.LanguageModel(model, vocabulary)
+    torch.save(lm, args.save)

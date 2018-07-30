@@ -1,9 +1,6 @@
 import argparse
 import torch
 
-import sys
-sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
-
 from language_models import lstm_model, vocab, language_model
 
 
@@ -49,5 +46,4 @@ if __name__ == '__main__':
     )
 
     lm = language_model.LanguageModel(model, vocab)
-    with open(args.save, 'wb') as f:
-        lm.save(f)
+    torch.save(lm, args.save)

@@ -2,9 +2,6 @@
 import argparse
 import torch
 
-import sys
-sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
-
 from language_models import language_model, vocab, ffnn_models
 
 
@@ -37,15 +34,14 @@ if __name__ == '__main__':
 
     print("loading vocabulary...")
     with open(args.wordlist, 'r') as f:
-        vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     print("building model...")
 
     model = ffnn_models.BengioModelIvecInput(
-        len(vocab), args.emsize, args.hist_len,
+        len(vocabulary), args.emsize, args.hist_len,
         args.nhid, args.dropout, args.ivec_dim
     )
 
-    lm = language_model.LanguageModel(model, vocab)
-    with open(args.save, 'wb') as f:
-        lm.save(f)
+    lm = language_model.LanguageModel(model, vocabulary)
+    torch.save(lm, args.save)

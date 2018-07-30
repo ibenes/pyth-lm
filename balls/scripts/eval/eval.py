@@ -5,7 +5,6 @@ import torch
 from data_pipeline.data import tokens_from_fn
 from data_pipeline.multistream import batchify
 from data_pipeline.temporal_splitting import TemporalSplits
-from language_models import language_model
 
 from runtime.runtime_utils import TransposeWrapper, init_seeds
 from runtime.runtime_multifile import evaluate_
@@ -37,10 +36,9 @@ if __name__ == '__main__':
     init_seeds(args.seed, args.cuda)
 
     print("loading model...")
-    with open(args.load, 'rb') as f:
-        lm = language_model.load(f)
+    lm = torch.load(args.load)
     if args.cuda:
-        lm.model.cuda()
+        lm.cuda()
     print(lm.model)
 
     print("preparing data...")
