@@ -58,9 +58,10 @@ def evaluate_(lm, data_source, use_ivecs, custom_batches):
         hidden = repackage_hidden(hidden)
 
         if use_ivecs:
-            output, hidden = lm(X, hidden, ivecs)
+            output, hidden = lm.model(X, hidden, ivecs)
         else:
-            output, hidden = lm(X, hidden)
+            output, hidden = lm.model(X, hidden)
+        output = lm.decoder(output)
         output_flat = output.view(-1, output.size(-1))
 
         total_loss += lm.criterion(output_flat, targets_flat).data
@@ -108,9 +109,10 @@ def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches):
         hidden = repackage_hidden(hidden)
 
         if use_ivecs:
-            output, hidden = lm(X, hidden, ivecs)
+            output, hidden = lm.model(X, hidden, ivecs)
         else:
-            output, hidden = lm(X, hidden)
+            output, hidden = lm.model(X, hidden)
+        output = lm.decoder(output)
         output_flat = output.view(-1, output.size(-1))
 
         loss = lm.criterion(output_flat, targets_flat) / output_flat.size(0)
