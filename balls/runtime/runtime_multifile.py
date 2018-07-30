@@ -88,7 +88,7 @@ def evaluate_no_transpose(model, data_source, use_ivecs):
 
 def train_(model, data, optim, logger, clip, use_ivecs, custom_batches):
     model.train()
-    criterion = nn.NLLLoss()
+    criterion = nn.NLLLoss(size_average=False)
 
     if custom_batches:
         hs_reorganizer = TensorReorganizer(model.init_hidden)
@@ -115,7 +115,7 @@ def train_(model, data, optim, logger, clip, use_ivecs, custom_batches):
             output, hidden = model(X, hidden)
         output_flat = output.view(-1, output.size(-1))
 
-        loss = criterion(output_flat, targets_flat)
+        loss = criterion(output_flat, targets_flat) / output_flat.size(0)
 
         optim.zero_grad()
         loss.backward()
