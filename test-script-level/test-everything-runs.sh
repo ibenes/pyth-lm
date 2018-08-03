@@ -11,7 +11,8 @@ TEST_DIR="${BASH_SOURCE%/*}"
 $TEST_DIR/test-lstm-runs.sh $EXP_DIR lsmt $WT_ROOT || exit 1
 
 # 2) build a SMM-LSTM
-$TEST_DIR/test-smm-lstm-runs.sh $EXP_DIR smm-lstm $WT_ROOT $IVEC_EXTRACTOR || exit 1
+# commented out as we cannost fit output-enhaced SMM-LSTM  into the decoder framework
+# $TEST_DIR/test-smm-lstm-runs.sh $EXP_DIR smm-lstm $WT_ROOT $IVEC_EXTRACTOR || exit 1
 
 # 3) build iFN-LM
 $TEST_DIR/test-fn-runs.sh $EXP_DIR ifn $WT_ROOT  || exit 1
