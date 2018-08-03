@@ -34,16 +34,18 @@ if __name__ == '__main__':
     print("loading vocabulary...")
     with open(args.wordlist, 'r') as f:
         if args.quoted_wordlist:
-            vocab = vocab.quoted_vocab_from_kaldi_wordlist(f, args.unk)
+            vocabulary = vocab.quoted_vocab_from_kaldi_wordlist(f, args.unk)
         else:
-            vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
+            vocabulary = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     print("building model...")
 
     model = lstm_model.LSTMLanguageModel(
-        len(vocab), args.emsize, args.nhid,
+        len(vocabulary), args.emsize, args.nhid,
         args.nlayers, args.dropout, args.tied
     )
 
-    lm = language_model.LanguageModel(model, vocab)
+    decoder = language_model.FullSoftmaxDecoder(args.nhid, len(vocabulary))
+
+    lm = language_model.LanguageModel(model, decoder, vocabulary)
     torch.save(lm, args.save)

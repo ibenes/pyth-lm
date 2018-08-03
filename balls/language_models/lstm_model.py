@@ -10,12 +10,9 @@ class LSTMLanguageModel(nn.Module):
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
         self.rnn = nn.LSTM(ninp, nhid, nlayers, dropout=dropout)
-        self.decoder = nn.Linear(nhid, ntoken)
 
         if tie_weights:
-            if nhid != ninp:
-                raise ValueError('When using the tied flag, nhid must be equal to emsize')
-            self.decoder.weight = self.encoder.weight
+            raise NotImplementedError
 
         self.init_weights()
 
@@ -28,15 +25,12 @@ class LSTMLanguageModel(nn.Module):
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
-        self.decoder.bias.data.fill_(0)
-        self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, input, hidden):
         emb = self.drop(self.encoder(input))
         output, hidden = self.rnn(emb, hidden)
         output = self.drop(output)
-        decoded = nn.LogSoftmax(dim=2)(self.decoder(output))
-        return decoded, hidden
+        return output, hidden
 
     def output_expected_embs(self, input):
         assert (len(input.size()) == 2)  # time X batch index

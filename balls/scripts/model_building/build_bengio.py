@@ -41,5 +41,7 @@ if __name__ == '__main__':
         args.nhid, args.dropout
     )
 
-    lm = language_model.LanguageModel(model, vocabulary)
+    decoder = language_model.FullSoftmaxDecoder(args.nhid, len(vocabulary))
+
+    lm = language_model.LanguageModel(model, decoder, vocabulary)
     torch.save(lm, args.save)
