@@ -1,6 +1,5 @@
 import torch
 from torch.autograd import Variable
-import torch.nn as nn
 
 from .runtime_utils import repackage_hidden
 from .tensor_reorganization import TensorReorganizer
@@ -16,7 +15,7 @@ def prepare_inputs(inputs, do_transpose, use_ivecs, custom_batches):
     targets = inputs[1]
     if do_transpose:
         targets = targets.t().contiguous()
-    targets_flat = Variable(targets.view(-1))
+    targets = Variable(targets)
 
     if use_ivecs:
         ivecs = Variable(inputs[2])
@@ -28,7 +27,7 @@ def prepare_inputs(inputs, do_transpose, use_ivecs, custom_batches):
     else:
         mask = None
 
-    return X, targets_flat, ivecs, mask, batch_size
+    return X, targets, ivecs, mask, batch_size
 
 
 def evaluate_(lm, data_source, use_ivecs, custom_batches):
@@ -44,7 +43,7 @@ def evaluate_(lm, data_source, use_ivecs, custom_batches):
     do_transpose = not lm.model.batch_first
 
     for inputs in data_source:
-        X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
+        X, targets, ivecs, mask, batch_size = prepare_inputs(
             inputs,
             do_transpose, use_ivecs, custom_batches
         )
@@ -61,11 +60,10 @@ def evaluate_(lm, data_source, use_ivecs, custom_batches):
             output, hidden = lm.model(X, hidden, ivecs)
         else:
             output, hidden = lm.model(X, hidden)
-        output = lm.decoder(output)
-        output_flat = output.view(-1, output.size(-1))
 
-        total_loss += lm.criterion(output_flat, targets_flat).data
-        total_timesteps += len(targets_flat)
+        loss, nb_words = lm.decoder.neg_log_prob(output, targets)
+        total_loss += loss.data
+        total_timesteps += nb_words
 
     return total_loss[0] / total_timesteps
 
@@ -84,8 +82,6 @@ def evaluate_no_transpose(model, data_source, use_ivecs):
     )
 
 
-# TODO time X batch or vice-versa?
-
 def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches):
     lm.train()
 
@@ -96,7 +92,7 @@ def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches):
     do_transpose = not lm.model.batch_first
 
     for inputs in data:
-        X, targets_flat, ivecs, mask, batch_size = prepare_inputs(
+        X, targets, ivecs, mask, batch_size = prepare_inputs(
             inputs,
             do_transpose, use_ivecs, custom_batches
         )
@@ -112,10 +108,8 @@ def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches):
             output, hidden = lm.model(X, hidden, ivecs)
         else:
             output, hidden = lm.model(X, hidden)
-        output = lm.decoder(output)
-        output_flat = output.view(-1, output.size(-1))
-
-        loss = lm.criterion(output_flat, targets_flat) / output_flat.size(0)
+        loss, nb_words = lm.decoder.neg_log_prob(output, targets)
+        loss /= nb_words
 
         optim.zero_grad()
         loss.backward()

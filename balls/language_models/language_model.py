@@ -9,6 +9,4 @@ class LanguageModel(torch.nn.Module):
         self.decoder = decoder
         self.vocab = vocab
 
-        self.criterion = torch.nn.NLLLoss(size_average=False)
-
         self.forward = model.forward
