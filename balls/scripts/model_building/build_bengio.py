@@ -3,6 +3,7 @@ import argparse
 import torch
 
 from language_models import ffnn_models, vocab, language_model
+from language_models.decoders import FullSoftmaxDecoder
 
 
 if __name__ == '__main__':
@@ -41,7 +42,7 @@ if __name__ == '__main__':
         args.nhid, args.dropout
     )
 
-    decoder = language_model.FullSoftmaxDecoder(args.nhid, len(vocabulary))
+    decoder = FullSoftmaxDecoder(args.nhid, len(vocabulary))
 
     lm = language_model.LanguageModel(model, decoder, vocabulary)
     torch.save(lm, args.save)
