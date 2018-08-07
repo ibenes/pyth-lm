@@ -86,7 +86,7 @@ if __name__ == '__main__':
     with open(args.decoder_wordlist) as f:
         decoder_vocabulary = vocab_from_kaldi_wordlist(f, unk_word=args.unk)
 
-    lm = torch.load(args.lm)
+    lm = torch.load(args.lm, map_location=lambda storage, location: storage)
     lm.eval()
 
     oov_start_idx = decoder_vocabulary[args.oov_start]
