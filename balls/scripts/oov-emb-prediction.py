@@ -73,6 +73,9 @@ def tensor_from_words(words, lm):
     return torch.autograd.Variable(tensor)
 
 
+BATCH_SIZE = 1
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--unk', default="<UNK>")
@@ -105,6 +108,6 @@ if __name__ == '__main__':
             emb, h = lm.model(th_data, h0)
             out_emb = emb[0][-1].data
         else:
-            out_emb = lm.model.init_hidden(th_data.size(0))[0][0, 0].data
+            out_emb = lm.model.init_hidden(BATCH_SIZE)[0][0, 0].data
 
         print(key, " ".join("{:.4f}".format(e) for e in out_emb))
