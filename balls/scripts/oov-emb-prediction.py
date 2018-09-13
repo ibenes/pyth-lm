@@ -83,14 +83,14 @@ if __name__ == '__main__':
     parser.add_argument('--oov-end', required=True)
     parser.add_argument('--interest-constant', type=int, required=True)
     parser.add_argument('--decoder-wordlist', required=True)
-    parser.add_argument('--lm', required=True)
+    parser.add_argument('--fwd-lm', required=True)
     args = parser.parse_args()
 
     with open(args.decoder_wordlist) as f:
         decoder_vocabulary = vocab_from_kaldi_wordlist(f, unk_word=args.unk)
 
-    lm = torch.load(args.lm, map_location=lambda storage, location: storage)
-    lm.eval()
+    fwd_lm = torch.load(args.fwd_lm, map_location=lambda storage, location: storage)
+    fwd_lm.eval()
 
     oov_start_idx = decoder_vocabulary[args.oov_start]
     oov_end_idx = decoder_vocabulary[args.oov_end]
@@ -103,11 +103,11 @@ if __name__ == '__main__':
         transcript = words_from_idx(idxes)
         prefix = relevant_prefix(transcript)
         if len(prefix) > 0:
-            th_data = tensor_from_words(prefix, lm)
-            h0 = lm.model.init_hidden(th_data.size(0))
-            emb, h = lm.model(th_data, h0)
+            th_data = tensor_from_words(prefix, fwd_lm)
+            h0 = fwd_lm.model.init_hidden(th_data.size(0))
+            emb, h = fwd_lm.model(th_data, h0)
             out_emb = emb[0][-1].data
         else:
-            out_emb = lm.model.init_hidden(BATCH_SIZE)[0][0, 0].data
+            out_emb = fwd_lm.model.init_hidden(BATCH_SIZE)[0][0, 0].data
 
         print(key, " ".join("{:.4f}".format(e) for e in out_emb))
