@@ -76,6 +76,19 @@ def tensor_from_words(words, lm):
 BATCH_SIZE = 1
 
 
+def emb_from_string(transcript, lm):
+    prefix = relevant_prefix(transcript)
+    if len(prefix) > 0:
+        th_data = tensor_from_words(prefix, lm)
+        h0 = lm.model.init_hidden(th_data.size(0))
+        emb, h = lm.model(th_data, h0)
+        out_emb = emb[0][-1].data
+    else:
+        out_emb = lm.model.init_hidden(BATCH_SIZE)[0][0, 0].data
+
+    return out_emb
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--unk', default="<UNK>")
@@ -83,14 +96,23 @@ if __name__ == '__main__':
     parser.add_argument('--oov-end', required=True)
     parser.add_argument('--interest-constant', type=int, required=True)
     parser.add_argument('--decoder-wordlist', required=True)
-    parser.add_argument('--fwd-lm', required=True)
+    parser.add_argument('--fwd-lm')
+    parser.add_argument('--bwd-lm')
     args = parser.parse_args()
+
+    if not args.fwd_lm and not args.bwd_lm:
+        sys.stderr.write("At least one of '--fwd-lm' and '--bwd-lm' needs to be specified\n")
+        sys.exit(1)
 
     with open(args.decoder_wordlist) as f:
         decoder_vocabulary = vocab_from_kaldi_wordlist(f, unk_word=args.unk)
 
-    fwd_lm = torch.load(args.fwd_lm, map_location=lambda storage, location: storage)
-    fwd_lm.eval()
+    if args.fwd_lm:
+        fwd_lm = torch.load(args.fwd_lm, map_location=lambda storage, location: storage)
+        fwd_lm.eval()
+    if args.bwd_lm:
+        bwd_lm = torch.load(args.bwd_lm, map_location=lambda storage, location: storage)
+        bwd_lm.eval()
 
     oov_start_idx = decoder_vocabulary[args.oov_start]
     oov_end_idx = decoder_vocabulary[args.oov_end]
@@ -99,15 +121,17 @@ if __name__ == '__main__':
         fields = line.split()
         key = fields[0]
         idxes = [int(idx) for idx in fields[1:]]
-
         transcript = words_from_idx(idxes)
-        prefix = relevant_prefix(transcript)
-        if len(prefix) > 0:
-            th_data = tensor_from_words(prefix, fwd_lm)
-            h0 = fwd_lm.model.init_hidden(th_data.size(0))
-            emb, h = fwd_lm.model(th_data, h0)
-            out_emb = emb[0][-1].data
-        else:
-            out_emb = fwd_lm.model.init_hidden(BATCH_SIZE)[0][0, 0].data
 
-        print(key, " ".join("{:.4f}".format(e) for e in out_emb))
+        output = key
+        if args.fwd_lm:
+            fwd_emb = emb_from_string(transcript, fwd_lm)
+            fwd_emb_str = " ".join("{:.4f}".format(e) for e in fwd_emb)
+            output += " " + fwd_emb_str
+        if args.bwd_lm:
+            bwd_emb = emb_from_string(list(reversed(transcript)), bwd_lm)
+            bwd_emb_str = " ".join("{:.4f}".format(e) for e in bwd_emb)
+            output += " " + bwd_emb_str
+        output += '\n'
+
+        sys.stdout.write(output)
