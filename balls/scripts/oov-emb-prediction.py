@@ -78,13 +78,12 @@ BATCH_SIZE = 1
 
 def emb_from_string(transcript, lm):
     prefix = relevant_prefix(transcript)
-    if len(prefix) > 0:
-        th_data = tensor_from_words(prefix, lm)
-        h0 = lm.model.init_hidden(th_data.size(0))
-        emb, h = lm.model(th_data, h0)
-        out_emb = emb[0][-1].data
-    else:
-        out_emb = lm.model.init_hidden(BATCH_SIZE)[0][0, 0].data
+    prefix.insert(0, "</s>")
+
+    th_data = tensor_from_words(prefix, lm)
+    h0 = lm.model.init_hidden(th_data.size(0))
+    emb, h = lm.model(th_data, h0)
+    out_emb = emb[0][-1].data
 
     return out_emb
 
