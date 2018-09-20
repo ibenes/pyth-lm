@@ -4,6 +4,8 @@ import sys
 
 import torch
 
+from embeddings_io import str_from_embedding
+
 
 def relevant_prefix(transcript, word_of_interest):
     first_oov_oi_loc = transcript.index(word_of_interest)
@@ -61,11 +63,11 @@ if __name__ == '__main__':
         output = key
         if args.fwd_lm:
             fwd_emb = emb_from_string(transcript, fwd_lm)
-            fwd_emb_str = " ".join("{:.4f}".format(e) for e in fwd_emb)
+            fwd_emb_str = str_from_embedding(fwd_emb)
             output += " " + fwd_emb_str
         if args.bwd_lm:
             bwd_emb = emb_from_string(list(reversed(transcript)), bwd_lm)
-            bwd_emb_str = " ".join("{:.4f}".format(e) for e in bwd_emb)
+            bwd_emb_str = str_from_embedding(bwd_emb)
             output += " " + bwd_emb_str
         output += '\n'
 
