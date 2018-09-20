@@ -5,6 +5,8 @@ import sys
 
 import torch
 
+from embeddings_io import str_from_embedding
+
 
 def tensor_from_words(words, lm):
     tensor = torch.LongTensor([lm.vocab[w] for w in words]).view(1, -1)
@@ -46,12 +48,12 @@ if __name__ == '__main__':
 
         if args.fwd_lm:
             fwd_embs = embs_from_words(words, fwd_lm)
-            fwd_embs_strs = [" ".join(["{:.4f}".format(e) for e in emb]) for emb in fwd_embs]
+            fwd_embs_strs = [str_from_embedding(emb) for emb in fwd_embs]
             data_cols.append(fwd_embs_strs)
 
         if args.bwd_lm:
             bwd_embs = reversed(list(embs_from_words(list(reversed(words)), bwd_lm)))
-            bwd_embs_strs = [" ".join(["{:.4f}".format(e) for e in emb]) for emb in bwd_embs]
+            bwd_embs_strs = [str_from_embedding(emb) for emb in bwd_embs]
             data_cols.append(bwd_embs_strs)
 
         for data_row in zip(*data_cols):
