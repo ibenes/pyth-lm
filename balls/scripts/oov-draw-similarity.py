@@ -7,8 +7,6 @@ import sys
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
-import matplotlib.pyplot as plt
-
 
 def area_under_curve(xs_in, ys_in):
     assert(len(xs_in) == len(ys_in))
@@ -53,7 +51,11 @@ if __name__ == '__main__':
     parser.add_argument('--length-norm', action='store_true')
     parser.add_argument('--log-det', action='store_true')
     parser.add_argument('--eps', type=float, default=1e-3, help='to prevent log of zero')
+    parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
+
+    if args.plot:
+        import matplotlib.pyplot as plt
 
     embs_list = []
     keys = []
@@ -112,26 +114,29 @@ if __name__ == '__main__':
 
     mis_fas = np.asarray(mis_fas)
 
-    plt.figure()
-    plt.imshow(similarities)
-    plt.colorbar()
+    if args.plot:
+        plt.figure()
+        plt.imshow(similarities)
+        plt.colorbar()
 
     miss_rate = mis_fas[:, 0]
     fa_rate = mis_fas[:, 1]
     print("Area under DET curve (in linspace): {:.5f}".format(area_under_curve(miss_rate, fa_rate)))
     print("EER: {:.5f}".format(100.0*eer(miss_rate, fa_rate)))
 
-    plt.figure()
 
-    if args.log_det:
-        plt.loglog(miss_rate, fa_rate)
-    else:
-        plt.plot(miss_rate, fa_rate)
+    if args.plot:
+        plt.figure()
 
-    plt.axis('scaled')
-    plt.xlim(left=0.0)
-    plt.ylim(bottom=0.0)
-    plt.xlabel('miss rate')
-    plt.ylabel('FA rate')
+        if args.log_det:
+            plt.loglog(miss_rate, fa_rate)
+        else:
+            plt.plot(miss_rate, fa_rate)
 
-    plt.show()
+        plt.axis('scaled')
+        plt.xlim(left=0.0)
+        plt.ylim(bottom=0.0)
+        plt.xlabel('miss rate')
+        plt.ylabel('FA rate')
+
+        plt.show()
