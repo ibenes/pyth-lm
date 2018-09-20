@@ -5,6 +5,7 @@ import sys
 import torch
 
 from embeddings_io import str_from_embedding
+from embeddings_computation import tensor_from_words
 
 
 def relevant_prefix(transcript, word_of_interest):
@@ -13,11 +14,6 @@ def relevant_prefix(transcript, word_of_interest):
         raise ValueError("there are multiple OOVs of interest!")
 
     return transcript[:first_oov_oi_loc]
-
-
-def tensor_from_words(words, vocab):
-    tensor = torch.LongTensor([vocab[w] for w in words]).view(1, -1)
-    return torch.autograd.Variable(tensor)
 
 
 BATCH_SIZE = 1
