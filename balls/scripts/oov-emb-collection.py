@@ -6,17 +6,12 @@ import sys
 import torch
 
 from embeddings_io import str_from_embedding
-
-
-def tensor_from_words(words, lm):
-    tensor = torch.LongTensor([lm.vocab[w] for w in words]).view(1, -1)
-
-    return torch.autograd.Variable(tensor)
+from embeddings_computation import tensor_from_words
 
 
 def embs_from_words(words, lm):
     words = ["</s>"] + words
-    th_data = tensor_from_words(words, lm)
+    th_data = tensor_from_words(words, lm.vocab)
     h0 = lm.model.init_hidden(th_data.size(0))
     emb, h = lm.model(th_data[:, :-1], h0)
     return emb[0].data
