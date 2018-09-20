@@ -63,12 +63,10 @@ if __name__ == '__main__':
         output = key
         if args.fwd_lm:
             fwd_emb = emb_from_string(transcript, fwd_lm)
-            fwd_emb_str = str_from_embedding(fwd_emb)
-            output += " " + fwd_emb_str
+            output += " " + str_from_embedding(fwd_emb)
         if args.bwd_lm:
             bwd_emb = emb_from_string(list(reversed(transcript)), bwd_lm)
-            bwd_emb_str = str_from_embedding(bwd_emb)
-            output += " " + bwd_emb_str
+            output += " " + str_from_embedding(bwd_emb)
         output += '\n'
 
         sys.stdout.write(output)
