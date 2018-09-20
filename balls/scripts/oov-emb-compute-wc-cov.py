@@ -7,6 +7,8 @@ from typing import Dict, List
 import numpy as np
 from scipy.linalg import fractional_matrix_power
 
+from embeddings_io import emb_line_iterator
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--show-cov', action='store_true')
@@ -14,11 +16,7 @@ if __name__ == '__main__':
 
     collection: Dict[str, List[np.ndarray]] = {}
 
-    for line in sys.stdin:
-        fields = line.split()
-        word = fields[0]
-        emb = np.asarray([float(f) for f in fields[1:]])
-
+    for word, emb in emb_line_iterator(sys.stdin):
         if word in collection:
             collection[word].append(emb)
         else:
