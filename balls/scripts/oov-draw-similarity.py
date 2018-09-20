@@ -46,6 +46,29 @@ def eer(xs, ys):
     return eer
 
 
+def emb_line_iterator(f):
+    for line in sys.stdin:
+        fields = line.split()
+        key = fields[0]
+        embedding = np.asarray([float(e) for e in fields[1:]])
+
+        if args.length_norm:
+            embedding /= np.linalg.norm(embedding)
+
+        yield key, embedding
+
+
+def all_embs_from_file(f):
+    embs = []
+    keys = []
+
+    for key, emb in emb_line_iterator(f):
+        embs.append(emb)
+        keys.append(key)
+
+    return keys, np.stack(embs)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--length-norm', action='store_true')
@@ -58,20 +81,8 @@ if __name__ == '__main__':
     if args.plot:
         import matplotlib.pyplot as plt
 
-    embs_list = []
-    keys = []
-    for line in sys.stdin:
-        fields = line.split()
-        key = fields[0]
-        embedding = np.asarray([float(e) for e in fields[1:]])
+    keys, embs = all_embs_from_file(sys.stdin)
 
-        if args.length_norm:
-            embedding /= np.linalg.norm(embedding)
-
-        keys.append(key)
-        embs_list.append(embedding)
-
-    embs = np.stack(embs_list)
     if args.metric == 'inner_prod':
         similarities = embs @ embs.T
     elif args.metric == 'l2_dist':
