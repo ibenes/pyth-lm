@@ -69,6 +69,23 @@ def all_embs_from_file(f):
     return keys, np.stack(embs)
 
 
+def trial_scores_list(keys, similarities):
+    score_tg = []
+    for i in range(len(keys)):
+        for j in range(i+1, len(keys)):
+            a = keys[i].split(':')[0]
+            b = keys[j].split(':')[0]
+
+            score = similarities[i, j]
+
+            if a == b:
+                score_tg.append((score, 1))
+            else:
+                score_tg.append((score, 0))
+
+    return score_tg
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--length-norm', action='store_true')
@@ -88,18 +105,7 @@ if __name__ == '__main__':
     elif args.metric == 'l2_dist':
         similarities = -squareform(pdist(embs))
 
-    score_tg = []
-    for i in range(len(keys)):
-        for j in range(i+1, len(keys)):
-            a = keys[i].split(':')[0]
-            b = keys[j].split(':')[0]
-
-            score = similarities[i, j]
-
-            if a == b:
-                score_tg.append((score, 1))
-            else:
-                score_tg.append((score, 0))
+    score_tg = trial_scores_list(keys, similarities)
 
     nb_trials = len(score_tg)
     nb_same = sum(s[1] for s in score_tg)
