@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-det', action='store_true')
     parser.add_argument('--eps', type=float, default=1e-3, help='to prevent log of zero')
     parser.add_argument('--plot', action='store_true')
-    parser.add_argument('--metric', required=True, choices=['inner_prod', 'l2_dist'])
+    parser.add_argument('--metric', default='inner_prod', choices=['inner_prod', 'l2_dist'])
     args = parser.parse_args()
 
     if args.plot:
