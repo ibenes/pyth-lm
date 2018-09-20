@@ -5,6 +5,8 @@ import sys
 
 import numpy as np
 
+from embeddings_io import emb_line_iterator
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--transform', required=True)
@@ -12,10 +14,7 @@ if __name__ == '__main__':
 
     transform = np.loadtxt(args.transform)
 
-    for line in sys.stdin:
-        fields = line.split()
-        key = fields[0]
-        embedding = np.asarray([float(e) for e in fields[1:]])
+    for key, embedding in emb_line_iterator(sys.stdin):
         projected = embedding @ transform
 
         emb_str = " ".join(["{:.4f}".format(e) for e in projected])
