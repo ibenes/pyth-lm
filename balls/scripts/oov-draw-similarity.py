@@ -7,6 +7,8 @@ import sys
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
+from embeddings_io import all_embs_from_file
+
 
 def area_under_curve(xs_in, ys_in):
     assert(len(xs_in) == len(ys_in))
@@ -44,27 +46,6 @@ def eer(xs, ys):
             eer = lambda_i * xs[i] + (1.0-lambda_i)*xs[i+1]
 
     return eer
-
-
-def emb_line_iterator(f):
-    for line in sys.stdin:
-        fields = line.split()
-        key = fields[0]
-        embedding = np.asarray([float(e) for e in fields[1:]])
-
-
-        yield key, embedding
-
-
-def all_embs_from_file(f):
-    embs = []
-    keys = []
-
-    for key, emb in emb_line_iterator(f):
-        embs.append(emb)
-        keys.append(key)
-
-    return keys, np.stack(embs)
 
 
 def trial_scores_list(keys, similarities):
