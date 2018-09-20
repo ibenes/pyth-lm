@@ -5,7 +5,7 @@ import sys
 
 import numpy as np
 
-from embeddings_io import emb_line_iterator
+from embeddings_io import emb_line_iterator, str_from_embedding
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -17,5 +17,5 @@ if __name__ == '__main__':
     for key, embedding in emb_line_iterator(sys.stdin):
         projected = embedding @ transform
 
-        emb_str = " ".join(["{:.4f}".format(e) for e in projected])
+        emb_str = str_from_embedding(projected)
         sys.stdout.write("{} {}\n".format(key, emb_str))

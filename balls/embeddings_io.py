@@ -19,3 +19,7 @@ def all_embs_from_file(f):
         keys.append(key)
 
     return keys, np.stack(embs)
+
+
+def str_from_embedding(emb):
+    return " ".join(["{:.4f}".format(e) for e in emb])
