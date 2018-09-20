@@ -15,9 +15,8 @@ def relevant_prefix(transcript, word_of_interest):
     return transcript[:first_oov_oi_loc]
 
 
-def tensor_from_words(words, lm):
-    tensor = torch.LongTensor([lm.vocab[w] for w in words]).view(1, -1)
-
+def tensor_from_words(words, vocab):
+    tensor = torch.LongTensor([vocab[w] for w in words]).view(1, -1)
     return torch.autograd.Variable(tensor)
 
 
@@ -28,7 +27,7 @@ def emb_from_string(transcript, lm):
     prefix = relevant_prefix(transcript, args.unk_oi)
     prefix = ["</s>"] + prefix
 
-    th_data = tensor_from_words(prefix, lm)
+    th_data = tensor_from_words(prefix, lm.vocab)
     h0 = lm.model.init_hidden(th_data.size(0))
     emb, h = lm.model(th_data, h0)
     out_emb = emb[0][-1].data
