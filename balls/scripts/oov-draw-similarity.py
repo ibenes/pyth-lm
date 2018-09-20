@@ -52,8 +52,6 @@ def emb_line_iterator(f):
         key = fields[0]
         embedding = np.asarray([float(e) for e in fields[1:]])
 
-        if args.length_norm:
-            embedding /= np.linalg.norm(embedding)
 
         yield key, embedding
 
@@ -99,6 +97,8 @@ if __name__ == '__main__':
         import matplotlib.pyplot as plt
 
     keys, embs = all_embs_from_file(sys.stdin)
+    if args.length_norm:
+        embs /= np.linalg.norm(embs, axis=1)[:, None]
 
     if args.metric == 'inner_prod':
         similarities = embs @ embs.T
