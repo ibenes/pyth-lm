@@ -142,7 +142,7 @@ if __name__ == '__main__':
     miss_rate = mis_fas[:, 0]
     fa_rate = mis_fas[:, 1]
     print("Area under DET curve (in linspace): {:.5f}".format(area_under_curve(miss_rate, fa_rate)))
-    print("EER: {:.5f}".format(100.0*eer(miss_rate, fa_rate)))
+    print("EER: {:.2f}".format(100.0*eer(miss_rate, fa_rate)))
 
 
     if args.plot:
