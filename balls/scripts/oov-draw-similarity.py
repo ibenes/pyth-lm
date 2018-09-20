@@ -52,6 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-det', action='store_true')
     parser.add_argument('--eps', type=float, default=1e-3, help='to prevent log of zero')
     parser.add_argument('--plot', action='store_true')
+    parser.add_argument('--metric', required=True, choices=['inner_prod', 'l2_dist'])
     args = parser.parse_args()
 
     if args.plot:
@@ -71,8 +72,10 @@ if __name__ == '__main__':
         embs_list.append(embedding)
 
     embs = np.stack(embs_list)
-    # similarities = embs @ embs.T
-    similarities = -squareform(pdist(embs))
+    if args.metric == 'inner_prod':
+        similarities = embs @ embs.T
+    elif args.metric == 'l2_dist':
+        similarities = -squareform(pdist(embs))
 
     score_tg = []
     for i in range(len(keys)):
