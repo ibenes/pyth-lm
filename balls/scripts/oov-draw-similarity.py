@@ -88,6 +88,11 @@ if __name__ == '__main__':
     elif args.metric == 'l2_dist':
         similarities = -squareform(pdist(embs))
 
+    if args.plot:
+        plt.figure()
+        plt.imshow(similarities)
+        plt.colorbar()
+
     score_tg = trial_scores_list(keys, similarities)
 
     nb_trials = len(score_tg)
@@ -119,12 +124,6 @@ if __name__ == '__main__':
         mis_fas.append([(nb_misses+args.eps)/nb_trials, (nb_false_alarms+args.eps)/nb_trials])
 
     mis_fas = np.asarray(mis_fas)
-
-    if args.plot:
-        plt.figure()
-        plt.imshow(similarities)
-        plt.colorbar()
-
     miss_rate = mis_fas[:, 0]
     fa_rate = mis_fas[:, 1]
 
