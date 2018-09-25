@@ -72,6 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--eps', type=float, default=1e-3, help='to prevent log of zero')
     parser.add_argument('--plot', action='store_true')
     parser.add_argument('--baseline', action='store_true')
+    parser.add_argument('--free-axis', action='store_true')
     parser.add_argument('--metric', default='inner_prod', choices=['inner_prod', 'l2_dist'])
     args = parser.parse_args()
 
@@ -128,11 +129,11 @@ if __name__ == '__main__':
     fa_rate = mis_fas[:, 1]
 
     area_line_fmt = "Area under DET curve (in linspace): {:.5f}"
-    eer_line_fmt = "EER: {:.2f}"
+    eer_line_fmt = "EER: {:.2f} %"
 
     if args.baseline:
         area_line_fmt += " / {:.5f}"
-        eer_line_fmt += " / {:.2f}"
+        eer_line_fmt += " / {:.2f} %"
 
     print(area_line_fmt.format(
         area_under_curve(miss_rate, fa_rate),
@@ -159,7 +160,8 @@ if __name__ == '__main__':
 
             plt.legend()
 
-        plt.axis('scaled')
+        if not args.free_axis:
+            plt.axis('scaled')
         plt.xlim(left=0.0)
         plt.ylim(bottom=0.0)
         plt.xlabel('miss rate')
