@@ -71,6 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-det', action='store_true')
     parser.add_argument('--eps', type=float, default=1e-3, help='to prevent log of zero')
     parser.add_argument('--plot', action='store_true')
+    parser.add_argument('--plot-baseline', action='store_true')
     parser.add_argument('--metric', default='inner_prod', choices=['inner_prod', 'l2_dist'])
     args = parser.parse_args()
 
@@ -125,14 +126,25 @@ if __name__ == '__main__':
     print("Area under DET curve (in linspace): {:.5f}".format(area_under_curve(miss_rate, fa_rate)))
     print("EER: {:.2f}".format(100.0*eer(miss_rate, fa_rate)))
 
-
     if args.plot:
         plt.figure()
 
         if args.log_det:
-            plt.loglog(miss_rate, fa_rate)
+            plt_func = plt.loglog
         else:
-            plt.plot(miss_rate, fa_rate)
+            plt_func = plt.plot
+        det_handle = plt_func(miss_rate, fa_rate, label='System')
+
+        if args.plot_baseline:
+            x_max = nb_same / nb_trials
+            y_max = nb_different / nb_trials
+            xs = np.linspace(0, x_max)
+            ys = np.linspace(y_max, 0)
+            baseline_handle = plt_func(xs, ys, label='Baseline')
+
+
+        if args.plot_baseline:
+            plt.legend()
 
         plt.axis('scaled')
         plt.xlim(left=0.0)
