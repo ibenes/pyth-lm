@@ -71,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-det', action='store_true')
     parser.add_argument('--eps', type=float, default=1e-3, help='to prevent log of zero')
     parser.add_argument('--plot', action='store_true')
-    parser.add_argument('--plot-baseline', action='store_true')
+    parser.add_argument('--baseline', action='store_true')
     parser.add_argument('--metric', default='inner_prod', choices=['inner_prod', 'l2_dist'])
     args = parser.parse_args()
 
@@ -92,6 +92,9 @@ if __name__ == '__main__':
     nb_trials = len(score_tg)
     nb_same = sum(s[1] for s in score_tg)
     nb_different = nb_trials - nb_same
+
+    max_miss_rate = nb_same / nb_trials
+    max_fa_rate = nb_different / nb_trials
 
     print("# positive trials: {} ({:.1f} %)".format(nb_same, 100.0*nb_same/nb_trials))
     print("# negative trials: {} ({:.1f} %)".format(nb_different, 100.0*nb_different/nb_trials))
@@ -123,8 +126,22 @@ if __name__ == '__main__':
 
     miss_rate = mis_fas[:, 0]
     fa_rate = mis_fas[:, 1]
-    print("Area under DET curve (in linspace): {:.5f}".format(area_under_curve(miss_rate, fa_rate)))
-    print("EER: {:.2f}".format(100.0*eer(miss_rate, fa_rate)))
+
+    area_line_fmt = "Area under DET curve (in linspace): {:.5f}"
+    eer_line_fmt = "EER: {:.2f}"
+
+    if args.baseline:
+        area_line_fmt += " / {:.5f}"
+        eer_line_fmt += " / {:.2f}"
+
+    print(area_line_fmt.format(
+        area_under_curve(miss_rate, fa_rate),
+        max_miss_rate * max_fa_rate / 2.0
+    ))
+    print(eer_line_fmt.format(
+        100.0*eer(miss_rate, fa_rate),
+        100.0*max_miss_rate * max_fa_rate / (max_miss_rate + max_fa_rate)
+    ))
 
     if args.plot:
         plt.figure()
@@ -135,15 +152,11 @@ if __name__ == '__main__':
             plt_func = plt.plot
         det_handle = plt_func(miss_rate, fa_rate, label='System')
 
-        if args.plot_baseline:
-            x_max = nb_same / nb_trials
-            y_max = nb_different / nb_trials
-            xs = np.linspace(0, x_max)
-            ys = np.linspace(y_max, 0)
+        if args.baseline:
+            xs = np.linspace(0, max_miss_rate)
+            ys = np.linspace(max_fa_rate, 0)
             baseline_handle = plt_func(xs, ys, label='Baseline')
 
-
-        if args.plot_baseline:
             plt.legend()
 
         plt.axis('scaled')
