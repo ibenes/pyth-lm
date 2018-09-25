@@ -131,18 +131,30 @@ if __name__ == '__main__':
     area_line_fmt = "Area under DET curve (in linspace): {:.5f}"
     eer_line_fmt = "EER: {:.2f} %"
 
-    if args.baseline:
-        area_line_fmt += " / {:.5f}"
-        eer_line_fmt += " / {:.2f} %"
+    system_au_det = area_under_curve(miss_rate, fa_rate)
+    system_eer = eer(miss_rate, fa_rate)
 
-    print(area_line_fmt.format(
-        area_under_curve(miss_rate, fa_rate),
-        max_miss_rate * max_fa_rate / 2.0
-    ))
-    print(eer_line_fmt.format(
-        100.0*eer(miss_rate, fa_rate),
-        100.0*max_miss_rate * max_fa_rate / (max_miss_rate + max_fa_rate)
-    ))
+    if args.baseline:
+        area_line_fmt += " / {:.5f} / {:.2f} %"
+        eer_line_fmt += " / {:.2f} % / {:.2f} %"
+
+        baseline_au_det = max_miss_rate * max_fa_rate / 2.0
+        baseline_eer = max_miss_rate * max_fa_rate / (max_miss_rate + max_fa_rate)
+
+        print(area_line_fmt.format(
+            system_au_det,
+            baseline_eer,
+            100.0 * (1.0 - system_au_det/baseline_au_det)
+        ))
+        print(eer_line_fmt.format(
+            100.0*system_eer,
+            100.0*baseline_eer,
+            100.0 * (1.0 - system_eer/baseline_eer)
+        ))
+
+    else:
+        print(area_line_fmt.format(system_au_det))
+        print(eer_line_fmt.format(100.0*system_eer))
 
     if args.plot:
         plt.figure()
