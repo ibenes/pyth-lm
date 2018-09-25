@@ -51,6 +51,11 @@ def words_from_idx(idx_list):
         else:
             raise RuntimeError("got into an impossible state {}".format(state))
 
+    if state == ST_OOV_INTEREST:
+        raise ValueError("Incomplete OOV of interest on line '{}'".format(idx_list))
+    elif state == ST_OOV_OTHER:
+        raise ValueError("Incomplete OOV (not of interest) on line '{}'".format(idx_list))
+
     return transcript
 
 
@@ -74,6 +79,11 @@ if __name__ == '__main__':
         fields = line.split()
         key = fields[0]
         idxes = [int(idx) for idx in fields[1:]]
-        transcript = words_from_idx(idxes)
+
+        try:
+            transcript = words_from_idx(idxes)
+        except ValueError:
+            sys.stderr.write("WARNING: there was a problem with input line {} (counting from 0)\n".format(line_no))
+            continue
 
         sys.stdout.write("{} {}\n".format(key, " ".join(str(w) for w in transcript)))
