@@ -56,6 +56,6 @@ if __name__ == '__main__':
     score_tg = trial_scores_list(keys, similarities)
 
     det = DETCurve(score_tg, args.baseline)
-    det.textual_report()
+    sys.stdout.write(det.textual_report())
     if args.plot:
         det.plot(args.log_det, not args.free_axis)

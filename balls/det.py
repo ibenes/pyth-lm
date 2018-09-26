@@ -77,6 +77,7 @@ class DETCurve:
         self._fa_rate = mis_fas[:, 1]
 
     def textual_report(self):
+        report = ""
         area_line_fmt = "Area under DET curve (in linspace): {:.5f}"
         eer_line_fmt = "EER: {:.2f} %"
 
@@ -90,20 +91,22 @@ class DETCurve:
             baseline_au_det = self._max_miss_rate * self._max_fa_rate / 2.0
             baseline_eer = self._max_miss_rate * self._max_fa_rate / (self._max_miss_rate + self._max_fa_rate)
 
-            print(area_line_fmt.format(
+            report += area_line_fmt.format(
                 system_au_det,
                 baseline_au_det,
                 100.0 * (1.0 - system_au_det/baseline_au_det)
-            ))
-            print(eer_line_fmt.format(
+            ) + '\n'
+            report += eer_line_fmt.format(
                 100.0*system_eer,
                 100.0*baseline_eer,
                 100.0 * (1.0 - system_eer/baseline_eer)
-            ))
+            ) + '\n'
 
         else:
-            print(area_line_fmt.format(system_au_det))
-            print(eer_line_fmt.format(100.0*system_eer))
+            report += area_line_fmt.format(system_au_det) + '\n'
+            report += eer_line_fmt.format(100.0*system_eer) + '\n'
+
+        return report
 
     def plot(self, log_axis, scaled_axis):
         import matplotlib.pyplot as plt
@@ -113,12 +116,12 @@ class DETCurve:
             plt_func = plt.loglog
         else:
             plt_func = plt.plot
-        det_handle = plt_func(self._miss_rate, self._fa_rate, label='System')
+        plt_func(self._miss_rate, self._fa_rate, label='System')
 
         if self._baseline:
             xs = np.linspace(0, self._max_miss_rate)
             ys = np.linspace(self._max_fa_rate, 0)
-            baseline_handle = plt_func(xs, ys, label='Baseline')
+            plt_func(xs, ys, label='Baseline')
 
             plt.legend()
 
