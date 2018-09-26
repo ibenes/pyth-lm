@@ -26,10 +26,12 @@ def str_from_embedding(emb):
     return " ".join(["{:.4f}".format(e) for e in emb])
 
 
-def all_embs_by_key(f, shall_be_collected=lambda w: True):
+def all_embs_by_key(f, shall_be_collected=lambda w: True, key_transform=lambda w: w):
     collection: Dict[str, List[np.ndarray]] = {}
 
     for word, emb in emb_line_iterator(f):
+        word = key_transform(word)
+
         if not shall_be_collected(word):
             continue
 
