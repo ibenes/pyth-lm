@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
         print(area_line_fmt.format(
             system_au_det,
-            baseline_eer,
+            baseline_au_det,
             100.0 * (1.0 - system_au_det/baseline_au_det)
         ))
         print(eer_line_fmt.format(
