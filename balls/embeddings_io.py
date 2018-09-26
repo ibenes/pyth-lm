@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Dict, List
 
 
 def emb_line_iterator(f):
@@ -23,3 +24,21 @@ def all_embs_from_file(f):
 
 def str_from_embedding(emb):
     return " ".join(["{:.4f}".format(e) for e in emb])
+
+
+def all_embs_by_key(f, shall_be_collected=lambda w: True):
+    collection: Dict[str, List[np.ndarray]] = {}
+
+    for word, emb in emb_line_iterator(f):
+        if not shall_be_collected(word):
+            continue
+
+        if word in collection:
+            collection[word].append(emb)
+        else:
+            collection[word] = [emb]
+
+    for w in collection:
+        collection[w] = np.stack(collection[w])
+
+    return collection

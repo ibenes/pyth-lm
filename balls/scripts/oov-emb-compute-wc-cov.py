@@ -2,28 +2,35 @@
 
 import argparse
 import sys
-from typing import Dict, List
 
 import numpy as np
 from scipy.linalg import fractional_matrix_power
 
-from embeddings_io import emb_line_iterator
+from embeddings_io import all_embs_by_key
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--show-cov', action='store_true')
+    parser.add_argument(
+        '--filter',
+        help='file with words. If present, cov_wc will be computed exclusively from these'
+    )
     args = parser.parse_args()
 
-    collection: Dict[str, List[np.ndarray]] = {}
+    if args.filter:
+        with open(args.filter) as f:
+            words_to_collect = f.read().split()
+        shall_be_collected = lambda w: w in words_to_collect
+    else:
+        shall_be_collected = lambda _: True
 
-    for word, emb in emb_line_iterator(sys.stdin):
-        if word in collection:
-            collection[word].append(emb)
-        else:
-            collection[word] = [emb]
-
-    for w in collection:
-        collection[w] = np.stack(collection[w])
+    collection = all_embs_by_key(sys.stdin, shall_be_collected)
+    sys.stderr.write(
+        "INFO: Used total of {} words, {} unique\n".format(
+            sum(block.shape[0] for block in collection.values()),
+            len(collection)
+        )
+    )
 
     centered = []
     for w in collection:
