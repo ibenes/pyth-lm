@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import sys
 
 
@@ -21,12 +22,30 @@ def levenshtein_distance(s1, s2):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--lexicon', help='Compute edit dist. in a phonetic space given by the LEXICON')
+    args = parser.parse_args()
+
+    lexicon = {}
+    if args.lexicon:
+        with open(args.lexicon) as f:
+            for line in f:
+                fields = line.split()
+                lexicon[fields[0]] = fields[1:]
+
     words = sys.stdin.read().split()
     unique_pairs = [(words[i], words[j]) for i in range(len(words)) for j in range(i)]
-    pair_distances = sorted(
-        [(a, b, levenshtein_distance(a, b)) for a, b in unique_pairs],
-        key=lambda pair_with_dist: pair_with_dist[2]
-    )
+
+    if args.lexicon:
+        pair_distances = sorted(
+            [(a, b, levenshtein_distance(lexicon[a], lexicon[b])) for a, b in unique_pairs],
+            key=lambda pair_with_dist: pair_with_dist[2]
+        )
+    else:
+        pair_distances = sorted(
+            [(a, b, levenshtein_distance(a, b)) for a, b in unique_pairs],
+            key=lambda pair_with_dist: pair_with_dist[2]
+        )
 
     for a, b, d in pair_distances:
         sys.stdout.write("{} {} {}\n".format(a, b, d))
