@@ -33,9 +33,6 @@ if __name__ == '__main__':
 
     emb_collection = all_embs_by_key(sys.stdin, key_transform=lambda w: w.split(':')[0])
 
-    # if args.metric == 'inner_prod':
-    #     similarities = embs @ embs.T
-
     score_tg = []
     for w in emb_collection:
         embs = emb_collection[w]
