@@ -113,7 +113,7 @@ class DETCurve:
 
         return report
 
-    def plot(self, log_axis, scaled_axis):
+    def plot(self, log_axis, scaled_axis, eer_line):
         import matplotlib.pyplot as plt
         plt.figure()
 
@@ -129,6 +129,11 @@ class DETCurve:
             plt_func(xs, ys, label='Baseline')
 
             plt.legend()
+
+        if eer_line:
+            print("[debug]")
+            endpoint = min([self._max_fa_rate, self._max_miss_rate])
+            plt_func([0.0, endpoint], [0.0, endpoint], color='k', linestyle='-.', linewidth=0.75)
 
         if scaled_axis:
             plt.axis('scaled')

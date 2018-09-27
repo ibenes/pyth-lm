@@ -35,6 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--plot', action='store_true')
     parser.add_argument('--baseline', action='store_true')
     parser.add_argument('--free-axis', action='store_true')
+    parser.add_argument('--eer-line', action='store_true')
     parser.add_argument('--metric', default='inner_prod', choices=['inner_prod', 'l2_dist'])
     args = parser.parse_args()
 
@@ -58,4 +59,4 @@ if __name__ == '__main__':
     det = DETCurve(score_tg, args.baseline, max_det_points=200)
     sys.stdout.write(det.textual_report())
     if args.plot:
-        det.plot(args.log_det, not args.free_axis)
+        det.plot(args.log_det, not args.free_axis, args.eer_line)
