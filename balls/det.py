@@ -131,7 +131,6 @@ class DETCurve:
             plt.legend()
 
         if eer_line:
-            print("[debug]")
             endpoint = min([self._max_fa_rate, self._max_miss_rate])
             plt_func([0.0, endpoint], [0.0, endpoint], color='k', linestyle='-.', linewidth=0.75)
 
