@@ -41,7 +41,7 @@ def eer(xs, ys):
 
 
 class DETCurve:
-    def __init__(self, score_tg, baseline):
+    def __init__(self, score_tg, baseline, max_det_points=0):
         self._baseline = baseline
 
         nb_trials = len(score_tg)
@@ -71,6 +71,11 @@ class DETCurve:
                 nb_correct_different += 1
 
             mis_fas.append([nb_misses/nb_trials, nb_false_alarms/nb_trials])
+
+        if max_det_points > 0:
+            assert(max_det_points > 1)
+            subsampling_coeff = len(mis_fas) // max_det_points
+            mis_fas = mis_fas[::subsampling_coeff] + [mis_fas[-1]]
 
         mis_fas = np.asarray(mis_fas)
         self._miss_rate = mis_fas[:, 0]

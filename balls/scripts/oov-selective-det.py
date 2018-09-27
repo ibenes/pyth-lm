@@ -50,7 +50,7 @@ if __name__ == '__main__':
         similarities = a_embs @ b_embs.T
         score_tg.extend([(s, 0) for s in similarities.flat])
 
-    det = DETCurve(score_tg, args.baseline)
+    det = DETCurve(score_tg, args.baseline, max_det_points=200)
     sys.stdout.write(det.textual_report())
     if args.plot:
         det.plot(args.log_det, not args.free_axis)
