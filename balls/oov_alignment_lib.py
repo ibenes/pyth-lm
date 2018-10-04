@@ -15,6 +15,8 @@ class AlignmentExtractor:
         pass
 
     def extract(self, a, b, moves_taken):
+        self._a = a
+        self._b = b
         self._ptr_a = moves_taken.shape[0] - 1
         self._ptr_b = moves_taken.shape[1] - 1
         self._alignment = []
@@ -24,24 +26,15 @@ class AlignmentExtractor:
             move = moves_taken[self._ptr_a, self._ptr_b]
 
             if move == VERTICAL_MOVE:
-                self._ptr_a -= 1
-                self._words_a.append(a[self._ptr_a])
+                self._vertical_move()
             elif move == HORIZONAL_MOVE:
-                self._ptr_b -= 1
-                self._words_b.append(b[self._ptr_b])
+                self._horizontal_move()
             else:
-                if self._ptr_a >= 1:
-                    self._words_a.append(a[self._ptr_a-1])
-                if self._ptr_b >= 1:
-                    self._words_b.append(b[self._ptr_b-1])
-
-                self._ptr_a -= 1
-                self._ptr_b -= 1
-
+                self._diagonal_move()
                 if self._ptr_a == 0 or self._ptr_b == 0:
                     continue  # no flushing
-
                 self._flush()
+
         self._flush()
 
         return list(reversed(self._alignment))
@@ -50,6 +43,23 @@ class AlignmentExtractor:
         self._alignment.append((list(reversed(self._words_a)), list(reversed(self._words_b))))
         self._words_a = []
         self._words_b = []
+
+    def _vertical_move(self):
+        self._ptr_a -= 1
+        self._words_a.append(self._a[self._ptr_a])
+
+    def _horizontal_move(self):
+        self._ptr_b -= 1
+        self._words_b.append(self._b[self._ptr_b])
+
+    def _diagonal_move(self):
+        if self._ptr_a >= 1:
+            self._words_a.append(self._a[self._ptr_a-1])
+        if self._ptr_b >= 1:
+            self._words_b.append(self._b[self._ptr_b-1])
+
+        self._ptr_a -= 1
+        self._ptr_b -= 1
 
 
 def align(a, b):
