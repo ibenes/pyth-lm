@@ -10,54 +10,57 @@ HORIZONAL_MOVE = 1
 VERTICAL_MOVE = -1
 
 
-class AlignmentExtractor:
-    def __init__(self, moves_taken):
-        self._ptr_a = moves_taken.shape[0] - 1
-        self._ptr_b = moves_taken.shape[1] - 1
-        self._alignment = []
-        self._words_a = []
-        self._words_b = []
-        while self._ptr_a != 0 or self._ptr_b != 0:
-            move = moves_taken[self._ptr_a, self._ptr_b]
+def path_from_moves(moves_taken):
+    ptr_a = moves_taken.shape[0] - 1
+    ptr_b = moves_taken.shape[1] - 1
 
-            if move == VERTICAL_MOVE:
-                self._vertical_move()
-            elif move == HORIZONAL_MOVE:
-                self._horizontal_move()
-            else:
-                self._diagonal_move()
-                if self._ptr_a == 0 or self._ptr_b == 0:
-                    continue  # no flushing
-                self._flush()
+    path = []
+    while ptr_a != 0 or ptr_b != 0:
+        move = int(moves_taken[ptr_a, ptr_b])
+        path.append(move)
 
-        self._flush()
+        if move == VERTICAL_MOVE:
+            ptr_a -= 1
+        elif move == HORIZONAL_MOVE:
+            ptr_b -= 1
+        else:
+            ptr_a -= 1
+            ptr_b -= 1
 
-        self._alignment = list(reversed(self._alignment))
+    return list(reversed(path))
 
-    def alignment(self):
-        return self._alignment
 
-    def _flush(self):
-        self._alignment.append((list(reversed(self._words_a)), list(reversed(self._words_b))))
-        self._words_a = []
-        self._words_b = []
+def ind_ali_from_path(path):
+    alignment = []
+    ptr_a = 0
+    ptr_b = 0
+    inds_a = []
+    inds_b = []
+    for move in path:
+        if move == VERTICAL_MOVE:
+            inds_a.append(ptr_a)
+            ptr_a += 1
+        elif move == HORIZONAL_MOVE:
+            inds_b.append(ptr_b)
+            ptr_b += 1
+        else:
+            inds_a.append(ptr_a)
+            inds_b.append(ptr_b)
+            ptr_a += 1
+            ptr_b += 1
 
-    def _vertical_move(self):
-        self._ptr_a -= 1
-        self._words_a.append(self._ptr_a)
+            alignment.append((inds_a, inds_b))
+            inds_a = []
+            inds_b = []
 
-    def _horizontal_move(self):
-        self._ptr_b -= 1
-        self._words_b.append(self._ptr_b)
+    if len(inds_a) > 0 or len(inds_b) > 0:
+        assert(len(inds_a) == 0 or len(inds_b) == 0)
+        alignment[-1] = (
+            alignment[-1][0] + inds_a,
+            alignment[-1][1] + inds_b,
+        )
 
-    def _diagonal_move(self):
-        if self._ptr_a >= 1:
-            self._words_a.append(self._ptr_a-1)
-        if self._ptr_b >= 1:
-            self._words_b.append(self._ptr_b-1)
-
-        self._ptr_a -= 1
-        self._ptr_b -= 1
+    return alignment
 
 
 def local_costs_from_strings(a, b):
@@ -117,10 +120,6 @@ def word_ali_from_index_ali(a, b, index_alignment):
 def align(a, b):
     local_costs = local_costs_from_strings(a, b)
     moves_taken = path_from_local_costs(local_costs)
-    # assert(alignment[0] == ([], []))
-    # alignment = alignment[1:]
-
-    # print(partial_costs)
-    # print(moves_taken)
-    index_alignment = AlignmentExtractor(moves_taken).alignment()
+    path = path_from_moves(moves_taken)
+    index_alignment = ind_ali_from_path(path)
     return word_ali_from_index_ali(a, b, index_alignment)
