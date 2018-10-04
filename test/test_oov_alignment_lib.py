@@ -34,3 +34,13 @@ class AlignTest(TestCase):
         ]
 
         self.assertEqual(align(a, b), expected)
+
+    def test_single_insertion(self):
+        a = "a".split()
+        b = "a b".split()
+
+        expected = [
+            (['a'], ['a', 'b']),
+        ]
+
+        self.assertEqual(align(a, b), expected)

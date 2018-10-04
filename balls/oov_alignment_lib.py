@@ -59,7 +59,7 @@ def align(a, b):
             words_a.append(a[ptr_a-1])
         elif move == HORIZONAL_MOVE:
             ptr_b -= 1
-            words_b.append(b[ptr_b-1])
+            words_b.append(b[ptr_b])
         else:
             if ptr_a >= 1:
                 words_a.append(a[ptr_a-1])
