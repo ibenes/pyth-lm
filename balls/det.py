@@ -113,7 +113,7 @@ class DETCurve:
 
         return report
 
-    def plot(self, log_axis, scaled_axis, eer_line):
+    def plot(self, log_axis, scaled_axis, eer_line, filename):
         import matplotlib.pyplot as plt
         plt.figure()
 
@@ -141,4 +141,7 @@ class DETCurve:
         plt.xlabel('miss rate')
         plt.ylabel('FA rate')
 
-        plt.show()
+        if filename:
+            plt.savefig(filename)
+        else:
+            plt.show()
