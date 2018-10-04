@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from os.path import commonprefix
 import sys
 
 import numpy as np
@@ -14,6 +15,14 @@ def extract_unique_scores(square_scores):
     return square_scores[np.triu_indices(square_scores.shape[0], k=0)]
 
 
+def only_differ_in_suffix(a, b, suffix_maxlen=1):
+    prefix = commonprefix([a, b])
+    a_suffix = a[len(prefix):]
+    b_suffix = a[len(prefix):]
+
+    return max([len(a_suffix), len(b_suffix)]) <= suffix_maxlen
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--log-det', action='store_true')
@@ -21,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--plot', action='store_true')
     parser.add_argument('--baseline', action='store_true')
     parser.add_argument('--trials', required=True, help='file with word pairs to compare')
+    parser.add_argument('--disregard-suffixes', action='store_true')
     parser.add_argument('--free-axis', action='store_true')
     parser.add_argument('--eer-line', action='store_true')
     parser.add_argument('--metric', default='inner_prod', choices=['inner_prod'])
@@ -41,6 +51,9 @@ if __name__ == '__main__':
 
     for a, b in trial_pairs:
         if a not in emb_collection or b not in emb_collection:
+            continue
+
+        if args.disregard_suffixes and only_differ_in_suffix(a, b):
             continue
 
         a_embs = emb_collection[a]
