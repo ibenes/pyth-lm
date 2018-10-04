@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 
 def word_distance(a, b):
@@ -129,38 +130,43 @@ def extract_mismatch(ali):
     mismatches = []
     last_was_mismatched = False
     for a, b in ali:
+        do_extend = copy.deepcopy(last_was_mismatched)
+        mismatch = None
+
         if len(a) == len(b) and a != b:
             assert(len(a) == 1 and len(b) == 1)
-            if last_was_mismatched:
-                mismatches[-1][0].extend(a)
-                mismatches[-1][1].extend(b)
-            else:
-                mismatches.append((a, b))
-
+            mismatch = (a, b)
             last_was_mismatched = True
         elif len(a) < len(b):
             assert(len(a) == 1)
             if a[0] == b[0]:
-                mismatches.append(([], b[1:]))
+                mismatch = ([], b[1:])
+                last_was_mismatched = True
             elif a[0] == b[-1]:
-                mismatches.append(([], b[:-1]))
+                mismatch = ([], b[:-1])
+                last_was_mismatched = False
             else:
-                mismatches.append((a, b))
-            last_was_mismatched = True
+                mismatch = (a, b)
+                last_was_mismatched = True
         elif len(a) > len(b):
             assert(len(b) == 1)
-            if last_was_mismatched:
-                if a[-1] == b[0]:
-                    mismatches[-1][0].extend(a[:-1])
+            if a[0] == b[0]:
+                mismatch = (a[1:], [])
+                last_was_mismatched = True
+            elif a[-1] == b[0]:
+                mismatch = (a[:-1], [])
+                last_was_mismatched = False
             else:
-                if a[0] == b[0]:
-                    mismatches.append((a[1:], []))
-                elif a[-1] == b[0]:
-                    mismatches.append((a[:-1], []))
-                else:
-                    mismatches.append((a, b))
-            last_was_mismatched = False
+                mismatch = (a, b)
+                last_was_mismatched = True
         else:
             last_was_mismatched = False
+            continue  # skip mismatch application
+
+        if do_extend:
+            mismatches[-1][0].extend(mismatch[0])
+            mismatches[-1][1].extend(mismatch[1])
+        else:
+            mismatches.append(mismatch)
 
     return mismatches
