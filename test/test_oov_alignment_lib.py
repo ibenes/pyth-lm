@@ -218,3 +218,13 @@ class MismatchExtractionTest(TestCase):
         ]
 
         self.assertEqual(extract_mismatch(ali), expectation)
+
+    def test_deletion_only_reversed(self):
+        ali = [
+            (['a', 'b'], ['b']),
+        ]
+        expectation = [
+            (['a'], []),
+        ]
+
+        self.assertEqual(extract_mismatch(ali), expectation)
