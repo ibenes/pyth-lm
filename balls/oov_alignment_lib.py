@@ -126,42 +126,49 @@ def align(a, b):
     return word_ali_from_index_ali(a, b, index_alignment)
 
 
+def single_pair_mismatch(a, b):
+    mismatch = None
+    if len(a) == len(b) and a != b:
+        assert(len(a) == 1 and len(b) == 1)
+        mismatch = (a, b)
+        ends_with_mismatch = True
+    elif len(a) < len(b):
+        assert(len(a) == 1)
+        if a[0] == b[0]:
+            mismatch = ([], b[1:])
+            ends_with_mismatch = True
+        elif a[0] == b[-1]:
+            mismatch = ([], b[:-1])
+            ends_with_mismatch = False
+        else:
+            mismatch = (a, b)
+            ends_with_mismatch = True
+    elif len(a) > len(b):
+        assert(len(b) == 1)
+        if a[0] == b[0]:
+            mismatch = (a[1:], [])
+            ends_with_mismatch = True
+        elif a[-1] == b[0]:
+            mismatch = (a[:-1], [])
+            ends_with_mismatch = False
+        else:
+            mismatch = (a, b)
+            ends_with_mismatch = True
+    else:
+        ends_with_mismatch = False
+
+    return mismatch, ends_with_mismatch
+
+
 def extract_mismatch(ali):
     mismatches = []
     last_was_mismatched = False
     for a, b in ali:
         do_extend = copy.deepcopy(last_was_mismatched)
-        mismatch = None
+        mismatch, last_was_mismatched = single_pair_mismatch(a, b)
 
-        if len(a) == len(b) and a != b:
-            assert(len(a) == 1 and len(b) == 1)
-            mismatch = (a, b)
-            last_was_mismatched = True
-        elif len(a) < len(b):
-            assert(len(a) == 1)
-            if a[0] == b[0]:
-                mismatch = ([], b[1:])
-                last_was_mismatched = True
-            elif a[0] == b[-1]:
-                mismatch = ([], b[:-1])
-                last_was_mismatched = False
-            else:
-                mismatch = (a, b)
-                last_was_mismatched = True
-        elif len(a) > len(b):
-            assert(len(b) == 1)
-            if a[0] == b[0]:
-                mismatch = (a[1:], [])
-                last_was_mismatched = True
-            elif a[-1] == b[0]:
-                mismatch = (a[:-1], [])
-                last_was_mismatched = False
-            else:
-                mismatch = (a, b)
-                last_was_mismatched = True
-        else:
-            last_was_mismatched = False
-            continue  # skip mismatch application
+        if not mismatch:
+            continue
 
         if do_extend:
             mismatches[-1][0].extend(mismatch[0])
