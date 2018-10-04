@@ -11,9 +11,7 @@ VERTICAL_MOVE = -1
 
 
 class AlignmentExtractor:
-    def __init__(self, a, b, moves_taken):
-        self._a = a
-        self._b = b
+    def __init__(self, moves_taken):
         self._ptr_a = moves_taken.shape[0] - 1
         self._ptr_b = moves_taken.shape[1] - 1
         self._alignment = []
@@ -46,17 +44,17 @@ class AlignmentExtractor:
 
     def _vertical_move(self):
         self._ptr_a -= 1
-        self._words_a.append(self._a[self._ptr_a])
+        self._words_a.append(self._ptr_a)
 
     def _horizontal_move(self):
         self._ptr_b -= 1
-        self._words_b.append(self._b[self._ptr_b])
+        self._words_b.append(self._ptr_b)
 
     def _diagonal_move(self):
         if self._ptr_a >= 1:
-            self._words_a.append(self._a[self._ptr_a-1])
+            self._words_a.append(self._ptr_a-1)
         if self._ptr_b >= 1:
-            self._words_b.append(self._b[self._ptr_b-1])
+            self._words_b.append(self._ptr_b-1)
 
         self._ptr_a -= 1
         self._ptr_b -= 1
@@ -103,4 +101,11 @@ def align(a, b):
 
     # print(partial_costs)
     # print(moves_taken)
-    return AlignmentExtractor(a, b, moves_taken).alignment()
+    index_alignment = AlignmentExtractor(moves_taken).alignment()
+    word_alignment = []
+    for inds_a, inds_b in index_alignment:
+        word_alignment.append((
+            [a[ind_a] for ind_a in inds_a],
+            [b[ind_b] for ind_b in inds_b],
+        ))
+    return word_alignment
