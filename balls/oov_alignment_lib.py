@@ -11,10 +11,7 @@ VERTICAL_MOVE = -1
 
 
 class AlignmentExtractor:
-    def __init__(self):
-        pass
-
-    def extract(self, a, b, moves_taken):
+    def __init__(self, a, b, moves_taken):
         self._a = a
         self._b = b
         self._ptr_a = moves_taken.shape[0] - 1
@@ -37,7 +34,10 @@ class AlignmentExtractor:
 
         self._flush()
 
-        return list(reversed(self._alignment))
+        self._alignment = list(reversed(self._alignment))
+
+    def alignment(self):
+        return self._alignment
 
     def _flush(self):
         self._alignment.append((list(reversed(self._words_a)), list(reversed(self._words_b))))
@@ -103,4 +103,4 @@ def align(a, b):
 
     # print(partial_costs)
     # print(moves_taken)
-    return AlignmentExtractor().extract(a, b, moves_taken)
+    return AlignmentExtractor(a, b, moves_taken).alignment()
