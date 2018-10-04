@@ -31,11 +31,9 @@ if __name__ == '__main__':
 
         candidate_line = fields[1:]
         reference_line = references[utt_id]
-        costs, moves, alignment = align(reference_line, candidate_line)
+        alignment = align(reference_line, candidate_line)
 
-        print('------' * 10)
+        print('------' * 25)
         print(candidate_line)
         print(reference_line)
-        print(costs)
-        print(moves)
         print(alignment)
