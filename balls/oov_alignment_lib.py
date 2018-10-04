@@ -151,9 +151,8 @@ def extract_mismatch(ali):
                 mismatches.append((a[1:], []))
             else:
                 mismatches.append((a, b))
-            last_was_mismatched = True
+            last_was_mismatched = False
         else:
             last_was_mismatched = False
-
 
     return mismatches
