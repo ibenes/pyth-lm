@@ -143,19 +143,26 @@ def insertion_mismatch(a, b):
     return mismatch, ends_with_mismatch
 
 
-def single_pair_mismatch(a, b):
-    mismatch = None
-    if len(a) == len(b) and a != b:
-        assert(len(a) == 1 and len(b) == 1)
+def equal_lenght_mismatch(a, b):
+    assert(len(a) == 1 and len(b) == 1)
+    if a != b:
         mismatch = (a, b)
         ends_with_mismatch = True
+    else:
+        mismatch = None
+        ends_with_mismatch = False
+
+    return mismatch, ends_with_mismatch
+
+
+def single_pair_mismatch(a, b):
+    if len(a) == len(b):
+        mismatch, ends_with_mismatch = equal_lenght_mismatch(a, b)
     elif len(a) < len(b):
         mismatch, ends_with_mismatch = insertion_mismatch(a, b)
     elif len(a) > len(b):
         mismatch, ends_with_mismatch = insertion_mismatch(b, a)
         mismatch = tuple(reversed(mismatch))
-    else:
-        ends_with_mismatch = False
 
     return mismatch, ends_with_mismatch
 
