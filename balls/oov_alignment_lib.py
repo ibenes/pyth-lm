@@ -69,9 +69,17 @@ def align(a, b):
             ptr_a -= 1
             ptr_b -= 1
 
+            if ptr_a == 0 or ptr_b == 0:
+                continue # no flushing
+
             alignment.append((list(reversed(words_a)), list(reversed(words_b))))
             words_a = []
             words_b = []
+
+    # one final flush
+    alignment.append((list(reversed(words_a)), list(reversed(words_b))))
+    words_a = []
+    words_b = []
 
     alignment = list(reversed(alignment))
     # assert(alignment[0] == ([], []))
