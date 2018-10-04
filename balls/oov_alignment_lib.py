@@ -126,4 +126,9 @@ def align(a, b):
 
 
 def extract_mismatch(ali):
-    return []
+    mismatches = []
+    for a, b in ali:
+        if a != b:
+            mismatches.append((a, b))
+
+    return mismatches

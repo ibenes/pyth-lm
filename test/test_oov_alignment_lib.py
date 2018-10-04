@@ -153,3 +153,13 @@ class MismatchExtractionTest(TestCase):
         ]
 
         self.assertEqual(extract_mismatch(ali), expectation)
+
+    def test_single_substitution(self):
+        ali = [
+            (['a'], ['b'])
+        ]
+        expectation = [
+            (['a'], ['b'])
+        ]
+
+        self.assertEqual(extract_mismatch(ali), expectation)
