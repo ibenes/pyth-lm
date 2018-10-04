@@ -5,7 +5,7 @@ import sys
 
 import numpy as np
 
-from oov_alignment_lib import align
+from oov_alignment_lib import align, extract_mismatch
 
 
 def parse_oov_id(oov_id):
@@ -32,8 +32,10 @@ if __name__ == '__main__':
         candidate_line = fields[1:]
         reference_line = references[utt_id]
         alignment = align(reference_line, candidate_line)
+        mismatches = extract_mismatch(alignment)
 
         print('------' * 25)
         print(candidate_line)
         print(reference_line)
         print(alignment)
+        print(mismatches)
