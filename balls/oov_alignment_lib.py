@@ -129,7 +129,8 @@ def extract_mismatch(ali):
     mismatches = []
     last_was_mismatched = False
     for a, b in ali:
-        if a != b:
+        if len(a) == len(b) and a != b:
+            assert(len(a) == 1 and len(b) == 1)
             if last_was_mismatched:
                 mismatches[-1][0].extend(a)
                 mismatches[-1][1].extend(b)
@@ -137,7 +138,15 @@ def extract_mismatch(ali):
                 mismatches.append((a, b))
 
             last_was_mismatched = True
+        elif len(a) < len(b):
+            assert(len(a) == 1)
+            if a[0] == b[0]:
+                mismatches.append(([], b[1:]))
+            else:
+                mismatches.append((a, b))
+            last_was_mismatched = True
         else:
             last_was_mismatched = False
+
 
     return mismatches
