@@ -142,6 +142,8 @@ def extract_mismatch(ali):
             assert(len(a) == 1)
             if a[0] == b[0]:
                 mismatches.append(([], b[1:]))
+            elif a[0] == b[-1]:
+                mismatches.append(([], b[:-1]))
             else:
                 mismatches.append((a, b))
             last_was_mismatched = True

@@ -203,6 +203,18 @@ class MismatchExtractionTest(TestCase):
 
         self.assertEqual(extract_mismatch(ali), expectation)
 
+    def test_insertion_only_reversed(self):
+        ali = [
+            (['begin'], ['begin']),
+            (['b'], ['a', 'b']),
+            (['end'], ['end']),
+        ]
+        expectation = [
+            ([], ['a']),
+        ]
+
+        self.assertEqual(extract_mismatch(ali), expectation)
+
     def test_substitution_with_deletion(self):
         ali = [
             (['begin'], ['begin']),
