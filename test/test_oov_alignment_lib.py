@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from oov_alignment_lib import align
+from oov_alignment_lib import align, extract_mismatch
 
 
 class AlignTest(TestCase):
@@ -114,3 +114,42 @@ class AlignTest(TestCase):
         ]
 
         self.assertEqual(align(a, b), expected)
+
+    def test_double_substituion(self):
+        a = "a b c d".split()
+        b = "a x y d".split()
+
+        expected = [
+            (['a'], ['a']),
+            (['b'], ['x']),
+            (['c'], ['y']),
+            (['d'], ['d']),
+        ]
+
+        self.assertEqual(align(a, b), expected)
+
+    def test_inner_insertion(self):
+        a = "a d".split()
+        b = "a b c d".split()
+
+        expected_1 = [
+            (['a'], ['a', 'b', 'c']),
+            (['d'], ['d']),
+        ]
+        expected_2 = [
+            (['a'], ['a']),
+            (['d'], ['b', 'c', 'd']),
+        ]
+
+        self.assertIn(align(a, b), [expected_1, expected_2])
+
+
+class MismatchExtractionTest(TestCase):
+    def test_trivial(self):
+        ali = [
+            (['a'], ['a'])
+        ]
+        expectation = [
+        ]
+
+        self.assertEqual(extract_mismatch(ali), expectation)

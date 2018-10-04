@@ -123,3 +123,7 @@ def align(a, b):
     path = path_from_moves(moves_taken)
     index_alignment = ind_ali_from_path(path)
     return word_ali_from_index_ali(a, b, index_alignment)
+
+
+def extract_mismatch(ali):
+    return []
