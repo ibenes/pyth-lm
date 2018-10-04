@@ -14,3 +14,23 @@ class AlignTest(TestCase):
         ]
 
         self.assertEqual(align(a, b), expected)
+
+    def test_single_element(self):
+        a = "a".split()
+        b = "a".split()
+
+        expected = [
+            (['a'], ['a']),
+        ]
+
+        self.assertEqual(align(a, b), expected)
+
+    def test_substitution_only(self):
+        a = "a".split()
+        b = "b".split()
+
+        expected = [
+            (['a'], ['b']),
+        ]
+
+        self.assertEqual(align(a, b), expected)
