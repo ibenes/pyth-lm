@@ -60,13 +60,18 @@ class AlignmentExtractor:
         self._ptr_b -= 1
 
 
-def align(a, b):
+def local_costs_from_strings(a, b):
     local_costs = np.zeros(shape=(len(a)+1, len(b)+1))
 
     for i, w_a in enumerate(a):
         for j, w_b in enumerate(b):
             local_costs[i+1, j+1] = word_distance(w_a, w_b)
 
+    return local_costs
+
+
+def align(a, b):
+    local_costs = local_costs_from_strings(a, b)
     partial_costs = np.full(shape=(len(a)+1, len(b)+1), fill_value=np.inf)
     moves_taken = np.full(shape=(len(a)+1, len(b)+1), fill_value=np.inf)
 
