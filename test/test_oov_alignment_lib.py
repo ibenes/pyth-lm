@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from oov_alignment_lib import align, extract_mismatch
+from oov_alignment_lib import find_in_mismatches
 
 
 class AlignTest(TestCase):
@@ -263,3 +264,33 @@ class MismatchExtractionTest(TestCase):
         ]
 
         self.assertEqual(extract_mismatch(ali), expectation)
+
+
+class FindingInMismatchesTest(TestCase):
+    def test_trivial(self):
+        mismatches = [
+            (['x'], ['a'])
+        ]
+        expectation = (['x'], ['a'])
+
+        self.assertEqual(find_in_mismatches(mismatches, 'x'), expectation)
+
+    def test_finding(self):
+        mismatches = [
+            (['c'], ['d']),
+            (['x'], ['a']),
+            (['b'], ['f']),
+        ]
+        expectation = (['x'], ['a'])
+
+        self.assertEqual(find_in_mismatches(mismatches, 'x'), expectation)
+
+    def test_multiple_elements_in_mismatch(self):
+        mismatches = [
+            (['c'], ['d']),
+            (['c', 'b', 'x'], ['a']),
+            (['b'], ['f']),
+        ]
+        expectation = (['c', 'b', 'x'], ['a'])
+
+        self.assertEqual(find_in_mismatches(mismatches, 'x'), expectation)

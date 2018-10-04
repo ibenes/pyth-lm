@@ -184,3 +184,9 @@ def extract_mismatch(ali):
             mismatches.append(mismatch)
 
     return mismatches
+
+
+def find_in_mismatches(mismatches, word):
+    for m in mismatches:
+        if word in m[0] or word in m[1]:
+            return m
