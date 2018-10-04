@@ -97,12 +97,12 @@ def path_from_local_costs(local_costs):
                 best_cost = min([vertical_cost, horizontal_cost, diagonal_cost])
 
                 partial_costs[i, j] = best_cost
-                if best_cost == vertical_cost:
-                    moves_taken[i, j] = VERTICAL_MOVE
+                if best_cost == diagonal_cost:
+                    moves_taken[i, j] = DIAGONAL_MOVE
                 elif best_cost == horizontal_cost:
                     moves_taken[i, j] = HORIZONAL_MOVE
                 else:
-                    moves_taken[i, j] = DIAGONAL_MOVE
+                    moves_taken[i, j] = VERTICAL_MOVE
 
     return moves_taken
 
