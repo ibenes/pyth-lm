@@ -15,42 +15,41 @@ class AlignmentExtractor:
         pass
 
     def extract(self, a, b, moves_taken):
-        ptr_a = moves_taken.shape[0] - 1
-        ptr_b = moves_taken.shape[1] - 1
-        alignment = []
-        words_a = []
-        words_b = []
-        while ptr_a != 0 or ptr_b != 0:
-            move = moves_taken[ptr_a, ptr_b]
+        self._ptr_a = moves_taken.shape[0] - 1
+        self._ptr_b = moves_taken.shape[1] - 1
+        self._alignment = []
+        self._words_a = []
+        self._words_b = []
+        while self._ptr_a != 0 or self._ptr_b != 0:
+            move = moves_taken[self._ptr_a, self._ptr_b]
 
             if move == VERTICAL_MOVE:
-                ptr_a -= 1
-                words_a.append(a[ptr_a])
+                self._ptr_a -= 1
+                self._words_a.append(a[self._ptr_a])
             elif move == HORIZONAL_MOVE:
-                ptr_b -= 1
-                words_b.append(b[ptr_b])
+                self._ptr_b -= 1
+                self._words_b.append(b[self._ptr_b])
             else:
-                if ptr_a >= 1:
-                    words_a.append(a[ptr_a-1])
-                if ptr_b >= 1:
-                    words_b.append(b[ptr_b-1])
+                if self._ptr_a >= 1:
+                    self._words_a.append(a[self._ptr_a-1])
+                if self._ptr_b >= 1:
+                    self._words_b.append(b[self._ptr_b-1])
 
-                ptr_a -= 1
-                ptr_b -= 1
+                self._ptr_a -= 1
+                self._ptr_b -= 1
 
-                if ptr_a == 0 or ptr_b == 0:
-                    continue # no flushing
+                if self._ptr_a == 0 or self._ptr_b == 0:
+                    continue  # no flushing
 
-                alignment.append((list(reversed(words_a)), list(reversed(words_b))))
-                words_a = []
-                words_b = []
+                self._flush()
+        self._flush()
 
-        # one final flush
-        alignment.append((list(reversed(words_a)), list(reversed(words_b))))
-        words_a = []
-        words_b = []
+        return list(reversed(self._alignment))
 
-        return list(reversed(alignment))
+    def _flush(self):
+        self._alignment.append((list(reversed(self._words_a)), list(reversed(self._words_b))))
+        self._words_a = []
+        self._words_b = []
 
 
 def align(a, b):
