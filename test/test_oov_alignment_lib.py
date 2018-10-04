@@ -181,7 +181,9 @@ class MismatchExtractionTest(TestCase):
 
     def test_substitution_with_insertion(self):
         ali = [
+            (['begin'], ['begin']),
             (['c'], ['a', 'b']),
+            (['end'], ['end']),
         ]
         expectation = [
             (['c'], ['a', 'b']),
@@ -191,7 +193,9 @@ class MismatchExtractionTest(TestCase):
 
     def test_insertion_only(self):
         ali = [
+            (['begin'], ['begin']),
             (['a'], ['a', 'b']),
+            (['end'], ['end']),
         ]
         expectation = [
             ([], ['b']),
@@ -201,7 +205,9 @@ class MismatchExtractionTest(TestCase):
 
     def test_substitution_with_deletion(self):
         ali = [
+            (['begin'], ['begin']),
             (['a', 'b'], ['c']),
+            (['end'], ['end']),
         ]
         expectation = [
             (['a', 'b'], ['c']),
@@ -211,7 +217,9 @@ class MismatchExtractionTest(TestCase):
 
     def test_deletion_only(self):
         ali = [
+            (['begin'], ['begin']),
             (['a', 'b'], ['a']),
+            (['end'], ['end']),
         ]
         expectation = [
             (['b'], []),
@@ -221,7 +229,9 @@ class MismatchExtractionTest(TestCase):
 
     def test_deletion_only_reversed(self):
         ali = [
+            (['begin'], ['begin']),
             (['a', 'b'], ['b']),
+            (['end'], ['end']),
         ]
         expectation = [
             (['a'], []),
