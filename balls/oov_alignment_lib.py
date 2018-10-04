@@ -61,20 +61,22 @@ def align(a, b):
             ptr_b -= 1
             words_b.append(b[ptr_b-1])
         else:
-            ptr_a -= 1
-            ptr_b -= 1
-
             if ptr_a >= 1:
                 words_a.append(a[ptr_a-1])
             if ptr_b >= 1:
                 words_b.append(b[ptr_b-1])
+
+            ptr_a -= 1
+            ptr_b -= 1
 
             alignment.append((list(reversed(words_a)), list(reversed(words_b))))
             words_a = []
             words_b = []
 
     alignment = list(reversed(alignment))
-    assert(alignment[0] == ([], []))
-    alignment = alignment[1:]
+    # assert(alignment[0] == ([], []))
+    # alignment = alignment[1:]
 
-    return partial_costs, moves_taken, alignment
+    print(partial_costs)
+    print(moves_taken)
+    return alignment
