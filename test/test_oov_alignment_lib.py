@@ -198,3 +198,23 @@ class MismatchExtractionTest(TestCase):
         ]
 
         self.assertEqual(extract_mismatch(ali), expectation)
+
+    def test_substitution_with_deletion(self):
+        ali = [
+            (['a', 'b'], ['c']),
+        ]
+        expectation = [
+            (['a', 'b'], ['c']),
+        ]
+
+        self.assertEqual(extract_mismatch(ali), expectation)
+
+    def test_deletion_only(self):
+        ali = [
+            (['a', 'b'], ['a']),
+        ]
+        expectation = [
+            (['b'], []),
+        ]
+
+        self.assertEqual(extract_mismatch(ali), expectation)

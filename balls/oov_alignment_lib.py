@@ -145,6 +145,13 @@ def extract_mismatch(ali):
             else:
                 mismatches.append((a, b))
             last_was_mismatched = True
+        elif len(a) > len(b):
+            assert(len(b) == 1)
+            if a[0] == b[0]:
+                mismatches.append((a[1:], []))
+            else:
+                mismatches.append((a, b))
+            last_was_mismatched = True
         else:
             last_was_mismatched = False
 
