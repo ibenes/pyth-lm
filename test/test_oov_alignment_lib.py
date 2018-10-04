@@ -250,3 +250,16 @@ class MismatchExtractionTest(TestCase):
         ]
 
         self.assertEqual(extract_mismatch(ali), expectation)
+
+    def test_deletion_after_substitution(self):
+        ali = [
+            (['begin'], ['begin']),
+            (['x'], ['y']),
+            (['a', 'b'], ['b']),
+            (['end'], ['end']),
+        ]
+        expectation = [
+            (['x', 'a'], ['y']),
+        ]
+
+        self.assertEqual(extract_mismatch(ali), expectation)
