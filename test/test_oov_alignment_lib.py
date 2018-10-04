@@ -144,6 +144,19 @@ class AlignTest(TestCase):
 
         self.assertIn(align(a, b), [expected_1, expected_2])
 
+    def test_inversion_at_end(self):
+        a = "a b c d".split()
+        b = "a b d c".split()
+
+        expected = [
+            (['a'], ['a']),
+            (['b'], ['b']),
+            (['c'], ['d']),
+            (['d'], ['c']),
+        ]
+
+        self.assertEqual(align(a, b), expected)
+
 
 class MismatchExtractionTest(TestCase):
     def test_trivial(self):
