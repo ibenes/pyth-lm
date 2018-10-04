@@ -127,8 +127,17 @@ def align(a, b):
 
 def extract_mismatch(ali):
     mismatches = []
+    last_was_mismatched = False
     for a, b in ali:
         if a != b:
-            mismatches.append((a, b))
+            if last_was_mismatched:
+                mismatches[-1][0].extend(a)
+                mismatches[-1][1].extend(b)
+            else:
+                mismatches.append((a, b))
+
+            last_was_mismatched = True
+        else:
+            last_was_mismatched = False
 
     return mismatches
