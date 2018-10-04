@@ -126,6 +126,23 @@ def align(a, b):
     return word_ali_from_index_ali(a, b, index_alignment)
 
 
+def insertion_mismatch(a, b):
+    assert(len(a) < len(b))
+    assert(len(a) == 1)
+
+    if a[0] == b[0]:
+        mismatch = ([], b[1:])
+        ends_with_mismatch = True
+    elif a[0] == b[-1]:
+        mismatch = ([], b[:-1])
+        ends_with_mismatch = False
+    else:
+        mismatch = (a, b)
+        ends_with_mismatch = True
+
+    return mismatch, ends_with_mismatch
+
+
 def single_pair_mismatch(a, b):
     mismatch = None
     if len(a) == len(b) and a != b:
@@ -133,27 +150,10 @@ def single_pair_mismatch(a, b):
         mismatch = (a, b)
         ends_with_mismatch = True
     elif len(a) < len(b):
-        assert(len(a) == 1)
-        if a[0] == b[0]:
-            mismatch = ([], b[1:])
-            ends_with_mismatch = True
-        elif a[0] == b[-1]:
-            mismatch = ([], b[:-1])
-            ends_with_mismatch = False
-        else:
-            mismatch = (a, b)
-            ends_with_mismatch = True
+        mismatch, ends_with_mismatch = insertion_mismatch(a, b)
     elif len(a) > len(b):
-        assert(len(b) == 1)
-        if a[0] == b[0]:
-            mismatch = (a[1:], [])
-            ends_with_mismatch = True
-        elif a[-1] == b[0]:
-            mismatch = (a[:-1], [])
-            ends_with_mismatch = False
-        else:
-            mismatch = (a, b)
-            ends_with_mismatch = True
+        mismatch, ends_with_mismatch = insertion_mismatch(b, a)
+        mismatch = tuple(reversed(mismatch))
     else:
         ends_with_mismatch = False
 
