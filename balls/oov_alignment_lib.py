@@ -103,6 +103,17 @@ def path_from_local_costs(local_costs):
     return moves_taken
 
 
+def word_ali_from_index_ali(a, b, index_alignment):
+    word_alignment = []
+    for inds_a, inds_b in index_alignment:
+        word_alignment.append((
+            [a[ind_a] for ind_a in inds_a],
+            [b[ind_b] for ind_b in inds_b],
+        ))
+
+    return word_alignment
+
+
 def align(a, b):
     local_costs = local_costs_from_strings(a, b)
     moves_taken = path_from_local_costs(local_costs)
@@ -112,10 +123,4 @@ def align(a, b):
     # print(partial_costs)
     # print(moves_taken)
     index_alignment = AlignmentExtractor(moves_taken).alignment()
-    word_alignment = []
-    for inds_a, inds_b in index_alignment:
-        word_alignment.append((
-            [a[ind_a] for ind_a in inds_a],
-            [b[ind_b] for ind_b in inds_b],
-        ))
-    return word_alignment
+    return word_ali_from_index_ali(a, b, index_alignment)
