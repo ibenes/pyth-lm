@@ -70,10 +70,9 @@ def local_costs_from_strings(a, b):
     return local_costs
 
 
-def align(a, b):
-    local_costs = local_costs_from_strings(a, b)
-    partial_costs = np.full(shape=(len(a)+1, len(b)+1), fill_value=np.inf)
-    moves_taken = np.full(shape=(len(a)+1, len(b)+1), fill_value=np.inf)
+def path_from_local_costs(local_costs):
+    partial_costs = np.full(shape=local_costs.shape, fill_value=np.inf)
+    moves_taken = np.full(shape=local_costs.shape, fill_value=np.inf)
 
     for i in range(partial_costs.shape[0]):
         for j in range(partial_costs.shape[1]):
@@ -101,6 +100,12 @@ def align(a, b):
                 else:
                     moves_taken[i, j] = DIAGONAL_MOVE
 
+    return moves_taken
+
+
+def align(a, b):
+    local_costs = local_costs_from_strings(a, b)
+    moves_taken = path_from_local_costs(local_costs)
     # assert(alignment[0] == ([], []))
     # alignment = alignment[1:]
 
