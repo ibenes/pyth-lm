@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from oov_alignment_lib import align, extract_mismatch
-from oov_alignment_lib import find_in_mismatches
+from oov_alignment_lib import find_in_mismatches, number_of_errors
 
 
 class AlignTest(TestCase):
@@ -307,3 +307,15 @@ class FindingInMismatchesTest(TestCase):
         expectation = (['c', 'b', 'x'], ['a'])
 
         self.assertEqual(find_in_mismatches(mismatches, 'x'), expectation)
+
+
+class NumberOfErrorsTest(TestCase):
+    def test_trivial(self):
+        mismatches = [
+            (['x'], ['a'])
+        ]
+
+        self.assertEqual(number_of_errors(mismatches), 1)
+
+    def test_no_mismatch(self):
+        self.assertEqual(number_of_errors([]), 0)
