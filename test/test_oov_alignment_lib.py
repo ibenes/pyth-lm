@@ -319,3 +319,25 @@ class NumberOfErrorsTest(TestCase):
 
     def test_no_mismatch(self):
         self.assertEqual(number_of_errors([]), 0)
+
+    def test_multiple_substitutions(self):
+        mismatches = [
+            (['x'], ['a']),
+            (['x'], ['a'])
+        ]
+
+        self.assertEqual(number_of_errors(mismatches), 2)
+
+    def test_single_insertion(self):
+        mismatches = [
+            (['x'], ['a', 'b']),
+        ]
+
+        self.assertEqual(number_of_errors(mismatches), 2)
+
+    def test_single_deletion(self):
+        mismatches = [
+            (['a', 'b'], ['x']),
+        ]
+
+        self.assertEqual(number_of_errors(mismatches), 2)

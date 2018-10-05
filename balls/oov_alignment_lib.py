@@ -194,6 +194,6 @@ def find_in_mismatches(mismatches, word):
 
 def number_of_errors(mismatches):
     nb_errors = 0
-    for m in mismatches:
-        nb_errors += 1
+    for a, b in mismatches:
+        nb_errors += 1 + abs(len(a) - len(b))
     return nb_errors
