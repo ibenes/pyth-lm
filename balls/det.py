@@ -66,6 +66,12 @@ def det_points_from_score_tg(score_tg):
     return mis_fas
 
 
+def subsample_list(the_list, max_points):
+    assert(max_points > 1)
+    subsampling_coeff = len(the_list) // max_points
+    return the_list[::subsampling_coeff] + [the_list[-1]]
+
+
 class DETCurve:
     def __init__(self, score_tg, baseline, max_det_points=0):
         self._baseline = baseline
@@ -83,9 +89,7 @@ class DETCurve:
         mis_fas = det_points_from_score_tg(score_tg)
 
         if max_det_points > 0:
-            assert(max_det_points > 1)
-            subsampling_coeff = len(mis_fas) // max_det_points
-            mis_fas = mis_fas[::subsampling_coeff] + [mis_fas[-1]]
+            mis_fas = subsample_list(mis_fas, max_det_points)
 
         mis_fas = np.asarray(mis_fas)
         self._miss_rate = mis_fas[:, 0]
