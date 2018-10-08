@@ -68,6 +68,9 @@ def det_points_from_score_tg(score_tg):
 
 def subsample_list(the_list, max_points):
     assert(max_points > 1)
+    if max_points == len(the_list):
+        return the_list
+
     subsampling_coeff = len(the_list) // max_points
     return the_list[::subsampling_coeff] + [the_list[-1]]
 
