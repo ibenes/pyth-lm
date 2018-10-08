@@ -109,3 +109,15 @@ class ListSubsamplingTests(TestCase):
                 [1, 2, 3, 4, 6],
             ]
         )
+
+    def test_include_4_of_6(self):
+        self.assertIn(
+            subsample_list([1, 2, 3, 4, 5, 6], 4),
+            [
+                [1] + middle + [6] for middle in [
+                    [2, 3], [2, 4], [2, 5],
+                    [3, 4], [3, 5],
+                    [4, 5],
+                ]
+            ]
+        )
