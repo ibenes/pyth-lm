@@ -69,8 +69,15 @@ def det_points_from_score_tg(score_tg):
 def subsample_list(the_list, max_points):
     ''' Ensures that both the first and the last element are included.
     '''
-    subsampling_coeff = int((len(the_list) - 1) / (max_points-1))
-    return the_list[0:-1:subsampling_coeff] + [the_list[-1]]
+    subsampling_coeff_exact = (len(the_list) - 1) / (max_points-1)
+    if subsampling_coeff_exact > 1.0 and subsampling_coeff_exact < 2.0:
+        inverse_subsampling_coeff_exact = (len(the_list) - 2) / (len(the_list) - max_points)
+        inverse_subsampling_coeff = int(inverse_subsampling_coeff_exact)
+        to_drop = list(range(1, len(the_list)-1, inverse_subsampling_coeff))
+        return [x for i, x in enumerate(the_list) if i not in to_drop]
+    else:
+        subsampling_coeff = int(subsampling_coeff_exact)
+        return the_list[0:-1:subsampling_coeff] + [the_list[-1]]
 
 
 class DETCurve:
