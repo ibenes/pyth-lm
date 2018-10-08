@@ -74,3 +74,27 @@ class ListSubsamplingTests(TestCase):
             subsample_list([1, 2], 2),
             [1, 2]
         )
+
+    def test_halving_longer(self):
+        self.assertEqual(
+            subsample_list([1, 2, 3, 4], 2),
+            [1, 4]
+        )
+
+    def test_halving_uneven(self):
+        self.assertEqual(
+            subsample_list([1, 2, 3, 4, 5], 2),
+            [1, 5]
+        )
+
+    def test_halving_uneven_2(self):
+        self.assertEqual(
+            subsample_list([1, 2, 3, 4, 5], 3),
+            [1, 3, 5]
+        )
+
+    def test_every_third(self):
+        self.assertEqual(
+            subsample_list([1, 2, 3, 4, 5, 6], 2),
+            [1, 6]
+        )
