@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from det import det_points_from_score_tg
+from det import subsample_list
 
 
 class DetPointTests(TestCase):
@@ -65,3 +66,11 @@ class DetPointTests(TestCase):
         ]
 
         self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+
+
+class ListSubsamplingTests(TestCase):
+    def test_trivial(self):
+        self.assertEqual(
+            subsample_list([1, 2], 2),
+            [1, 2]
+        )
