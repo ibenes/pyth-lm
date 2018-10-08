@@ -40,6 +40,32 @@ def eer(xs, ys):
     return eer
 
 
+def det_points_from_score_tg(score_tg):
+    nb_trials = len(score_tg)
+    nb_same = sum(s[1] for s in score_tg)
+    nb_different = nb_trials - nb_same
+
+    sorted_score_tg = sorted(score_tg, key=lambda s: s[0])
+
+    nb_correct_same = nb_same
+    nb_correct_different = 0
+    nb_false_alarms = nb_different
+    nb_misses = 0
+    mis_fas = [[nb_misses/nb_trials, nb_false_alarms/nb_trials]]
+
+    for s in sorted_score_tg:
+        if s[1] == 1:
+            nb_misses += 1
+            nb_correct_same -= 1
+        else:
+            nb_false_alarms -= 1
+            nb_correct_different += 1
+
+        mis_fas.append([nb_misses/nb_trials, nb_false_alarms/nb_trials])
+
+    return mis_fas
+
+
 class DETCurve:
     def __init__(self, score_tg, baseline, max_det_points=0):
         self._baseline = baseline
@@ -54,23 +80,7 @@ class DETCurve:
         print("# positive trials: {} ({:.1f} %)".format(nb_same, 100.0*nb_same/nb_trials))
         print("# negative trials: {} ({:.1f} %)".format(nb_different, 100.0*nb_different/nb_trials))
 
-        score_tg = sorted(score_tg, key=lambda s: s[0])
-
-        mis_fas = []
-        nb_correct_same = nb_same
-        nb_correct_different = 0
-        nb_false_alarms = nb_different
-        nb_misses = 0
-
-        for s in score_tg:
-            if s[1] == 1:
-                nb_misses += 1
-                nb_correct_same -= 1
-            else:
-                nb_false_alarms -= 1
-                nb_correct_different += 1
-
-            mis_fas.append([nb_misses/nb_trials, nb_false_alarms/nb_trials])
+        mis_fas = det_points_from_score_tg(score_tg)
 
         if max_det_points > 0:
             assert(max_det_points > 1)
