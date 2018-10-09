@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from det import det_points_from_score_tg
 from det import subsample_list
+from det import merge_lists
 
 
 class DetPointTests(TestCase):
@@ -120,4 +121,36 @@ class ListSubsamplingTests(TestCase):
                     [4, 5],
                 ]
             ]
+        )
+
+
+class ListMergingTests(TestCase):
+    def test_trivial(self):
+        self.assertEqual(
+            merge_lists([1, 2], []),
+            [1, 2]
+        )
+
+    def test_trivial_reversed(self):
+        self.assertEqual(
+            merge_lists([], [1, 2]),
+            [1, 2]
+        )
+
+    def test_concat(self):
+        self.assertEqual(
+            merge_lists([1], [2]),
+            [1, 2]
+        )
+
+    def test_concat_reverse(self):
+        self.assertEqual(
+            merge_lists([2], [1]),
+            [1, 2]
+        )
+
+    def test_duplicities(self):
+        self.assertEqual(
+            merge_lists([1, 2], [1]),
+            [1, 2]
         )

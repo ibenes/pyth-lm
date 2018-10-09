@@ -93,6 +93,10 @@ def subsample_list(the_list, max_points):
     return pick(the_list, indices)
 
 
+def merge_lists(a, b):
+    return sorted(set(a + b))
+
+
 class DETCurve:
     def __init__(self, score_tg, baseline, max_det_points=0):
         self._baseline = baseline
