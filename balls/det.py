@@ -82,11 +82,15 @@ def subsampling_indices(length, max_points):
         return all_indices[0:-1:subsampling_coeff] + [all_indices[-1]]
 
 
+def pick(the_list, indices):
+    return [the_list[i] for i in indices]
+
+
 def subsample_list(the_list, max_points):
     ''' Ensures that both the first and the last element are included.
     '''
     indices = subsampling_indices(len(the_list), max_points)
-    return [the_list[i] for i in indices]
+    return pick(the_list, indices)
 
 
 class DETCurve:
