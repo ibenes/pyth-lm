@@ -66,18 +66,27 @@ def det_points_from_score_tg(score_tg):
     return mis_fas
 
 
+def subsampling_indices(length, max_points):
+    ''' Ensures that both the first and the last element are included.
+    '''
+    all_indices = list(range(length))
+
+    subsampling_coeff_exact = (len(all_indices) - 1) / (max_points-1)
+    if subsampling_coeff_exact > 1.0 and subsampling_coeff_exact < 2.0:
+        inverse_subsampling_coeff_exact = (len(all_indices) - 2) / (len(all_indices) - max_points)
+        inverse_subsampling_coeff = int(inverse_subsampling_coeff_exact)
+        to_drop = list(range(1, len(all_indices)-1, inverse_subsampling_coeff))
+        return [x for i, x in enumerate(all_indices) if i not in to_drop]
+    else:
+        subsampling_coeff = int(subsampling_coeff_exact)
+        return all_indices[0:-1:subsampling_coeff] + [all_indices[-1]]
+
+
 def subsample_list(the_list, max_points):
     ''' Ensures that both the first and the last element are included.
     '''
-    subsampling_coeff_exact = (len(the_list) - 1) / (max_points-1)
-    if subsampling_coeff_exact > 1.0 and subsampling_coeff_exact < 2.0:
-        inverse_subsampling_coeff_exact = (len(the_list) - 2) / (len(the_list) - max_points)
-        inverse_subsampling_coeff = int(inverse_subsampling_coeff_exact)
-        to_drop = list(range(1, len(the_list)-1, inverse_subsampling_coeff))
-        return [x for i, x in enumerate(the_list) if i not in to_drop]
-    else:
-        subsampling_coeff = int(subsampling_coeff_exact)
-        return the_list[0:-1:subsampling_coeff] + [the_list[-1]]
+    indices = subsampling_indices(len(the_list), max_points)
+    return [the_list[i] for i in indices]
 
 
 class DETCurve:
