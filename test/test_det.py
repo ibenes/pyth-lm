@@ -12,9 +12,9 @@ class DetPointTests(TestCase):
         ]
 
         det_points = [
-            [0.0, 0.5],
-            [0.0, 0.0],
             [0.5, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.5],
         ]
 
         self.assertEqual(det_points_from_score_tg(score_tg), det_points)
@@ -26,9 +26,9 @@ class DetPointTests(TestCase):
         ]
 
         det_points = [
-            [0.0, 0.5],
-            [0.0, 0.0],
             [0.5, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.5],
         ]
 
         self.assertEqual(det_points_from_score_tg(score_tg), det_points)
@@ -40,9 +40,9 @@ class DetPointTests(TestCase):
         ]
 
         det_points = [
-            [0.0, 0.5],
-            [0.5, 0.5],
             [0.5, 0.0],
+            [0.5, 0.5],
+            [0.0, 0.5],
         ]
 
         self.assertEqual(det_points_from_score_tg(score_tg), det_points)
@@ -57,12 +57,12 @@ class DetPointTests(TestCase):
         ]
 
         det_points = [
-            [0.0, 0.4],
-            [0.0, 0.2],
-            [0.2, 0.2],
-            [0.2, 0.0],
-            [0.4, 0.0],
             [0.6, 0.0],
+            [0.4, 0.0],
+            [0.2, 0.0],
+            [0.2, 0.2],
+            [0.0, 0.2],
+            [0.0, 0.4],
         ]
 
         self.assertEqual(det_points_from_score_tg(score_tg), det_points)

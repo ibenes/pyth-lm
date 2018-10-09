@@ -45,21 +45,21 @@ def det_points_from_score_tg(score_tg):
     nb_same = sum(s[1] for s in score_tg)
     nb_different = nb_trials - nb_same
 
-    sorted_score_tg = sorted(score_tg, key=lambda s: s[0])
+    sorted_score_tg = sorted(score_tg, key=lambda s: s[0], reverse=True)
 
-    nb_correct_same = nb_same
-    nb_correct_different = 0
-    nb_false_alarms = nb_different
-    nb_misses = 0
+    nb_correct_same = 0
+    nb_correct_different = nb_different
+    nb_false_alarms = 0
+    nb_misses = nb_same
     mis_fas = [[nb_misses/nb_trials, nb_false_alarms/nb_trials]]
 
     for s in sorted_score_tg:
         if s[1] == 1:
-            nb_misses += 1
-            nb_correct_same -= 1
+            nb_misses -= 1
+            nb_correct_same += 1
         else:
-            nb_false_alarms -= 1
-            nb_correct_different += 1
+            nb_false_alarms += 1
+            nb_correct_different -= 1
 
         mis_fas.append([nb_misses/nb_trials, nb_false_alarms/nb_trials])
 
@@ -137,13 +137,17 @@ class DETCurve:
 
     def plot(self, log_axis, scaled_axis, eer_line, filename):
         import matplotlib.pyplot as plt
-        plt.figure()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
         if log_axis:
             plt_func = plt.loglog
         else:
             plt_func = plt.plot
         plt_func(self._miss_rate, self._fa_rate, label='System')
+
+        for i, xy in enumerate(zip(self._miss_rate, self._fa_rate)):
+            ax.annotate(str(i), xy=xy, textcoords='data')
 
         if self._baseline:
             xs = np.linspace(0, self._max_miss_rate)
