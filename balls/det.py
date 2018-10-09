@@ -105,12 +105,12 @@ class DETCurve:
 
         mis_fas = det_points_from_score_tg(score_tg)
 
+        self._nb_clusterings = subsampling_indices(len(mis_fas), max_det_points)
         if max_det_points > 0:
             mis_fas = subsample_list(mis_fas, max_det_points)
 
-        mis_fas = np.asarray(mis_fas)
-        self._miss_rate = mis_fas[:, 0]
-        self._fa_rate = mis_fas[:, 1]
+        self._miss_rate = [msfa[0] for msfa in mis_fas]
+        self._fa_rate = [msfa[1] for msfa in mis_fas]
 
     def textual_report(self):
         report = ""
@@ -155,7 +155,7 @@ class DETCurve:
             plt_func = plt.plot
         plt_func(self._miss_rate, self._fa_rate, label='System')
 
-        for i, xy in enumerate(zip(self._miss_rate, self._fa_rate)):
+        for i, xy in zip(self._nb_clusterings, zip(self._miss_rate, self._fa_rate)):
             ax.annotate(str(i), xy=xy, textcoords='data')
 
         if self._baseline:
