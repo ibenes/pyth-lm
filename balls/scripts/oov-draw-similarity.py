@@ -7,7 +7,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
 from embeddings_io import all_embs_from_file
-from det import DETCurve
+from oov_clustering.det import DETCurve
 
 
 def trial_scores_list(keys, similarities):

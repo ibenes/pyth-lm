@@ -113,9 +113,12 @@ class DETCurve:
 
         mis_fas = det_points_from_score_tg(score_tg)
 
-        self._nb_clusterings = subsampling_indices(len(mis_fas), max_det_points)
         if max_det_points > 0:
-            mis_fas = subsample_list(mis_fas, max_det_points)
+            self._nb_clusterings = merge_lists(
+                subsampling_indices(len(mis_fas), max_det_points),
+                list(range(0, 1000, 25))
+            )
+            mis_fas = pick(mis_fas, self._nb_clusterings)
 
         self._miss_rate = [msfa[0] for msfa in mis_fas]
         self._fa_rate = [msfa[1] for msfa in mis_fas]
