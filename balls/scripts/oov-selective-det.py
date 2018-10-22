@@ -7,7 +7,7 @@ import sys
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
-from embeddings_io import all_embs_by_key
+from oov_clustering.embeddings_io import all_embs_by_key
 from oov_clustering.det import DETCurve
 
 

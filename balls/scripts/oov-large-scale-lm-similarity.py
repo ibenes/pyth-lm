@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from embeddings_io import all_embs_from_file
+from oov_clustering.embeddings_io import all_embs_from_file
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

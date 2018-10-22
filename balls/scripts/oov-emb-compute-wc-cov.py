@@ -6,7 +6,7 @@ import sys
 import numpy as np
 from scipy.linalg import fractional_matrix_power
 
-from embeddings_io import all_embs_by_key
+from oov_clustering.embeddings_io import all_embs_by_key
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
