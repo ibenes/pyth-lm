@@ -6,7 +6,7 @@ import sys
 import torch
 
 from oov_clustering.embeddings_io import str_from_embedding
-from embeddings_computation import tensor_from_words
+from oov_clustering.embeddings_computation import tensor_from_words
 
 
 def embs_from_words(words, lm):
