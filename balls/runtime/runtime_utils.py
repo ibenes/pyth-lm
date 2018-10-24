@@ -1,7 +1,6 @@
 import random
 import torch
 
-from torch.autograd import Variable
 from data_pipeline import split_corpus_dataset
 
 import sys
@@ -31,7 +30,7 @@ class TransposeWrapper:
 
 def repackage_hidden(h):
     """Wraps hidden states in new Variables, to detach them from their history."""
-    if type(h) == Variable or isinstance(h, torch.Tensor):
+    if isinstance(h, torch.Tensor):
         return h.detach()
     else:
         return tuple(repackage_hidden(v) for v in h)
