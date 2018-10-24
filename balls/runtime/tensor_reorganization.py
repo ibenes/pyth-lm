@@ -37,7 +37,7 @@ class TensorReorganizer():
         self._zeros_provider = zeros_provider
 
     def __call__(self, orig, mask, batch_size):
-        if len(mask.size()) == 0:
+        if len(mask) == 0:
             return self._zeros_provider(batch_size)
 
         if mask.size(0) > batch_size:
