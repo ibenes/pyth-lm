@@ -45,7 +45,7 @@ class TensorReorganizer():
 
         if isinstance(orig, tuple):
             single_var = False
-        elif isinstance(orig, torch._TensorBase) or (orig, torch.autograd.Variable):
+        elif isinstance(orig, torch.Tensor):
             single_var = True
         else:
             raise TypeError(
