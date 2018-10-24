@@ -1,5 +1,4 @@
 import torch
-from torch.autograd import Variable
 
 from .runtime_utils import repackage_hidden
 from .tensor_reorganization import TensorReorganizer
@@ -10,20 +9,18 @@ def prepare_inputs(inputs, do_transpose, use_ivecs, custom_batches):
     batch_size = X.size(0)
     if do_transpose:
         X = X.t()
-    X = Variable(X)
 
     targets = inputs[1]
     if do_transpose:
         targets = targets.t().contiguous()
-    targets = Variable(targets)
 
     if use_ivecs:
-        ivecs = Variable(inputs[2])
+        ivecs = inputs[2]
     else:
         ivecs = None
 
     if custom_batches:
-        mask = Variable(inputs[-1])  # 3
+        mask = inputs[-1]  # 3
     else:
         mask = None
 
