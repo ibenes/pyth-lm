@@ -7,7 +7,7 @@ import torch
 from torch.autograd import Variable
 
 import sys
-sys.path.append('/mnt/matylda5/ibenes/projects/santosh-lm/smm-pytorch/')
+sys.path.append('/u/benes/smm')
 from smm import SMM, update_ws 
 
 class IvecExtractor():
