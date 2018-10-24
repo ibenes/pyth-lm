@@ -65,7 +65,7 @@ def evaluate_(lm, data_source, use_ivecs, custom_batches):
         total_loss += loss.data
         total_timesteps += nb_words
 
-    return total_loss[0] / total_timesteps
+    return total_loss.item() / total_timesteps
 
 
 def evaluate(model, data_source, use_ivecs):
