@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from oov_alignment_lib import align, extract_mismatch
-from oov_alignment_lib import find_in_mismatches, number_of_errors
+from oov_clustering.oov_alignment_lib import align, extract_mismatch
+from oov_clustering.oov_alignment_lib import find_in_mismatches, number_of_errors
 
 
 class AlignTest(TestCase):
