@@ -1,5 +1,4 @@
 import torch.nn as nn
-from torch.autograd import Variable
 
 
 class LSTMLanguageModel(nn.Module):
@@ -43,8 +42,8 @@ class LSTMLanguageModel(nn.Module):
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
-        return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+        return (weight.new_zeros(self.nlayers, bsz, self.nhid),
+                weight.new_zeros(self.nlayers, bsz, self.nhid))
 
 
 class LSTMPLanguageModel(nn.Module):
@@ -81,7 +80,5 @@ class LSTMPLanguageModel(nn.Module):
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
-        return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
-
-
+        return (weight.new_zeros(self.nlayers, bsz, self.nhid),
+                weight.new_zeros(self.nlayers, bsz, self.nhid))
