@@ -4,6 +4,7 @@ import math
 
 import torch
 
+
 class BaseLogger():
     def __init__(self, report_period, output_file=sys.stdout):
         self._start_time = time.time()
@@ -14,7 +15,7 @@ class BaseLogger():
 
     def log(self, *args):
         self._log(*args)
-        self._nb_logs += 1 
+        self._nb_logs += 1
 
         if self._nb_logs % self._report_period == 0:
             self._flush()
@@ -34,8 +35,8 @@ class BaseLogger():
         pass
 
     def _log(self, *args):
-        pass 
-    
+        pass
+
 
 class InfinityLogger(BaseLogger):
     def __init__(self, epoch, report_period, lr, output_file=sys.stdout):
@@ -82,14 +83,13 @@ class GradLogger(BaseLogger):
             all_grads = torch.stack(self._grads[name])
             grad_mavs.append(all_grads.mean().data[0])
 
-        fmt_string = " ".join("{:.7f}" for _ in grad_mavs)  + "\n"
+        fmt_string = " ".join("{:.7f}" for _ in grad_mavs) + "\n"
         line = fmt_string.format(*grad_mavs)
         self._of.write(line)
 
     def _reset(self):
         for name in self._grads:
             self._grads[name] = []
-
 
 
 class ProgressLogger():
@@ -106,7 +106,7 @@ class ProgressLogger():
 
     def log(self, loss):
         self._running_loss += loss
-        self._nb_logs += 1 
+        self._nb_logs += 1
 
         if self._nb_logs % self._report_period == 0:
             self._flush()
@@ -131,7 +131,6 @@ class ProgressLogger():
     def _reset(self):
         self._running_loss = 0.0
         self._start_time = time.time()
-
 
 
 class NoneLogger():
