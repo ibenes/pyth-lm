@@ -50,7 +50,7 @@ class InfinityLogger(BaseLogger):
 
     def _flush(self):
         ms_per_log = (time.time() - self._start_time) * 1000 / self._report_period
-        cur_loss = (self._running_loss / self._report_period)[0]
+        cur_loss = (self._running_loss / self._report_period).item()
         fmt_string = '| epoch {:3d} | {:5d} batches done | lr {:.3e} | ms/batch {:5.2f} | loss {:5.2f} | ppl {:8.2f}\n'
         line = fmt_string.format(
             self._epoch, self._nb_logs, self._lr,
@@ -81,7 +81,7 @@ class GradLogger(BaseLogger):
         grad_mavs = []
         for name in self._grads:
             all_grads = torch.stack(self._grads[name])
-            grad_mavs.append(all_grads.mean().data[0])
+            grad_mavs.append(all_grads.mean().data.item())
 
         fmt_string = " ".join("{:.7f}" for _ in grad_mavs) + "\n"
         line = fmt_string.format(*grad_mavs)
@@ -120,7 +120,7 @@ class ProgressLogger():
 
     def _flush(self):
         ms_per_log = (time.time() - self._start_time) * 1000 / self._report_period
-        cur_loss = (self._running_loss / self._report_period)[0]
+        cur_loss = (self._running_loss / self._report_period).item()
         fmt_string = '| epoch {:3d} | {:5d}/{:5d} batches | lr {:.3e} | ms/batch {:5.2f} | loss {:5.2f} | ppl {:8.2f}\n'
         line = fmt_string.format(
             self._epoch, self._nb_logs, self._nb_updates, self._lr,
