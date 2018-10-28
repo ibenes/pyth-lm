@@ -5,7 +5,6 @@ import math
 import runtime_utils
 
 import torch
-from torch.autograd import Variable
 
 import language_model
 import smm_ivec_extractor
@@ -49,7 +48,7 @@ if __name__ == '__main__':
     for doc_no, doc in enumerate(documents):
         text = " ".join(doc)
         ivec = ivec_extractor(text).cuda()
-        qs = lm.model.ivec_to_logprobs(Variable(ivec)).data
+        qs = lm.model.ivec_to_logprobs(ivec).data
         cross_entropies.append(unigram_ps[doc_no] @ qs)
 
     cross_entropies = torch.FloatTensor(cross_entropies)
