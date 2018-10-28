@@ -4,7 +4,6 @@ import pickle
 
 import numpy as np
 import torch
-from torch.autograd import Variable
 
 from smm import update_ws
 
@@ -27,7 +26,7 @@ class IvecExtractor():
 
         if self._model.cuda:
             data = data.cuda()
-        X = Variable(data.t())
+        X = data.t()
 
         self._model.reset_w(X.size(-1))  # initialize i-vectors to zeros
         opt_w = torch.optim.Adagrad([self._model.W], lr=self._lr)
