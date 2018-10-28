@@ -3,14 +3,11 @@
 import argparse
 import math
 import runtime_utils
-import vocab
 
 import torch
 from torch.autograd import Variable
 
-import analysis
 import language_model
-import smm_lstm_models
 import smm_ivec_extractor
 
 
@@ -57,5 +54,5 @@ if __name__ == '__main__':
 
     cross_entropies = torch.FloatTensor(cross_entropies)
     avg_ce = -cross_entropies @ bows.float().sum(dim=1) / bows.sum()
-    
+
     print("{:.4f} {:.2f}".format(avg_ce, math.exp(avg_ce)))
