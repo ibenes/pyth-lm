@@ -29,7 +29,7 @@ class TransposeWrapper:
 
 
 def repackage_hidden(h):
-    """Wraps hidden states in new Variables, to detach them from their history."""
+    """Detaches a tuple of tensors them from their history."""
     if isinstance(h, torch.Tensor):
         return h.detach()
     else:
