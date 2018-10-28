@@ -3,14 +3,10 @@
 import argparse
 import math
 import runtime_utils
-import vocab
 
 import torch
-from torch.autograd import Variable
 
-import analysis
 import language_model
-import smm_lstm_models
 import smm_ivec_extractor
 
 
@@ -52,10 +48,10 @@ if __name__ == '__main__':
     for doc_no, doc in enumerate(documents):
         text = " ".join(doc)
         ivec = ivec_extractor(text).cuda()
-        qs = lm.model.ivec_to_logprobs(Variable(ivec)).data
+        qs = lm.model.ivec_to_logprobs(ivec).data
         cross_entropies.append(unigram_ps[doc_no] @ qs)
 
     cross_entropies = torch.FloatTensor(cross_entropies)
     avg_ce = -cross_entropies @ bows.float().sum(dim=1) / bows.sum()
-    
+
     print("{:.4f} {:.2f}".format(avg_ce, math.exp(avg_ce)))

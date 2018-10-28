@@ -37,7 +37,7 @@ class TensorReorganizer():
         self._zeros_provider = zeros_provider
 
     def __call__(self, orig, mask, batch_size):
-        if len(mask.size()) == 0:
+        if len(mask) == 0:
             return self._zeros_provider(batch_size)
 
         if mask.size(0) > batch_size:
@@ -45,12 +45,12 @@ class TensorReorganizer():
 
         if isinstance(orig, tuple):
             single_var = False
-        elif isinstance(orig, torch._TensorBase) or (orig, torch.autograd.Variable):
+        elif isinstance(orig, torch.Tensor):
             single_var = True
         else:
             raise TypeError(
                 "orig has unsupported type {}, "
-                "only tuples, Tensors, and Variables are accepted".format(
+                "only tuples and Tensors are accepted".format(
                     orig.__class__
                 )
             )

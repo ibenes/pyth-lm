@@ -11,7 +11,7 @@ class FullSoftmaxDecoder(torch.nn.Module):
         self.projection.weight.data.uniform_(-init_range, init_range)
         self.projection.bias.data.fill_(0)
 
-        self.nllloss = torch.nn.NLLLoss(size_average=False)
+        self.nllloss = torch.nn.NLLLoss(reduction='sum')
 
     def forward(self, X):
         a = self.projection(X)

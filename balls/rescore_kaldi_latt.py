@@ -1,9 +1,6 @@
 import argparse
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
 
-import model
 import vocab
 
 import kaldi_itf
@@ -16,8 +13,8 @@ def max_len(seqs):
 def pick_ys(y, seq_x):
     seqs_ys = []
     for seq_n, seq in enumerate(seq_x):
-        seq_ys = [1.0] # hard 1.0 for the 'sure' <s>
-        for w_n, w in enumerate(seq[1:]): # skipping the initial element ^^^
+        seq_ys = [1.0]  # hard 1.0 for the 'sure' <s>
+        for w_n, w in enumerate(seq[1:]):  # skipping the initial element ^^^
             seq_ys.append(y[w_n, seq_n, w])
         seqs_ys.append(seq_ys)
 
@@ -45,11 +42,10 @@ def seqs_logprob(seqs, model):
     if args.cuda:
         data = data.cuda()
 
-    X = Variable(data)
+    X = data
     h0 = model.init_hidden(batch_size)
 
     y, _ = model(X, h0)
-    y = y.data # extract the Tensor out of the Variable
 
     word_log_scores = pick_ys(y, seqs)
     seq_log_scores = [sum(seq) for seq in word_log_scores]
@@ -74,7 +70,7 @@ def dict_to_list(utts_map):
 def translate_latt_to_model(words, latt_vocab, model_vocab):
     words = [latt_vocab.i2w(i) for i in word_ids]
     return tokens_to_pythlm(words, model_vocab)
-     
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
@@ -124,8 +120,8 @@ if __name__ == '__main__':
                 curr_seg = segment
 
             if segment != curr_seg:
-                X, rev_map = dict_to_list(segment_utts) # reform the word sequences
-                y = seqs_logprob(X, model) # score
+                X, rev_map = dict_to_list(segment_utts)  # reform the word sequences
+                y = seqs_logprob(X, model)  # score
 
                 # write
                 for i, log_p in enumerate(y):
@@ -137,8 +133,8 @@ if __name__ == '__main__':
             segment_utts[trans_id] = ids
 
         # Last segment:
-        X, rev_map = dict_to_list(segment_utts) # reform the word sequences
-        y = seqs_logprob(X, model) # score
+        X, rev_map = dict_to_list(segment_utts)  # reform the word sequences
+        y = seqs_logprob(X, model)  # score
 
         # write
         for i, log_p in enumerate(y):

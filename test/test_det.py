@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from det import det_points_from_score_tg
-from det import subsample_list
-from det import merge_lists
+from oov_clustering.det import det_points_from_score_tg
+from oov_clustering.det import subsample_list
+from oov_clustering.det import merge_lists
 
 
 class DetPointTests(TestCase):
