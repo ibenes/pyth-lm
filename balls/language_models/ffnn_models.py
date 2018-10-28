@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 
 
 class BengioModel(nn.Module):
@@ -38,7 +37,7 @@ class BengioModel(nn.Module):
     def init_hidden(self, bsz):
         # not used, but to fit into the framework of other ivec-LMs
         weight = next(self.parameters()).data
-        return (Variable(weight.new(1, bsz, self.nb_hidden).zero_()))
+        return weight.new_zeros(1, bsz, self.nb_hidden)
 
 
 class BengioModelIvecInput(nn.Module):
@@ -80,4 +79,4 @@ class BengioModelIvecInput(nn.Module):
     def init_hidden(self, bsz):
         # not used, but to fit into the framework of other ivec-LMs
         weight = next(self.parameters()).data
-        return (Variable(weight.new(1, bsz, self.nb_hidden).zero_()))
+        return weight.new_zeros(1, bsz, self.nb_hidden)
