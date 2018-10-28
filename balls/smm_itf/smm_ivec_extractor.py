@@ -6,8 +6,6 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-import sys
-sys.path.append('/u/benes/smm')
 from smm import update_ws
 
 
