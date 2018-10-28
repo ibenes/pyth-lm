@@ -8,7 +8,8 @@ from torch.autograd import Variable
 
 import sys
 sys.path.append('/u/benes/smm')
-from smm import SMM, update_ws 
+from smm import update_ws
+
 
 class IvecExtractor():
     def __init__(self, model, nb_iters, lr, tokenizer):
@@ -35,13 +36,13 @@ class IvecExtractor():
 
         loss = self._model.loss(X)
 
-        # TODO this is a very nasty hack, needs to be 
-        # completely reworked, a separate class should be 
+        # TODO this is a very nasty hack, needs to be
+        # completely reworked, a separate class should be
         # prepared to implement this
         if self._nb_iters < 0:
             initrange = 10**(self._nb_iters)
             self._model.W.data.uniform_(-initrange, initrange)
-        else: 
+        else:
             for i in range(self._nb_iters):
                 loss = update_ws(self._model, opt_w, loss, X)
 
@@ -74,13 +75,11 @@ class IvecExtractor():
                         'lr': lr_bytes, 'nb_iters': nb_iters_bytes}
         pickle.dump(complete_smm, f)
 
-
     def __eq__(self, other):
         return (torch.equal(self._model.T, other._model.T) and
-               self._lr == other._lr and
-               self._nb_iters == other._nb_iters and
-               self._tokenizer == other._tokenizer)
-
+                self._lr == other._lr and
+                self._nb_iters == other._nb_iters and
+                self._tokenizer == other._tokenizer)
 
     def zero_bows(self, nb_bows):
         empty_docs = ["" for _ in range(nb_bows)]
@@ -90,11 +89,11 @@ class IvecExtractor():
             bows = bows.cuda()
         return bows
 
-    def build_translator(self, source_vocabulary):  
+    def build_translator(self, source_vocabulary):
         maxes = []
         argmaxes = []
         for w in source_vocabulary:
-            bow = self._tokenizer.transform([w]) 
+            bow = self._tokenizer.transform([w])
             prototype = torch.from_numpy(bow.A.astype(np.float32))
             p_max, p_argmax = prototype.max(dim=1)
             maxes.append(p_max)
@@ -111,18 +110,18 @@ class IvecExtractor():
 
 
 def translate(W, translation_table, translation_mask, dst_vocab_size):
-    W_flat = W.view(-1) # W was [B, T], W_flat is [BxT]
-    translation = translation_table[W_flat] # [BxT]
-    invalid_translations = translation_mask[W_flat].nonzero().view(-1) # [number of words without translation]
+    W_flat = W.view(-1)  # W was [B, T], W_flat is [BxT]
+    translation = translation_table[W_flat]  # [BxT]
+    invalid_translations = translation_mask[W_flat].nonzero().view(-1)  # [number of words without translation]
 
-    one_hot = W.new(translation.size() + (dst_vocab_size,)).float() # [BxT, SMM vocab_size]
+    one_hot = W.new(translation.size() + (dst_vocab_size,)).float()  # [BxT, SMM vocab_size]
     one_hot.zero_()
-    one_hot.scatter_(1,translation.view(-1,1),1) 
+    one_hot.scatter_(1, translation.view(-1, 1), 1)
     if len(invalid_translations.size()) > 0:
-        one_hot[invalid_translations] = 0 # zeroes the entries where no translation should ever happen
+        one_hot[invalid_translations] = 0  # zeroes the entries where no translation should ever happen
 
-    one_hot_reshaped = one_hot.view(W.size() + (dst_vocab_size, )) # [B, T, SMM vocab_size]
-    return one_hot_reshaped.sum(dim=-2) # [B, SMM vocab_size]
+    one_hot_reshaped = one_hot.view(W.size() + (dst_vocab_size, ))  # [B, T, SMM vocab_size]
+    return one_hot_reshaped.sum(dim=-2)  # [B, SMM vocab_size]
 
 
 def load(f):
