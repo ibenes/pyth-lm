@@ -50,7 +50,7 @@ class TensorReorganizer():
         else:
             raise TypeError(
                 "orig has unsupported type {}, "
-                "only tuples, Tensors, and Variables are accepted".format(
+                "only tuples and Tensors are accepted".format(
                     orig.__class__
                 )
             )
