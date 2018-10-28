@@ -1,6 +1,5 @@
 import argparse
 import torch
-from torch.autograd import Variable
 
 import vocab
 
@@ -43,11 +42,10 @@ def seqs_logprob(seqs, model):
     if args.cuda:
         data = data.cuda()
 
-    X = Variable(data)
+    X = data
     h0 = model.init_hidden(batch_size)
 
     y, _ = model(X, h0)
-    y = y.data  # extract the Tensor out of the Variable
 
     word_log_scores = pick_ys(y, seqs)
     seq_log_scores = [sum(seq) for seq in word_log_scores]
