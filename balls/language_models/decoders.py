@@ -17,9 +17,12 @@ class FullSoftmaxDecoder(torch.nn.Module):
         a = self.projection(X)
         return self.log_softmax(a)
 
-    def neg_log_prob(self, X, targets):
+    def neg_log_prob_raw(self, X, targets):
         preds = self.forward(X)
         targets_flat = targets.view(-1)
         preds_flat = preds.view(-1, preds.size(-1))
 
-        return self.nllloss(preds_flat, targets_flat), preds_flat.size(0)
+        return torch.nn.functional.nll_loss(preds_flat, targets_flat, reduction='none')
+
+    def neg_log_prob(self, X, targets):
+        return self.neg_log_prob_raw(X, targets).sum(), targets.numel()
