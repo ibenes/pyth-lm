@@ -38,7 +38,7 @@ if __name__ == '__main__':
     init_seeds(args.seed, args.cuda)
 
     print("loading model...")
-    lm = torch.load(args.load)
+    lm = torch.load(args.load, map_location='cpu')
     if args.cuda:
         lm.cuda()
     print(lm.model)
