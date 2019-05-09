@@ -1,24 +1,33 @@
 import torch
 
 
+def word_splitter(line):
+    return line.split()
+
+
+def char_splitter(line):
+    return list(line)
+
+
 def tokens_from_file(f, vocab, randomize, regime='words'):
     ids = []
 
     lines = f.read().split('\n')
+
+    if regime == 'words':
+        tokenizer = word_splitter
+    elif regime == 'chars':
+        tokenizer = char_splitter
+    else:
+        raise ValueError("unsupported regime {}".format(regime))
 
     if randomize:
         import random
         random.shuffle(lines)
 
     for line in lines:
-        if regime == 'words':
-            elements = line.split()
-        elif regime == 'chars':
-            elements = line
-        else:
-            raise ValueError("unsupported regime {}".format(regime))
-
-        ids.extend([vocab[e] for e in elements])
+        tokens = tokenizer(line)
+        ids.extend([vocab[e] for e in tokens])
 
     return torch.LongTensor(ids)
 
