@@ -41,6 +41,9 @@ if __name__ == '__main__':
         else:
             vocabulary = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
+    if not vocabulary.is_continuous():
+        raise ValueError("Vocabulary is not continuous, cannot use it with Softmax Decoder")
+
     print("building model...")
 
     model = lstm_model.LSTMLanguageModel(
