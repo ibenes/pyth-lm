@@ -5,8 +5,13 @@ def word_splitter(line):
     return line.split()
 
 
-def char_splitter(line):
-    return list(line)
+def char_splitter(line, sentence_end_token=None):
+    chars = list(line)
+
+    if sentence_end_token is None:
+        return chars
+    else:
+        return chars + [sentence_end_token]
 
 
 def tokens_from_file(f, vocab, randomize, regime='words'):
@@ -17,7 +22,7 @@ def tokens_from_file(f, vocab, randomize, regime='words'):
     if regime == 'words':
         tokenizer = word_splitter
     elif regime == 'chars':
-        tokenizer = char_splitter
+        tokenizer = lambda line: char_splitter(line, '<sb>')
     else:
         raise ValueError("unsupported regime {}".format(regime))
 
