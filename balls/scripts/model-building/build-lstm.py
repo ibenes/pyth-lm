@@ -42,7 +42,7 @@ if __name__ == '__main__':
             vocabulary = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     if not vocabulary.is_continuous():
-        raise ValueError("Vocabulary is not continuous, cannot use it with Softmax Decoder")
+        raise ValueError("Vocabulary is not continuous, missing indexes {}".format(vocabulary.missing_indexes()))
 
     print("building model...")
 
