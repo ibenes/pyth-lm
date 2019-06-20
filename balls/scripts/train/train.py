@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import math
 import torch
 
 from data_pipeline.data import tokens_from_fn
@@ -82,10 +83,11 @@ if __name__ == '__main__':
     )
     valid_data = TransposeWrapper(valid_data_tb)
 
+    print('Initial perplexity {:.2f}'.format(math.exp(evaluate_(lm, valid_data, use_ivecs=False, custom_batches=False))))
+
     print("training...")
     lr = args.lr
     best_val_loss = None
-
     for epoch in range(1, args.epochs+1):
         logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched)//args.target_seq_len)
         optim = torch.optim.SGD(lm.parameters(), lr, weight_decay=args.beta)
