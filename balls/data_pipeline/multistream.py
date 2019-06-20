@@ -60,7 +60,7 @@ class BatchBuilder():
                     pass
 
             if len(batch) == 0:
-                raise StopIteration
+                return
 
             if self._discard_h:
                 hs_passed_on = streams_continued

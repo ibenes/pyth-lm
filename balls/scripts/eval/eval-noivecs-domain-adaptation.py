@@ -1,7 +1,9 @@
+#!/usr/bin/env python
+
 import argparse
 import math
+import torch
 
-from language_models import language_model
 from data_pipeline.split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
 from data_pipeline.multistream import BatchBuilder
 
@@ -35,10 +37,9 @@ if __name__ == '__main__':
     init_seeds(args.seed, args.cuda)
 
     print("loading LM...")
-    with open(args.load, 'rb') as f:
-        lm = language_model.load(f)
+    lm = torch.load(args.load)
     if args.cuda:
-        lm.model.cuda()
+        lm.cuda()
     print(lm.model)
 
     print("preparing data...")
@@ -57,7 +58,7 @@ if __name__ == '__main__':
         data = CudaStream(data)
 
     loss = evaluate_(
-        lm.model, data,
+        lm, data,
         use_ivecs=False,
         custom_batches=True,
     )

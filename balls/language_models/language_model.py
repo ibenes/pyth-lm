@@ -1,43 +1,32 @@
-import io
-import pickle
-import tempfile
 import torch
 
 
+class LanguageModel(torch.nn.Module):
+    def __init__(self, model, decoder, vocab):
+        super().__init__()
 
-class LanguageModel():
-    def __init__(self, model, vocab):
         self.model = model
+        self.decoder = decoder
         self.vocab = vocab
 
-    def save(self, f):
-        tmp_f = tempfile.TemporaryFile()
-        was_on_cuda = next(self.model.parameters()).is_cuda
-        self.model.cpu()
-        torch.save(self.model, tmp_f)
-        tmp_f.seek(0)
-        model_bytes = io.BytesIO(tmp_f.read())
-        if was_on_cuda:
-            self.model.cuda()
+        self.forward = model.forward
 
-        vocab_bytes = io.BytesIO()
-        pickle.dump(self.vocab, vocab_bytes)
+    def single_sentence_nll(self, sentence, prefix):
+        sentence_ids = [self.vocab[c] for c in sentence]
+        device = next(self.parameters()).device
 
-        complete_lm = {'model': model_bytes, 'vocab': vocab_bytes}
-        pickle.dump(complete_lm, f)
+        if prefix:
+            prefix_id = self.vocab[prefix]
+            tensor = torch.tensor([prefix_id] + sentence_ids).view(-1, 1).to(device)
+        else:
+            tensor = torch.tensor(sentence_ids).view(-1, 1).to(device)
 
+        h0 = self.model.init_hidden(1)
+        o, _ = self.model(tensor[:-1], h0)
 
-def load(f):
-    complete_lm = pickle.load(f)
+        if prefix:
+            nll, _ = self.decoder.neg_log_prob(o, tensor[1:])
+        else:
+            nll, _ = self.decoder.neg_log_prob(torch.cat([h0[0][0].unsqueeze(0), o]), tensor)
 
-    model_bytes = complete_lm['model']
-    tmp_f = tempfile.TemporaryFile()
-    tmp_f.write(model_bytes.getvalue())
-    tmp_f.seek(0)
-    model = torch.load(tmp_f)
-
-    vocab_bytes = complete_lm['vocab']
-    vocab_bytes.seek(0)
-    vocab = pickle.load(vocab_bytes)
-
-    return LanguageModel(model, vocab)
+        return nll.item()

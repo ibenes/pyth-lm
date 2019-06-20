@@ -2,10 +2,8 @@
 
 import argparse
 import torch
-from torch.autograd import Variable
 
 import language_models.vocab
-from language_models import language_model
 
 import typing
 
@@ -22,10 +20,6 @@ def seqs_to_tensor(seqs):
             ids[seq_n, word_n] = word
 
     return ids
-
-
-def tokens_to_pythlm(toks, vocab):
-    return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
 
 
 def dict_to_list(utts_map):
@@ -66,16 +60,20 @@ def seqs_logprob(seqs, model):
     if args.cuda:
         data = data.cuda()
 
-    X = Variable(data)
+    X = data
     h0 = model.init_hidden(batch_size)
 
     y, _ = model(X, h0)
-    y = y.data  # extract the Tensor out of the Variable
+    y = y.detach()  # extract the Tensor out of the Variable
 
     word_log_scores = pick_ys(y, seqs)
     seq_log_scores = [sum(seq) for seq in word_log_scores]
 
     return seq_log_scores
+
+
+def tokens_to_pythlm(toks, vocab):
+    return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
 
 
 if __name__ == '__main__':
@@ -99,8 +97,7 @@ if __name__ == '__main__':
         latt_vocab = language_models.vocab.vocab_from_kaldi_wordlist(f, unk_word=args.latt_unk)
 
     print("reading model...")
-    with open(args.model_from, 'rb') as model_f:
-        lm = language_model.load(model_f)
+    lm = torch.load(args.model_from, map_location='cpu')
     if args.cuda:
         lm.model.cuda()
     lm.model.eval()

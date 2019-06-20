@@ -2,10 +2,8 @@
 import argparse
 import torch
 
-import sys
-sys.path.insert(0, '/homes/kazi/ibenes/PhD/pyth-lm/')
-
-from language_models import language_model, vocab, ffnn_models
+from language_models import ffnn_models, vocab, language_model
+from language_models.decoders import FullSoftmaxDecoder
 
 
 if __name__ == '__main__':
@@ -18,8 +16,6 @@ if __name__ == '__main__':
                         help='size of word embeddings')
     parser.add_argument('--nhid', type=int, default=200,
                         help='number of hidden units per layer')
-    parser.add_argument('--ivec-dim', type=int, required=True,
-                        help='ivector dimensionality')
     parser.add_argument('--hist-len', type=int, default=2,
                         help='number of input words. If n-grams are being modelled, then (n-1)')
     parser.add_argument('--dropout', type=float, default=0.2,
@@ -37,15 +33,16 @@ if __name__ == '__main__':
 
     print("loading vocabulary...")
     with open(args.wordlist, 'r') as f:
-        vocab = vocab.vocab_from_kaldi_wordlist(f, args.unk)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(f, args.unk)
 
     print("building model...")
 
-    model = ffnn_models.BengioModelIvecInput(
-        len(vocab), args.emsize, args.hist_len,
-        args.nhid, args.dropout, args.ivec_dim
+    model = ffnn_models.BengioModel(
+        len(vocabulary), args.emsize, args.hist_len,
+        args.nhid, args.dropout
     )
 
-    lm = language_model.LanguageModel(model, vocab)
-    with open(args.save, 'wb') as f:
-        lm.save(f)
+    decoder = FullSoftmaxDecoder(args.nhid, len(vocabulary))
+
+    lm = language_model.LanguageModel(model, decoder, vocabulary)
+    torch.save(lm, args.save)

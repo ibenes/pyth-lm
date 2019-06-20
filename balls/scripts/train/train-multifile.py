@@ -1,9 +1,10 @@
+#!/usr/bin/env python
+
 import argparse
 import random
 
 import torch
 
-from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
 
 from data_pipeline.data import tokens_from_file
@@ -57,10 +58,9 @@ if __name__ == '__main__':
     init_seeds(args.seed, args.cuda)
 
     print("loading model...")
-    with open(args.load, 'rb') as f:
-        lm = language_model.load(f)
+    lm = torch.load(args.load)
     if args.cuda:
-        lm.model.cuda()
+        lm.cuda()
     print(lm.model)
 
     print("preparing data...")
@@ -99,22 +99,21 @@ if __name__ == '__main__':
         train_data_filtered = BatchFilter(
             train_data, args.batch_size, args.target_seq_len, args.min_batch_size
         )
-        optim = torch.optim.SGD(lm.model.parameters(), lr=lr, weight_decay=args.beta)
+        optim = torch.optim.SGD(lm.parameters(), lr=lr, weight_decay=args.beta)
 
         train(
-            lm.model, train_data_filtered, optim, logger,
+            lm, train_data_filtered, optim, logger,
             clip=args.clip,
             use_ivecs=False
         )
         train_data_filtered.report()
 
-        val_loss = evaluate(lm.model, valid_data, use_ivecs=False)
+        val_loss = evaluate(lm, valid_data, use_ivecs=False)
         print(epoch_summary(epoch, logger.nb_updates(), logger.time_since_creation(), val_loss))
 
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
-            with open(args.save, 'wb') as f:
-                lm.save(f)
+            torch.save(lm, args.save)
             best_val_loss = val_loss
         else:
             lr /= 2.0

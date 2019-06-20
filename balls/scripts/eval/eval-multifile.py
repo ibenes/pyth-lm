@@ -1,7 +1,9 @@
+#!/usr/bin/env python
+
 import argparse
 import math
+import torch
 
-from language_models import language_model
 from data_pipeline.multistream import BatchBuilder
 
 from data_pipeline.data import tokens_from_file
@@ -32,10 +34,9 @@ if __name__ == '__main__':
     init_seeds(args.seed, args.cuda)
 
     print("loading model...")
-    with open(args.load, 'rb') as f:
-        lm = language_model.load(f)
+    lm = torch.load(args.load)
     if args.cuda:
-        lm.model.cuda()
+        lm.cuda()
     print(lm.model)
 
     print("preparing data...")
@@ -50,5 +51,5 @@ if __name__ == '__main__':
     if args.cuda:
         data = CudaStream(data)
 
-    loss = evaluate(lm.model, data, use_ivecs=False)
+    loss = evaluate(lm, data, use_ivecs=False)
     print('loss {:5.2f} | ppl {:8.2f}'.format(loss, math.exp(loss)))

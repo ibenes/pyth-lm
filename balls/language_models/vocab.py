@@ -39,6 +39,12 @@ class Vocabulary(Mapping):
         else:
             pass  # do not do anything for known words
 
+    def is_continuous(self):
+        return max(self.i2w_.keys()) == len(self) - 1
+
+    def missing_indexes(self):
+        return [i for i in range(len(self)) if i not in self.i2w_]
+
     def w2i(self, word):
         return self.w2i_.get(word, self.unk_index_)
 

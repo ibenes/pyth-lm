@@ -78,6 +78,41 @@ class VocabularyTests(unittest.TestCase):
         vocabulary.add_word('hi')
         self.assertEqual(vocabulary.i2w(vocabulary['hi']), 'hi')
 
+    def test_continuity_test_positive(self):
+        kaldi_vocab = StringIO(""" <unk> 0
+                                    a 1
+                                    b 2 """)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertTrue(vocabulary.is_continuous())
+
+    def test_continuity_test_negative(self):
+        kaldi_vocab = StringIO(""" <unk> 0
+                                    a 1
+                                    b 3 """)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertFalse(vocabulary.is_continuous())
+
+    def test_missing_indexes_none(self):
+        kaldi_vocab = StringIO(""" <unk> 0
+                                    a 1
+                                    b 2 """)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertEqual(vocabulary.missing_indexes(), [])
+
+    def test_missing_indexes_middle(self):
+        kaldi_vocab = StringIO(""" <unk> 0
+                                    a 1
+                                    b 3 """)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertEqual(vocabulary.missing_indexes(), [2])
+
+    def test_missing_indexes_beginning(self):
+        kaldi_vocab = StringIO(""" <unk> 1
+                                    a 2
+                                    b 3 """)
+        vocabulary = vocab.vocab_from_kaldi_wordlist(kaldi_vocab, "<unk>")
+        self.assertEqual(vocabulary.missing_indexes(), [0])
+
 
 class VocabFromKaldiTests(unittest.TestCase):
     def setUp(self):
