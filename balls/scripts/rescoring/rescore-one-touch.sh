@@ -1,7 +1,8 @@
 work_dir=$1
 n_jobs=$2
 
-pythlm_model=/mnt/matylda5/ibenes/projects/wsj-rescoring/lstm.lm
+# pythlm_model=/mnt/matylda5/ibenes/projects/wsj-rescoring/lstm.lm
+pythlm_model=/mnt/matylda5/ibenes/projects/pero/lms/cs-wiki.lm
 
 kaldi_decode_dir=/mnt/matylda5/ibenes/kaldi/egs/wsj/s5/exp/tri4b/decode_bd_tgpr_dev93
 kaldi_wordlist=/mnt/matylda5/ibenes/kaldi/egs/wsj/s5/data/lang_test_bd_tgpr/words.txt
@@ -20,44 +21,44 @@ mkdir -p $work_dir
 
 for ii in $(seq 1 $n_jobs)
 do 
-#     lattice-to-nbest \
-#             --acoustic-scale=$(echo 1/$optimal_lmwt | bc -l) \
-#             --n=100 \
-#             "ark:gunzip -c $kaldi_decode_dir/lat.$ii.gz |" ark:- |\
-#         tee $work_dir/latt.$ii.nbest |\
-#         nbest-to-linear \
-#             ark:- \
-#             ark,t:$work_dir/$ii.ali \
-#             ark,t:$work_dir/$ii.words \
-#             ark,t:$work_dir/$ii.hclgscore \
-#             ark,t:$work_dir/$ii.acscore || break
-#
-#     lattice-lmrescore \
-#         --lm-scale=-1.0 \
-#         "ark:$work_dir/latt.$ii.nbest" \
-#         "$old_lm" \
-#         ark:- |\
-#         nbest-to-linear \
-#             ark:- \
-#             ark:/dev/null \
-#             ark:/dev/null \
-#             ark,t:$work_dir/$ii.hclscore \
-#             ark:/dev/null || break
-#
+    lattice-to-nbest \
+            --acoustic-scale=$(echo 1/$optimal_lmwt | bc -l) \
+            --n=100 \
+            "ark:gunzip -c $kaldi_decode_dir/lat.$ii.gz |" ark:- |\
+        tee $work_dir/latt.$ii.nbest |\
+        nbest-to-linear \
+            ark:- \
+            ark,t:$work_dir/$ii.ali \
+            ark,t:$work_dir/$ii.words \
+            ark,t:$work_dir/$ii.hclgscore \
+            ark,t:$work_dir/$ii.acscore || break
+
+    lattice-lmrescore \
+        --lm-scale=-1.0 \
+        "ark:$work_dir/latt.$ii.nbest" \
+        "$old_lm" \
+        ark:- |\
+        nbest-to-linear \
+            ark:- \
+            ark:/dev/null \
+            ark:/dev/null \
+            ark,t:$work_dir/$ii.hclscore \
+            ark:/dev/null || break
+
     scripts/rescoring/score-combiner.py \
         $work_dir/$ii.hclgscore 1.0 \
         $work_dir/$ii.hclscore -1.0 > $work_dir/$ii.gscore
 done
 
-# for ii in $(seq 1 $n_jobs) 
-# do 
-#     scripts/rescoring/rescore-kaldi-latt.py \
-#         --latt-vocab=$kaldi_wordlist \
-#         --latt-unk=$kaldi_unk \
-#         --model-from=$pythlm_model \
-#         $work_dir/$ii.words \
-#         $work_dir/$ii.rnnlm-scores 
-# done
+for ii in $(seq 1 $n_jobs) 
+do 
+    scripts/rescoring/rescore-kaldi-latt.py \
+        --latt-vocab=$kaldi_wordlist \
+        --latt-unk=$kaldi_unk \
+        --model-from=$pythlm_model \
+        $work_dir/$ii.words \
+        $work_dir/$ii.rnnlm-scores 
+done
 
 for lm_w in $lmws
 do
