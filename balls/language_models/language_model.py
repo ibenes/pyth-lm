@@ -12,11 +12,21 @@ class LanguageModel(torch.nn.Module):
         self.forward = model.forward
 
     def single_sentence_nll(self, sentence, prefix):
-        prefix_id = self.vocab[prefix]
         sentence_ids = [self.vocab[c] for c in sentence]
-
         device = next(self.parameters()).device
-        tensor = torch.tensor([prefix_id] + sentence_ids).view(-1, 1).to(device)
-        o, _ = self.model(tensor[:-1], self.model.init_hidden(1))
-        nll, _ = self.decoder.neg_log_prob(o, tensor[1:])
+
+        if prefix:
+            prefix_id = self.vocab[prefix]
+            tensor = torch.tensor([prefix_id] + sentence_ids).view(-1, 1).to(device)
+        else:
+            tensor = torch.tensor(sentence_ids).view(-1, 1).to(device)
+
+        h0 = self.model.init_hidden(1)
+        o, _ = self.model(tensor[:-1], h0)
+
+        if prefix:
+            nll, _ = self.decoder.neg_log_prob(o, tensor[1:])
+        else:
+            nll, _ = self.decoder.neg_log_prob(torch.cat([h0[0][0].unsqueeze(0), o]), tensor)
+
         return nll.item()
