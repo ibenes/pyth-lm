@@ -30,3 +30,6 @@ class LanguageModel(torch.nn.Module):
             nll, _ = self.decoder.neg_log_prob(torch.cat([h0[0][0].unsqueeze(0), o]), tensor)
 
         return nll.item()
+
+    def batch_nll(self, sentences, prefix):
+        return [self.single_sentence_nll(s, prefix) for s in sentences]
