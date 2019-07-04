@@ -68,6 +68,16 @@ class VocabularyTests(unittest.TestCase):
         vocabulary.add_word('hi')
         self.assertEqual(len(vocabulary), 2)
 
+    def test_unk_word(self):
+        vocabulary = vocab.Vocabulary('<bla>', 1)
+        vocabulary.add_word('hi')
+        self.assertEqual(vocabulary.unk_word, '<bla>')
+
+    def test_unk_ind(self):
+        vocabulary = vocab.Vocabulary('<bla>', 2)
+        vocabulary.add_word('hi')
+        self.assertEqual(vocabulary.unk_ind, 2)
+
     def test_add_already_known_word(self):
         vocabulary = vocab.Vocabulary('<unk>', 0)
         vocabulary.add_word('<unk>')

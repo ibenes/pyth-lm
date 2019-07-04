@@ -48,6 +48,14 @@ class Vocabulary(Mapping):
     def w2i(self, word):
         return self.w2i_.get(word, self.unk_index_)
 
+    @property
+    def unk_word(self):
+        return self.unk_word_
+
+    @property
+    def unk_ind(self):
+        return self.unk_index_
+
     def __getitem__(self, idx):
         return self.w2i(idx)
 
