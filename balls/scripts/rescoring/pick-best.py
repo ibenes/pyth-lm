@@ -1,5 +1,8 @@
+#!/usr/bin/env python
+
 import argparse
 import sys
+
 
 def read_latt(f):
     line = f.readline()
@@ -7,7 +10,7 @@ def read_latt(f):
         line = f.readline()
 
     if line == '':
-       return None, None, None
+        return None, None, None
 
     fields = line.strip().split('-')
     segment_id = '-'.join(fields[:-1])
@@ -21,15 +24,16 @@ def read_latt(f):
 
     return segment_id, trans_id, content
 
+
 def read_pick(f):
     return tuple(f.readline().split())
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('pick_file')
 
     args = parser.parse_args()
-
 
     tot_printed = 0
     unserved = 0

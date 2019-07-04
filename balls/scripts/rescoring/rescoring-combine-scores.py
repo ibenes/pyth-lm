@@ -1,13 +1,18 @@
+#!/usr/bin/env python
+
 import argparse
 
-import kaldi_itf
+import balls.kaldi_itf
+
 
 def dict_argmin(dict):
     return min(dict, key=dict.get)
 
+
 def write_best(scores, key, out_f):
     best = dict_argmin(scores)
     out_f.write(key + ' ' + best + '\n')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
@@ -51,8 +56,10 @@ if __name__ == '__main__':
             gr_s = float(gr_fields[1])
             lm_s = float(lm_fields[1])
 
-            segment_utts_scores[trans_id] = args.ac_scale * ac_s + \
-                                            args.gr_scale * gr_s + \
-                                            args.lm_scale * lm_s
+            segment_utts_scores[trans_id] = (
+                args.ac_scale * ac_s +
+                args.gr_scale * gr_s +
+                args.lm_scale * lm_s
+            )
 
         write_best(segment_utts_scores, curr_seg, out_f)

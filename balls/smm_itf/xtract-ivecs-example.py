@@ -7,7 +7,7 @@
 import argparse
 import torch
 
-import smm_ivec_extractor
+import .smm_ivec_extractor
 
 
 def bow_from_sentence(sentence, vocab):

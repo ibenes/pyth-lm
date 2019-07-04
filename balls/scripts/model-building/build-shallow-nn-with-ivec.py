@@ -2,8 +2,8 @@
 import argparse
 import torch
 
-from language_models import language_model, vocab, ffnn_models
-from language_models.decoders import FullSoftmaxDecoder
+from balls.language_models import language_model, vocab, ffnn_models
+from balls.language_models.decoders import FullSoftmaxDecoder
 
 
 if __name__ == '__main__':

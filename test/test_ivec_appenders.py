@@ -1,14 +1,14 @@
-import data_pipeline.split_corpus_dataset as split_corpus_dataset
-import smm_itf.ivec_appenders as ivec_appenders
+import balls.data_pipeline.split_corpus_dataset as split_corpus_dataset
+import balls.smm_itf.ivec_appenders as ivec_appenders
 import numpy as np
-from test.common import TestCase
+from .common import TestCase
 
 import torch
 from sklearn.feature_extraction.text import CountVectorizer
-import smm_itf.smm_ivec_extractor as smm_ivec_extractor
+import balls.smm_itf.smm_ivec_extractor as smm_ivec_extractor
 
-from language_models.vocab import Vocabulary
-from test.utils import getStream
+from balls.language_models.vocab import Vocabulary
+from .utils import getStream
 
 import sys
 sys.path.append('/mnt/matylda5/ibenes/projects/santosh-lm/smm-pytorch/')

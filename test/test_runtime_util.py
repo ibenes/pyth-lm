@@ -1,7 +1,7 @@
 import torch
-from test.common import TestCase
+from .common import TestCase
 
-from runtime.runtime_utils import repackage_hidden
+from balls.runtime.runtime_utils import repackage_hidden
 
 
 class TensorReorganizerTests(TestCase):

@@ -1,7 +1,7 @@
 import unittest
 import torch 
 
-from analysis import categorical_entropy, categorical_cross_entropy, categorical_kld
+from balls.analysis import categorical_entropy, categorical_cross_entropy, categorical_kld
 
 
 class CategoricalEntropyTests(unittest.TestCase):

@@ -1,60 +1,25 @@
+#!/usr/bin/env python
+
 import argparse
 import torch
 
-import vocab
+import balls.language_models.vocab
 
-import kaldi_itf
+import typing
 
-
-def max_len(seqs):
-    return max([len(seq) for seq in seqs])
-
-
-def pick_ys(y, seq_x):
-    seqs_ys = []
-    for seq_n, seq in enumerate(seq_x):
-        seq_ys = [1.0]  # hard 1.0 for the 'sure' <s>
-        for w_n, w in enumerate(seq[1:]):  # skipping the initial element ^^^
-            seq_ys.append(y[w_n, seq_n, w])
-        seqs_ys.append(seq_ys)
-
-    return seqs_ys
+import balls.kaldi_itf
 
 
 def seqs_to_tensor(seqs):
     batch_size = len(seqs)
-    maxlen = max_len(seqs)
+    maxlen = max([len(seq) for seq in seqs])
+
     ids = torch.LongTensor(batch_size, maxlen).zero_()
     for seq_n, seq in enumerate(seqs):
         for word_n, word in enumerate(seq):
             ids[seq_n, word_n] = word
 
-    # indexing is X[time][batch], thus we transpose
-    data = ids.t().contiguous()
-    return data, batch_size
-
-
-def seqs_logprob(seqs, model):
-    ''' Sequence as a list of integers
-    '''
-    data, batch_size = seqs_to_tensor(seqs)
-
-    if args.cuda:
-        data = data.cuda()
-
-    X = data
-    h0 = model.init_hidden(batch_size)
-
-    y, _ = model(X, h0)
-
-    word_log_scores = pick_ys(y, seqs)
-    seq_log_scores = [sum(seq) for seq in word_log_scores]
-
-    return seq_log_scores
-
-
-def tokens_to_pythlm(toks, vocab):
-    return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
+    return ids
 
 
 def dict_to_list(utts_map):
@@ -72,14 +37,52 @@ def translate_latt_to_model(words, latt_vocab, model_vocab):
     return tokens_to_pythlm(words, model_vocab)
 
 
+def pick_ys(y, seq_x):
+    seqs_ys = []
+    for seq_n, seq in enumerate(seq_x):
+        seq_ys = [1.0]  # hard 1.0 for the 'sure' <s>
+        for w_n, w in enumerate(seq[1:]):  # skipping the initial element ^^^
+            seq_ys.append(y[w_n, seq_n, w])
+        seqs_ys.append(seq_ys)
+
+    return seqs_ys
+
+
+def seqs_logprob(seqs, lm):
+    ''' Sequence as a list of integers
+    '''
+    data = seqs_to_tensor(seqs)
+    batch_size = data.size(0)
+
+    if not lm.model.batch_first:
+        data = data.t().contiguous()
+
+    if args.cuda:
+        data = data.cuda()
+
+    X = data
+    h0 = lm.model.init_hidden(batch_size)
+
+    o, _ = lm.model(X, h0)
+    y = lm.decoder(o)
+    y = y.detach()  # extract the Tensor out of the Variable
+
+    word_log_scores = pick_ys(y, seqs)
+    seq_log_scores = [sum(seq) for seq in word_log_scores]
+
+    return seq_log_scores
+
+
+def tokens_to_pythlm(toks, vocab):
+    return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--latt-vocab', type=str, required=True,
                         help='word -> int map; Kaldi style "words.txt"')
-    parser.add_argument('--model-vocab', type=str, required=True,
-                        help='word -> int map; Kaldi style "words.txt"')
-    parser.add_argument('--batch_size', type=int, default=1, metavar='N',
-                        help='batch size')
+    parser.add_argument('--latt-unk', type=str, default='<unk>',
+                        help='unk symbol used in the lattice')
     parser.add_argument('--cuda', action='store_true',
                         help='use CUDA')
     parser.add_argument('--model-from', type=str, required=True,
@@ -90,23 +93,19 @@ if __name__ == '__main__':
 
     print(args)
 
-    print("reading vocabs...")
+    print("reading lattice vocab...")
     with open(args.latt_vocab, 'r') as f:
-        latt_vocab = vocab.vocab_from_kaldi_wordlist(f, unk_word='<unk>')
-
-    with open(args.model_vocab, 'r') as f:
-        model_vocab = vocab.vocab_from_kaldi_wordlist(f)
+        latt_vocab = language_models.vocab.vocab_from_kaldi_wordlist(f, unk_word=args.latt_unk)
 
     print("reading model...")
-    with open(args.model_from, 'rb') as f:
-        model = torch.load(f)
+    lm = torch.load(args.model_from, map_location='cpu')
     if args.cuda:
-        model.cuda()
-    model.eval()
+        lm.model.cuda()
+    lm.model.eval()
 
     print("scoring...")
-    curr_seg = None
-    segment_utts = {}
+    curr_seg = ''
+    segment_utts: typing.Dict[str, typing.Any] = {}
 
     with open(args.in_filename) as in_f, open(args.out_filename, 'w') as out_f:
         for line in in_f:
@@ -114,18 +113,18 @@ if __name__ == '__main__':
             segment, trans_id = kaldi_itf.split_nbest_key(fields[0])
 
             word_ids = [int(wi) for wi in fields[1:]]
-            ids = translate_latt_to_model(word_ids, latt_vocab, model_vocab)
+            ids = translate_latt_to_model(word_ids, latt_vocab, lm.vocab)
 
             if not curr_seg:
                 curr_seg = segment
 
             if segment != curr_seg:
                 X, rev_map = dict_to_list(segment_utts)  # reform the word sequences
-                y = seqs_logprob(X, model)  # score
+                y = seqs_logprob(X, lm)  # score
 
                 # write
                 for i, log_p in enumerate(y):
-                    out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p) + '\n')
+                    out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p.item()) + '\n')
 
                 curr_seg = segment
                 segment_utts = {}
@@ -134,8 +133,8 @@ if __name__ == '__main__':
 
         # Last segment:
         X, rev_map = dict_to_list(segment_utts)  # reform the word sequences
-        y = seqs_logprob(X, model)  # score
+        y = seqs_logprob(X, lm)  # score
 
         # write
         for i, log_p in enumerate(y):
-            out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p) + '\n')
+            out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p.item()) + '\n')

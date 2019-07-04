@@ -5,15 +5,15 @@ import random
 
 import torch
 
-from data_pipeline.multistream import BatchBuilder
+from balls.data_pipeline.multistream import BatchBuilder
 
-from data_pipeline.data import tokens_from_file
-from data_pipeline.temporal_splitting import TemporalSplits
+from balls.data_pipeline.data import tokens_from_file
+from balls.data_pipeline.temporal_splitting import TemporalSplits
 
-from runtime.runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter, epoch_summary
-from runtime.runtime_multifile import evaluate, train
+from balls.runtime.runtime_utils import CudaStream, init_seeds, filelist_to_objects, BatchFilter, epoch_summary
+from balls.runtime.runtime_multifile import evaluate, train
 
-from runtime.loggers import InfinityLogger
+from balls.runtime.loggers import InfinityLogger
 
 
 if __name__ == '__main__':
