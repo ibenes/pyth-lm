@@ -5,7 +5,7 @@ import sys
 
 import numpy as np
 
-from oov_clustering.embeddings_io import emb_line_iterator, str_from_embedding
+from balls.oov_clustering.embeddings_io import emb_line_iterator, str_from_embedding
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

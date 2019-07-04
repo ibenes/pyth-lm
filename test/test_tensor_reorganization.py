@@ -1,8 +1,8 @@
-from runtime.tensor_reorganization import TensorReorganizer
+from balls.runtime.tensor_reorganization import TensorReorganizer
 
 import torch
 from torch.autograd import Variable
-from test.common import TestCase
+from .common import TestCase
 
 
 class Dummy_lstm():

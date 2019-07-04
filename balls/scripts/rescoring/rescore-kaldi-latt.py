@@ -3,11 +3,11 @@
 import argparse
 import torch
 
-import language_models.vocab
+import balls.language_models.vocab
 
 import typing
 
-import kaldi_itf
+import balls.kaldi_itf
 
 
 def seqs_to_tensor(seqs):
@@ -48,22 +48,23 @@ def pick_ys(y, seq_x):
     return seqs_ys
 
 
-def seqs_logprob(seqs, model):
+def seqs_logprob(seqs, lm):
     ''' Sequence as a list of integers
     '''
     data = seqs_to_tensor(seqs)
     batch_size = data.size(0)
 
-    if not model.batch_first:
+    if not lm.model.batch_first:
         data = data.t().contiguous()
 
     if args.cuda:
         data = data.cuda()
 
     X = data
-    h0 = model.init_hidden(batch_size)
+    h0 = lm.model.init_hidden(batch_size)
 
-    y, _ = model(X, h0)
+    o, _ = lm.model(X, h0)
+    y = lm.decoder(o)
     y = y.detach()  # extract the Tensor out of the Variable
 
     word_log_scores = pick_ys(y, seqs)
@@ -119,11 +120,11 @@ if __name__ == '__main__':
 
             if segment != curr_seg:
                 X, rev_map = dict_to_list(segment_utts)  # reform the word sequences
-                y = seqs_logprob(X, lm.model)  # score
+                y = seqs_logprob(X, lm)  # score
 
                 # write
                 for i, log_p in enumerate(y):
-                    out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p) + '\n')
+                    out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p.item()) + '\n')
 
                 curr_seg = segment
                 segment_utts = {}
@@ -132,8 +133,8 @@ if __name__ == '__main__':
 
         # Last segment:
         X, rev_map = dict_to_list(segment_utts)  # reform the word sequences
-        y = seqs_logprob(X, lm.model)  # score
+        y = seqs_logprob(X, lm)  # score
 
         # write
         for i, log_p in enumerate(y):
-            out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p) + '\n')
+            out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p.item()) + '\n')

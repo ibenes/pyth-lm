@@ -4,13 +4,13 @@ import argparse
 import math
 import torch
 
-from smm_itf import ivec_appenders
-from data_pipeline.split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
-from data_pipeline.multistream import BatchBuilder
-from smm_itf import smm_ivec_extractor
+from balls.smm_itf import ivec_appenders
+from balls.data_pipeline.split_corpus_dataset import DomainAdaptationSplitFFMultiTarget
+from balls.data_pipeline.multistream import BatchBuilder
+from balls.smm_itf import smm_ivec_extractor
 
-from runtime.runtime_utils import CudaStream, filelist_to_objects, init_seeds
-from runtime.runtime_multifile import evaluate_
+from balls.runtime.runtime_utils import CudaStream, filelist_to_objects, init_seeds
+from balls.runtime.runtime_multifile import evaluate_
 
 
 if __name__ == '__main__':

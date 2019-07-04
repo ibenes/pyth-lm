@@ -4,7 +4,7 @@ EXP_NAME=$2
 DATA_ROOT=$3
 IVEC_EXTRACTOR=$4
 
-python balls/scripts/model_building/build_bengio.py \
+python balls/scripts/model-building/build-shallow-nn.py \
     --wordlist=$DATA_ROOT/wordlist.txt \
     --unk="<unk>" \
     --emsize=20 \

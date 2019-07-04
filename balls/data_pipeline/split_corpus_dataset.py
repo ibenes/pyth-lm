@@ -1,6 +1,6 @@
 import torch
 
-from data_pipeline.temporal_splitting import TemporalSplits
+from balls.data_pipeline.temporal_splitting import TemporalSplits
 
 
 class TokenizedSplitFFBase():

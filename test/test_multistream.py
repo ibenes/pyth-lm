@@ -1,12 +1,12 @@
-from data_pipeline.multistream import BatchBuilder
-import data_pipeline.split_corpus_dataset as split_corpus_dataset
-import smm_itf.ivec_appenders as ivec_appenders
+from balls.data_pipeline.multistream import BatchBuilder
+import balls.data_pipeline.split_corpus_dataset as split_corpus_dataset
+import balls.smm_itf.ivec_appenders as ivec_appenders
 
 import numpy as np
 import torch
-from test.common import TestCase
+from .common import TestCase
 
-from test.utils import getStream
+from .utils import getStream
 
 
 # TODO remove the dependency on TokenizedSplit, ivectors etc.

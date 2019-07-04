@@ -1,5 +1,5 @@
 import unittest
-import language_models.vocab as vocab
+import balls.language_models.vocab as vocab
 from io import StringIO
 
 from collections import Mapping

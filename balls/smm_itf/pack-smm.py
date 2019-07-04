@@ -9,7 +9,7 @@ sys.path.append('/mnt/matylda5/ibenes/projects/santosh-lm/smm-pytorch')
 from smm import SMM
 import utils
 
-import smm_ivec_extractor
+import .smm_ivec_extractor
 
 
 if __name__ == '__main__':

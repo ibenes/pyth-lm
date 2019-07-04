@@ -7,8 +7,8 @@ import sys
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
-from oov_clustering.embeddings_io import all_embs_by_key
-from oov_clustering.det import DETCurve
+from balls.oov_clustering.embeddings_io import all_embs_by_key
+from balls.oov_clustering.det import DETCurve
 
 
 def extract_unique_scores(square_scores):

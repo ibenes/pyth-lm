@@ -1,9 +1,9 @@
-import data_pipeline.split_corpus_dataset as split_corpus_dataset
+import balls.data_pipeline.split_corpus_dataset as split_corpus_dataset
 
 import torch
-from test.common import TestCase
+from .common import TestCase
 
-from test.utils import getStream
+from .utils import getStream
 
 
 class TokenizedSplitTests(TestCase):

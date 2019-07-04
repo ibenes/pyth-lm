@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from oov_clustering.det import DETCurve
+from balls.oov_clustering.det import DETCurve
 from typing import List, Tuple
 import pickle
 import random

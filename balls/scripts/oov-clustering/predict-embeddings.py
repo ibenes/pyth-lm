@@ -4,8 +4,8 @@ import sys
 
 import torch
 
-from oov_clustering.embeddings_io import str_from_embedding
-from oov_clustering.embeddings_computation import tensor_from_words
+from balls.oov_clustering.embeddings_io import str_from_embedding
+from balls.oov_clustering.embeddings_computation import tensor_from_words
 
 
 def relevant_prefix(transcript, word_of_interest):

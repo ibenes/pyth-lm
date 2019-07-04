@@ -2,7 +2,7 @@
 import argparse
 import sys
 
-from language_models.vocab import vocab_from_kaldi_wordlist
+from balls.language_models.vocab import vocab_from_kaldi_wordlist
 
 ST_WORDS = 0
 ST_OOV_INTEREST = 1

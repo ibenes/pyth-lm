@@ -5,14 +5,14 @@ import random
 
 import torch
 
-from data_pipeline.multistream import BatchBuilder
-from smm_itf import ivec_appenders
-from smm_itf import smm_ivec_extractor
+from balls.data_pipeline.multistream import BatchBuilder
+from balls.smm_itf import ivec_appenders
+from balls.smm_itf import smm_ivec_extractor
 
-from runtime.runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter, epoch_summary
-from runtime.runtime_multifile import train, evaluate
+from balls.runtime.runtime_utils import CudaStream, init_seeds, filelist_to_tokenized_splits, BatchFilter, epoch_summary
+from balls.runtime.runtime_multifile import train, evaluate
 
-from runtime.loggers import InfinityLogger
+from balls.runtime.loggers import InfinityLogger
 
 
 if __name__ == '__main__':

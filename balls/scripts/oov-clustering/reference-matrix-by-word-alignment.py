@@ -5,8 +5,8 @@ import sys
 
 import numpy as np
 
-from oov_clustering.oov_alignment_lib import align, extract_mismatch
-from oov_clustering.oov_alignment_lib import find_in_mismatches, number_of_errors
+from balls.oov_clustering.oov_alignment_lib import align, extract_mismatch
+from balls.oov_clustering.oov_alignment_lib import find_in_mismatches, number_of_errors
 
 from typing import Dict, List, Tuple
 

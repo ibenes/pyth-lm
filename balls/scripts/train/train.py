@@ -4,14 +4,14 @@ import argparse
 import math
 import torch
 
-from data_pipeline.data import tokens_from_fn
-from data_pipeline.multistream import batchify
-from data_pipeline.temporal_splitting import TemporalSplits
+from balls.data_pipeline.data import tokens_from_fn
+from balls.data_pipeline.multistream import batchify
+from balls.data_pipeline.temporal_splitting import TemporalSplits
 
-from runtime.runtime_utils import TransposeWrapper, init_seeds, epoch_summary
-from runtime.runtime_multifile import evaluate_, train_
+from balls.runtime.runtime_utils import TransposeWrapper, init_seeds, epoch_summary
+from balls.runtime.runtime_multifile import evaluate_, train_
 
-from runtime.loggers import ProgressLogger
+from balls.runtime.loggers import ProgressLogger
 
 
 if __name__ == '__main__':

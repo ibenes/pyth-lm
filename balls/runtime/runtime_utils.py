@@ -1,7 +1,7 @@
 import random
 import torch
 
-from data_pipeline import split_corpus_dataset
+from balls.data_pipeline import split_corpus_dataset
 
 import sys
 import math

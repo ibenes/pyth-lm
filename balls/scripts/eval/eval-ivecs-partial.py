@@ -4,14 +4,14 @@ import argparse
 import math
 import torch
 
-from smm_itf import ivec_appenders
-from smm_itf import smm_ivec_extractor
-from data_pipeline.multistream import BatchBuilder
-from data_pipeline.temporal_splitting import TemporalSplits
-from data_pipeline.split_corpus_dataset import TokenizedSplitFFBase
+from balls.smm_itf import ivec_appenders
+from balls.smm_itf import smm_ivec_extractor
+from balls.data_pipeline.multistream import BatchBuilder
+from balls.data_pipeline.temporal_splitting import TemporalSplits
+from balls.data_pipeline.split_corpus_dataset import TokenizedSplitFFBase
 
-from runtime.runtime_utils import CudaStream, filelist_to_objects, init_seeds
-from runtime.runtime_multifile import evaluate
+from balls.runtime.runtime_utils import CudaStream, filelist_to_objects, init_seeds
+from balls.runtime.runtime_multifile import evaluate
 
 
 if __name__ == '__main__':
