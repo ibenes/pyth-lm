@@ -3,7 +3,7 @@
 import argparse
 import torch
 
-import balls.language_models.vocab
+import balls.language_models.vocab as vocab
 
 import typing
 
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     print("reading lattice vocab...")
     with open(args.latt_vocab, 'r') as f:
-        latt_vocab = language_models.vocab.vocab_from_kaldi_wordlist(f, unk_word=args.latt_unk)
+        latt_vocab = vocab.vocab_from_kaldi_wordlist(f, unk_word=args.latt_unk)
 
     print("reading model...")
     lm = torch.load(args.model_from, map_location='cpu')
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     with open(args.in_filename) as in_f, open(args.out_filename, 'w') as out_f:
         for line in in_f:
             fields = line.split()
-            segment, trans_id = kaldi_itf.split_nbest_key(fields[0])
+            segment, trans_id = balls.kaldi_itf.split_nbest_key(fields[0])
 
             word_ids = [int(wi) for wi in fields[1:]]
             ids = translate_latt_to_model(word_ids, latt_vocab, lm.vocab)
