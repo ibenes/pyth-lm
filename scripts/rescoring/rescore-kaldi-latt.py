@@ -32,7 +32,7 @@ def dict_to_list(utts_map):
     return list_of_lists, rev_map
 
 
-def translate_latt_to_model(words, latt_vocab, model_vocab):
+def translate_latt_to_model(word_ids, latt_vocab, model_vocab):
     words = [latt_vocab.i2w(i) for i in word_ids]
     return tokens_to_pythlm(words, model_vocab)
 
@@ -57,7 +57,7 @@ def seqs_logprob(seqs, lm):
     if not lm.model.batch_first:
         data = data.t().contiguous()
 
-    if args.cuda:
+    if next(lm.model.parameters()).is_cuda:
         data = data.cuda()
 
     X = data
@@ -77,7 +77,7 @@ def tokens_to_pythlm(toks, vocab):
     return [vocab.w2i('<s>')] + [vocab.w2i(tok) for tok in toks] + [vocab.w2i("</s>")]
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='PyTorch RNN/LSTM Language Model')
     parser.add_argument('--latt-vocab', type=str, required=True,
                         help='word -> int map; Kaldi style "words.txt"')
@@ -138,3 +138,7 @@ if __name__ == '__main__':
         # write
         for i, log_p in enumerate(y):
             out_f.write(curr_seg + '-' + rev_map[i] + ' ' + str(-log_p.item()) + '\n')
+
+
+if __name__ == '__main__':
+    main()
