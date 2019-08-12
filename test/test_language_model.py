@@ -1,8 +1,8 @@
 import unittest
-from language_models.lstm_model import LSTMLanguageModel
-from language_models.decoders import FullSoftmaxDecoder
-from language_models.language_model import LanguageModel
-from language_models.vocab import Vocabulary
+from balls.language_models.lstm_model import LSTMLanguageModel
+from balls.language_models.decoders import FullSoftmaxDecoder
+from balls.language_models.language_model import LanguageModel
+from balls.language_models.vocab import Vocabulary
 
 
 class BatchNLLCorrectnessTests(unittest.TestCase):
