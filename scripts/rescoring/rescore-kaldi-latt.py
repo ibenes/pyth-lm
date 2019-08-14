@@ -32,9 +32,15 @@ def dict_to_list(utts_map):
     return list_of_lists, rev_map
 
 
-def translate_latt_to_model(word_ids, latt_vocab, model_vocab):
+def translate_latt_to_model(word_ids, latt_vocab, model_vocab, mode='words'):
     words = [latt_vocab.i2w(i) for i in word_ids]
-    return tokens_to_pythlm(words, model_vocab)
+    if mode == 'words':
+        return tokens_to_pythlm(words, model_vocab)
+    elif mode == 'chars':
+        sentence = " ".join(words)
+        return tokens_to_pythlm(list(sentence), model_vocab)
+    else:
+        raise ValueError('Got unexpected mode "{}"'.format(mode))
 
 
 def pick_ys(y, seq_x):
@@ -85,6 +91,8 @@ def main():
                         help='unk symbol used in the lattice')
     parser.add_argument('--cuda', action='store_true',
                         help='use CUDA')
+    parser.add_argument('--character-lm', action='store_true',
+                        help='Process strings by characters')
     parser.add_argument('--model-from', type=str, required=True,
                         help='where to load the model from')
     parser.add_argument('in_filename', help='second output of nbest-to-linear, textual')
@@ -92,6 +100,8 @@ def main():
     args = parser.parse_args()
 
     print(args)
+
+    mode = 'chars' if args.character_lm else 'words'
 
     print("reading lattice vocab...")
     with open(args.latt_vocab, 'r') as f:
@@ -113,7 +123,7 @@ def main():
             segment, trans_id = balls.kaldi_itf.split_nbest_key(fields[0])
 
             word_ids = [int(wi) for wi in fields[1:]]
-            ids = translate_latt_to_model(word_ids, latt_vocab, lm.vocab)
+            ids = translate_latt_to_model(word_ids, latt_vocab, lm.vocab, mode)
 
             if not curr_seg:
                 curr_seg = segment
