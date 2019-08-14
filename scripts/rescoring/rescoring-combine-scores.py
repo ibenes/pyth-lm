@@ -2,7 +2,7 @@
 
 import argparse
 
-import balls.kaldi_itf
+import balls.kaldi_itf as kaldi_itf
 
 
 def dict_argmin(dict):
