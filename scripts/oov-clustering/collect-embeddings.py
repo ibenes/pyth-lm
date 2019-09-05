@@ -11,10 +11,13 @@ from balls.oov_clustering.embeddings_computation import tensor_from_words
 
 def embs_from_words(words, lm):
     words = ["</s>"] + words
-    th_data = tensor_from_words(words, lm.vocab)
+    th_data = tensor_from_words(words, lm.vocab)[:, :-1]
     h0 = lm.model.init_hidden(th_data.size(0))
-    emb, h = lm.model(th_data[:, :-1], h0)
-    return emb[0].data
+
+    if not lm.model.batch_first:
+        th_data = th_data.t()
+    emb, h = lm.model(th_data, h0)
+    return [an_embedding[0].detach() for an_embedding in emb]
 
 
 if __name__ == '__main__':
