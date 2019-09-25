@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--length-norm', action='store_true')
     parser.add_argument('--log-det', action='store_true')
     parser.add_argument('--eps', type=float, default=1e-3, help='to prevent log of zero')
-    parser.add_argument('--plot', action='store_true')
+    parser.add_argument('--plot', help='where to store the DET curve')
     parser.add_argument('--baseline', action='store_true')
     parser.add_argument('--free-axis', action='store_true')
     parser.add_argument('--eer-line', action='store_true')
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     score_tg = trial_scores_list(keys, similarities)
 
-    det = DETCurve(score_tg, args.baseline, max_det_points=200)
+    det = DETCurve(score_tg, args.baseline, max_det_points=20)
     sys.stdout.write(det.textual_report())
-    if args.plot:
-        det.plot(args.log_det, not args.free_axis, args.eer_line)
+    if args.plot is not None:
+        det.plot(args.log_det, not args.free_axis, args.eer_line, args.plot)

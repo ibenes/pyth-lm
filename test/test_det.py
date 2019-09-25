@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from balls.oov_clustering.det import det_points_from_score_tg
 from balls.oov_clustering.det import subsample_list
-from balls.oov_clustering.det import merge_lists
+from balls.oov_clustering.det import area_under_curve, eer
 
 
 class DetPointTests(TestCase):
@@ -18,7 +18,7 @@ class DetPointTests(TestCase):
             [0.0, 0.5],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
     def test_permutation(self):
         score_tg = [
@@ -32,7 +32,7 @@ class DetPointTests(TestCase):
             [0.0, 0.5],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
     def test_simple_bad_system(self):
         score_tg = [
@@ -46,7 +46,7 @@ class DetPointTests(TestCase):
             [0.0, 0.5],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
     def test_multiple_points(self):
         score_tg = [
@@ -66,7 +66,7 @@ class DetPointTests(TestCase):
             [0.0, 0.4],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
 
 class ListSubsamplingTests(TestCase):
@@ -124,33 +124,23 @@ class ListSubsamplingTests(TestCase):
         )
 
 
-class ListMergingTests(TestCase):
+class AreaComputationTests(TestCase):
     def test_trivial(self):
-        self.assertEqual(
-            merge_lists([1, 2], []),
-            [1, 2]
-        )
+        self.assertAlmostEqual(area_under_curve([0.0, 1.0], [1.0, 0.0]), 0.5)
 
-    def test_trivial_reversed(self):
-        self.assertEqual(
-            merge_lists([], [1, 2]),
-            [1, 2]
-        )
+    def test_breakpoint(self):
+        self.assertAlmostEqual(area_under_curve([0.0, 0.1, 1.0], [1.0, 0.1, 0.0]), 0.1*0.1 + 2*0.1*0.9/2)
 
-    def test_concat(self):
-        self.assertEqual(
-            merge_lists([1], [2]),
-            [1, 2]
-        )
+    def test_end_addition(self):
+        self.assertAlmostEqual(area_under_curve([0.1], [0.1]), 0.1*0.1 + 2*0.1*0.9/2)
 
-    def test_concat_reverse(self):
-        self.assertEqual(
-            merge_lists([2], [1]),
-            [1, 2]
-        )
 
-    def test_duplicities(self):
-        self.assertEqual(
-            merge_lists([1, 2], [1]),
-            [1, 2]
-        )
+class EerComputationTests(TestCase):
+    def test_trivial(self):
+        self.assertAlmostEqual(eer([0.0, 1.0], [1.0, 0.0]), 0.5)
+
+    def test_skewed(self):
+        self.assertAlmostEqual(eer([0.0, 1.0], [0.5, 0.0]), 1.0/3.0)
+
+    def test_exact_hit(self):
+        self.assertAlmostEqual(eer([0.0, 0.1, 1.0], [1.0, 0.1, 0.0]), 0.1)
