@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from balls.oov_clustering.det import det_points_from_score_tg
 from balls.oov_clustering.det import subsample_list
-from balls.oov_clustering.det import merge_lists
 from balls.oov_clustering.det import area_under_curve, eer
 
 
@@ -122,38 +121,6 @@ class ListSubsamplingTests(TestCase):
                     [4, 5],
                 ]
             ]
-        )
-
-
-class ListMergingTests(TestCase):
-    def test_trivial(self):
-        self.assertEqual(
-            merge_lists([1, 2], []),
-            [1, 2]
-        )
-
-    def test_trivial_reversed(self):
-        self.assertEqual(
-            merge_lists([], [1, 2]),
-            [1, 2]
-        )
-
-    def test_concat(self):
-        self.assertEqual(
-            merge_lists([1], [2]),
-            [1, 2]
-        )
-
-    def test_concat_reverse(self):
-        self.assertEqual(
-            merge_lists([2], [1]),
-            [1, 2]
-        )
-
-    def test_duplicities(self):
-        self.assertEqual(
-            merge_lists([1, 2], [1]),
-            [1, 2]
         )
 
 
