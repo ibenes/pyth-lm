@@ -17,7 +17,7 @@ if __name__ == '__main__':
                         help='location of the train corpus')
     args = parser.parse_args()
 
-    lm = torch.load(args.lm)
+    lm = torch.load(args.lm, map_location='cpu')
 
     tokenize_regime = 'words'
     if args.characters:
