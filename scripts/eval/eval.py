@@ -53,6 +53,10 @@ if __name__ == '__main__':
     )
     data = TransposeWrapper(data_tb)
 
+    oov_mask = ids == lm.vocab.unk_ind
+    nb_oovs = oov_mask.sum()
+    print('Nb oovs: {} ({:.2f} %)\n'.format(nb_oovs, 100.0 * nb_oovs/len(ids)))
+
     # Run on test data.
     loss = evaluate_(
         lm, data,
