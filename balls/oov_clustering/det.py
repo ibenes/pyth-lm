@@ -35,7 +35,7 @@ def eer(xs, ys):
             d_i = abs(xs[i] - ys[i])
             d_ip1 = xs[i+1] - ys[i+1]
             lambda_i = d_i/(d_i + d_ip1)
-            eer = lambda_i * xs[i] + (1.0-lambda_i)*xs[i+1]
+            eer = (1.0 - lambda_i) * xs[i] + lambda_i * xs[i+1]
 
     return eer
 
@@ -93,10 +93,6 @@ def subsample_list(the_list, max_points):
     return pick(the_list, indices)
 
 
-def merge_lists(a, b):
-    return sorted(set(a + b))
-
-
 class DETCurve:
     def __init__(self, score_tg, baseline, max_det_points=0):
         self._baseline = baseline
@@ -113,12 +109,11 @@ class DETCurve:
 
         mis_fas = det_points_from_score_tg(score_tg)
 
-        if max_det_points > 0:
-            self._nb_clusterings = merge_lists(
-                subsampling_indices(len(mis_fas), max_det_points),
-                list(range(0, 1000, 25))
-            )
+        if max_det_points > 0 and max_det_points < len(mis_fas):
+            self._nb_clusterings = subsampling_indices(len(mis_fas), max_det_points)
             mis_fas = pick(mis_fas, self._nb_clusterings)
+        else:
+            self._nb_clusterings = range(len(mis_fas))
 
         self._miss_rate = [msfa[0] for msfa in mis_fas]
         self._fa_rate = [msfa[1] for msfa in mis_fas]
@@ -128,8 +123,8 @@ class DETCurve:
         area_line_fmt = "Area under DET curve (in linspace): {:.5f}"
         eer_line_fmt = "EER: {:.2f} %"
 
-        system_au_det = area_under_curve(self._miss_rate, self._fa_rate)
-        system_eer = eer(self._miss_rate, self._fa_rate)
+        system_au_det = area_under_curve(self._fa_rate, self._miss_rate)
+        system_eer = eer(self._fa_rate, self._miss_rate)
 
         if self._baseline:
             area_line_fmt += " / {:.5f} / {:.2f} %"
@@ -167,7 +162,8 @@ class DETCurve:
         plt_func(self._miss_rate, self._fa_rate, label='System')
 
         for i, xy in zip(self._nb_clusterings, zip(self._miss_rate, self._fa_rate)):
-            ax.annotate(str(i), xy=xy, textcoords='data')
+            label = str(i)
+            ax.annotate((label), xy=xy, textcoords='data')
 
         if self._baseline:
             xs = np.linspace(0, self._max_miss_rate)

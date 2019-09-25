@@ -3,6 +3,7 @@ from unittest import TestCase
 from balls.oov_clustering.det import det_points_from_score_tg
 from balls.oov_clustering.det import subsample_list
 from balls.oov_clustering.det import merge_lists
+from balls.oov_clustering.det import area_under_curve, eer
 
 
 class DetPointTests(TestCase):
@@ -154,3 +155,25 @@ class ListMergingTests(TestCase):
             merge_lists([1, 2], [1]),
             [1, 2]
         )
+
+
+class AreaComputationTests(TestCase):
+    def test_trivial(self):
+        self.assertAlmostEqual(area_under_curve([0.0, 1.0], [1.0, 0.0]), 0.5)
+
+    def test_breakpoint(self):
+        self.assertAlmostEqual(area_under_curve([0.0, 0.1, 1.0], [1.0, 0.1, 0.0]), 0.1*0.1 + 2*0.1*0.9/2)
+
+    def test_end_addition(self):
+        self.assertAlmostEqual(area_under_curve([0.1], [0.1]), 0.1*0.1 + 2*0.1*0.9/2)
+
+
+class EerComputationTests(TestCase):
+    def test_trivial(self):
+        self.assertAlmostEqual(eer([0.0, 1.0], [1.0, 0.0]), 0.5)
+
+    def test_skewed(self):
+        self.assertAlmostEqual(eer([0.0, 1.0], [0.5, 0.0]), 1.0/3.0)
+
+    def test_exact_hit(self):
+        self.assertAlmostEqual(eer([0.0, 0.1, 1.0], [1.0, 0.1, 0.0]), 0.1)
