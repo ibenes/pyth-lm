@@ -63,7 +63,7 @@ def det_points_from_score_tg(score_tg):
 
         mis_fas.append([nb_misses/nb_trials, nb_false_alarms/nb_trials])
 
-    return mis_fas
+    return mis_fas, [s[0] for s in sorted_score_tg]
 
 
 def subsampling_indices(length, max_points):
@@ -107,13 +107,15 @@ class DETCurve:
         print("# positive trials: {} ({:.1f} %)".format(nb_same, 100.0*nb_same/nb_trials))
         print("# negative trials: {} ({:.1f} %)".format(nb_different, 100.0*nb_different/nb_trials))
 
-        mis_fas = det_points_from_score_tg(score_tg)
+        mis_fas, sorted_scores = det_points_from_score_tg(score_tg)
 
         if max_det_points > 0 and max_det_points < len(mis_fas):
             self._nb_clusterings = subsampling_indices(len(mis_fas), max_det_points)
+            self._scores = pick(sorted_scores, self._nb_clusterings[:-1] + [len(sorted_scores)-1])
             mis_fas = pick(mis_fas, self._nb_clusterings)
         else:
             self._nb_clusterings = range(len(mis_fas))
+            self._scores = sorted_scores
 
         self._miss_rate = [msfa[0] for msfa in mis_fas]
         self._fa_rate = [msfa[1] for msfa in mis_fas]
@@ -161,9 +163,9 @@ class DETCurve:
             plt_func = plt.plot
         plt_func(self._miss_rate, self._fa_rate, label='System')
 
-        for i, xy in zip(self._nb_clusterings, zip(self._miss_rate, self._fa_rate)):
-            label = str(i)
-            ax.annotate((label), xy=xy, textcoords='data')
+        for i, score, xy in zip(self._nb_clusterings, self._scores, zip(self._miss_rate, self._fa_rate)):
+            label = '{} ({:.2f})'.format(i, score)
+            ax.annotate((label), xy=xy, textcoords='data', fontsize='small')
 
         if self._baseline:
             xs = np.linspace(0, self._max_miss_rate)

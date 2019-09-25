@@ -18,7 +18,7 @@ class DetPointTests(TestCase):
             [0.0, 0.5],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
     def test_permutation(self):
         score_tg = [
@@ -32,7 +32,7 @@ class DetPointTests(TestCase):
             [0.0, 0.5],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
     def test_simple_bad_system(self):
         score_tg = [
@@ -46,7 +46,7 @@ class DetPointTests(TestCase):
             [0.0, 0.5],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
     def test_multiple_points(self):
         score_tg = [
@@ -66,7 +66,7 @@ class DetPointTests(TestCase):
             [0.0, 0.4],
         ]
 
-        self.assertEqual(det_points_from_score_tg(score_tg), det_points)
+        self.assertEqual(det_points_from_score_tg(score_tg)[0], det_points)
 
 
 class ListSubsamplingTests(TestCase):
