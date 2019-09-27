@@ -41,7 +41,7 @@ if __name__ == '__main__':
     lm = torch.load(args.load, map_location='cpu')
     if args.cuda:
         lm.cuda()
-    print(lm.model)
+    print(lm)
 
     print("preparing data...")
     ids = tokens_from_fn(args.data, lm.vocab, randomize=False)
