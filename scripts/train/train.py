@@ -3,6 +3,7 @@
 import argparse
 import math
 import torch
+from logger import Logger
 
 from balls.data_pipeline.data import tokens_from_fn
 from balls.data_pipeline.multistream import batchify
@@ -45,6 +46,8 @@ if __name__ == '__main__':
                         help='use CUDA')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='report interval')
+    parser.add_argument('--tb-logdir', type=str,
+                        help='folder for logs for TensorBoard')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
     parser.add_argument('--save', type=str, required=True,
@@ -53,6 +56,10 @@ if __name__ == '__main__':
     print(args)
 
     init_seeds(args.seed, args.cuda)
+
+    tb_logger = None
+    if args.tb_logdir:
+        tb_logger = Logger(args.tb_logdir, update_freq=100)
 
     print("loading model...")
     lm = torch.load(args.load)
@@ -97,6 +104,7 @@ if __name__ == '__main__':
             logger, args.clip,
             use_ivecs=False,
             custom_batches=False,
+            tb_logger=tb_logger,
         )
 
         val_loss = evaluate_(
@@ -105,6 +113,14 @@ if __name__ == '__main__':
             custom_batches=False,
         )
         print(epoch_summary(epoch, logger.nb_updates(), logger.time_since_creation(), val_loss))
+        if tb_logger is not None:
+            info = {
+                'loss/val': val_loss,
+                'ppl/val': math.exp(val_loss),
+            }
+            for tag, value in info.items():
+                tb_logger.scalar_summary(tag, value, enforce=True)
+                tb_logger.hierarchical_scalar_summary(tag.split('/')[0], tag.split('/')[1], value, enforce=True)
 
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
