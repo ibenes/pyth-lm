@@ -115,11 +115,12 @@ if __name__ == '__main__':
         print(epoch_summary(epoch, logger.nb_updates(), logger.time_since_creation(), val_loss))
         if tb_logger is not None:
             info = {
-                'val/loss': val_loss,
-                'val/ppl': math.exp(val_loss),
+                'loss/val': val_loss,
+                'ppl/val': math.exp(val_loss),
             }
             for tag, value in info.items():
                 tb_logger.scalar_summary(tag, value, enforce=True)
+                tb_logger.hierarchical_scalar_summary(tag.split('/')[0], tag.split('/')[1], value, enforce=True)
 
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:

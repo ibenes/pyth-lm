@@ -118,11 +118,12 @@ def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches, tb_logger=N
         if tb_logger is not None:
             tb_logger.next_step()
             info = {
-                'train/loss': loss.item(),
-                'train/ppl': loss.exp().item(),
+                'loss/train': loss.item(),
+                'ppl/train': loss.exp().item(),
             }
             for tag, value in info.items():
                 tb_logger.scalar_summary(tag, value)
+                tb_logger.hierarchical_scalar_summary(tag.split('/')[0], tag.split('/')[0], value, enforce=True)
 
             for tag, value in lm.named_parameters():
                 tag = tag.replace('.', '/')
