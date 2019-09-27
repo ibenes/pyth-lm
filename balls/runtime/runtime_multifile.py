@@ -79,7 +79,7 @@ def evaluate_no_transpose(model, data_source, use_ivecs):
     )
 
 
-def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches):
+def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches, tb_logger=None):
     lm.train()
 
     if custom_batches:
@@ -114,6 +114,20 @@ def train_(lm, data, optim, logger, clip, use_ivecs, custom_batches):
 
         optim.step()
         logger.log(loss.data)
+
+        if tb_logger is not None:
+            tb_logger.next_step()
+            info = {
+                'train/loss': loss.item(),
+                'train/ppl': loss.exp().item(),
+            }
+            for tag, value in info.items():
+                tb_logger.scalar_summary(tag, value)
+
+            for tag, value in lm.named_parameters():
+                tag = tag.replace('.', '/')
+                tb_logger.histo_summary(tag, value.data.cpu().numpy())
+                tb_logger.histo_summary(tag+'/grad', value.grad.data.cpu().numpy())
 
 
 def train(model, data, optim, logger, clip, use_ivecs):
