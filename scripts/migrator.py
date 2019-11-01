@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''Migrates old LM from before proper balls package was introduced.
 
-Build aroung the proposition of this SO answer:
+Build around the proposition of this SO answer:
 https://stackoverflow.com/a/53327348/9703830
 
 Uses a separate, monkey-patched pickle (`my_pickle`) for de-serialization
