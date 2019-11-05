@@ -44,7 +44,11 @@ if __name__ == '__main__':
     print(lm)
 
     print("preparing data...")
-    ids = tokens_from_fn(args.data, lm.vocab, randomize=False)
+    tokenize_regime = 'words'
+    if args.characters:
+        tokenize_regime = 'chars'
+
+    ids = tokens_from_fn(args.data, lm.vocab, randomize=False, regime=tokenize_regime)
     batched = batchify(ids, 10, args.cuda)
     data_tb = TemporalSplits(
         batched,
