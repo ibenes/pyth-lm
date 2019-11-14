@@ -89,6 +89,8 @@ def main():
                         help='report interval')
     parser.add_argument('--val-interval', type=int, default=1000000, metavar='N',
                         help='validation interval in number of tokens')
+    parser.add_argument('--val-report',
+                        help='where to put validation report')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
     parser.add_argument('--save', type=str, required=True,
@@ -137,7 +139,11 @@ def main():
     lr = args.lr
     best_val_loss = None
 
-    val_watcher = ValidationWatcher(lambda: val_loss_fn(lm), initial_val_loss, args.val_interval, sys.stdout)
+    if args.val_report is not None:
+        val_report_f = open(args.val_report, 'w', buffering=1)
+    else:
+        val_report_f = sys.stdout
+    val_watcher = ValidationWatcher(lambda: val_loss_fn(lm), initial_val_loss, args.val_interval, val_report_f)
     optim = torch.optim.SGD(lm.parameters(), lr, weight_decay=args.beta)
     for epoch in range(1, args.epochs + 1):
         logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched) // args.target_seq_len)
