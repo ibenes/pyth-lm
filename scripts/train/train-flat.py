@@ -2,6 +2,7 @@
 
 import argparse
 import math
+import sys
 import torch
 
 from balls.data_pipeline.data import tokens_from_fn
@@ -14,7 +15,48 @@ from balls.runtime.runtime_multifile import evaluate_, repackage_hidden
 from balls.runtime.loggers import ProgressLogger
 
 
-if __name__ == '__main__':
+class ValidationWatcher:
+    def __init__(self, val_fn, initial_val_loss, freq_in_tokens, out_f):
+        self.val_losses = initial_val_loss
+        self.validation_fn = val_fn
+
+        assert(freq_in_tokens > 0)
+        self.freq = freq_in_tokens
+
+        self.out_f = out_f
+
+        self.running_loss = 0.0
+        self.running_targets = 0
+        self.running_updates = 0
+
+        self.nb_total_updates = 0
+
+    def log_training_update(self, loss, nb_targets):
+        self.running_loss += loss
+        self.running_targets += nb_targets
+        self.running_updates += 1
+        self.nb_total_updates += 1
+
+        if self.running_targets > self.freq:
+            val_loss = self.run_validation()
+
+            running_ppl = math.exp(self.running_loss / self.running_updates)
+            val_ppl = math.exp(val_loss)
+
+            desc = '{} updates: {:.1f} {:.1f} {:.2f}\n'.format(
+                self.nb_total_updates, running_ppl, val_ppl, val_ppl - running_ppl
+            )
+            self.out_f.write(desc)
+
+            self.running_loss = 0.0
+            self.running_targets = 0
+            self.running_updates = 0
+
+    def run_validation(self):
+        return self.validation_fn()
+
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train', type=str, required=True,
                         help='location of the train corpus')
@@ -45,6 +87,8 @@ if __name__ == '__main__':
                         help='use CUDA')
     parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                         help='report interval')
+    parser.add_argument('--val-interval', type=int, default=1000000, metavar='N',
+                        help='validation interval in number of tokens')
     parser.add_argument('--load', type=str, required=True,
                         help='where to load a model from')
     parser.add_argument('--save', type=str, required=True,
@@ -83,24 +127,22 @@ if __name__ == '__main__':
     )
     valid_data = TransposeWrapper(valid_data_tb)
 
-    print('Initial perplexity {:.2f}'.format(math.exp(evaluate_(lm, valid_data, use_ivecs=False, custom_batches=False))))
+    def val_loss_fn(lm):
+        return evaluate_(lm, valid_data, use_ivecs=False, custom_batches=False)
+
+    initial_val_loss = val_loss_fn(lm)
+    print('Initial perplexity {:.2f}'.format(math.exp(initial_val_loss)))
 
     print("training...")
     lr = args.lr
     best_val_loss = None
 
-    running_loss = 0.0
-    nb_updates = 0
-
+    val_watcher = ValidationWatcher(lambda: val_loss_fn(lm), initial_val_loss, args.val_interval, sys.stdout)
+    optim = torch.optim.SGD(lm.parameters(), lr, weight_decay=args.beta)
     for epoch in range(1, args.epochs + 1):
         logger = ProgressLogger(epoch, args.log_interval, lr, len(train_batched) // args.target_seq_len)
-        optim = torch.optim.SGD(lm.parameters(), lr, weight_decay=args.beta)
-
-        lm.train()
 
         hidden = None
-        do_transpose = not lm.model.batch_first
-
         for X, targets in train_data:
             X = X.t()
             targets = targets.t().contiguous()
@@ -110,35 +152,21 @@ if __name__ == '__main__':
 
             hidden = repackage_hidden(hidden)
 
+            lm.train()
             output, hidden = lm.model(X, hidden)
             loss, nb_words = lm.decoder.neg_log_prob(output, targets)
             loss /= nb_words
+
+            val_watcher.log_training_update(loss.data, nb_words)
 
             optim.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm(lm.parameters(), args.clip)
 
             optim.step()
-            nb_updates += 1
-            running_loss += loss.data
-            if nb_updates % args.log_interval == 0:
-                train_ppl = math.exp(running_loss / args.log_interval)
-                val_ppl = math.exp(evaluate_(
-                    lm, valid_data,
-                    use_ivecs=False,
-                    custom_batches=False,
-                ))
-                print('{}: {:.1f} {:.1f} {:.2f}'.format(nb_updates, train_ppl, val_ppl, val_ppl - train_ppl))
-                running_loss = 0.0
-                lm.train()
-
             logger.log(loss.data)
 
-        val_loss = evaluate_(
-            lm, valid_data,
-            use_ivecs=False,
-            custom_batches=False,
-        )
+        val_loss = val_loss_fn(lm)
         print(epoch_summary(epoch, logger.nb_updates(), logger.time_since_creation(), val_loss))
 
         # Save the model if the validation loss is the best we've seen so far.
@@ -148,3 +176,7 @@ if __name__ == '__main__':
         else:
             lr /= 2.0
             pass
+
+
+if __name__ == '__main__':
+    main()
